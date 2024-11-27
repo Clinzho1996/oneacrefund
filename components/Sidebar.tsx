@@ -23,7 +23,7 @@ const Sidebar = () => {
 	const handleLogout = async () => {
 		try {
 			// Attempt sign out with redirect set to false
-			const result = await signOut({ redirect: false });
+			await signOut({ redirect: false });
 
 			// Sign-out is successful if no error occurs
 			toast.success("Logout successful!");
