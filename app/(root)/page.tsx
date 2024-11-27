@@ -38,7 +38,7 @@ export default function SignIn() {
 
 	return (
 		<div className="hero bg-primary-5 flex justify-center items-center align-middle h-screen">
-			<div className="bg-primary-1 p-1 rounded-lg w-fit">
+			<div className="bg-primary-1 p-1 rounded-lg w-fit mx-3 lg:mx-0">
 				<div className="bg-white p-4 rounded-lg flex flex-col items-center align-middle justify-center">
 					<div className="px-10">
 						<Image
@@ -48,7 +48,7 @@ export default function SignIn() {
 							height={50}
 							className="w-fit justify-center h-[50px] mx-auto flex flex-row "
 						/>
-						<p className="text-[16px] text-[#141414] font-semibold">
+						<p className="text-[16px] text-[#141414] font-semibold text-center">
 							Login to access your admin dashboard
 						</p>
 						<p className="text-sm text-[#7D7C81] text-center">
