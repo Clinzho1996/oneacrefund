@@ -21,13 +21,16 @@ const Sidebar = () => {
 	};
 
 	const handleLogout = async () => {
-		const result = await signOut({ redirect: false });
+		try {
+			// Attempt sign out with redirect set to false
+			const result = await signOut({ redirect: false });
 
-		if (result && (result as any).error) {
-			toast.error("Failed to log out. Please try again.");
-			console.error("Sign-out error:", (result as any).error);
-		} else {
+			// Sign-out is successful if no error occurs
 			toast.success("Logout successful!");
+		} catch (error) {
+			// Catch any unexpected errors (although 'signOut' should generally not throw)
+			toast.error("Failed to log out. Please try again.");
+			console.error("Sign-out error:", error);
 		}
 	};
 
