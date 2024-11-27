@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 
 function HeaderBox() {
-	const { data: session, status } = useSession();
+	const { data: session } = useSession();
 	// Function to get the name initials from the user's name
 	const getNameInitials = ({ name }: { name: string }) => {
 		if (!name) return "OA";

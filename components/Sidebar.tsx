@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 
 const Sidebar = () => {
 	const pathname = usePathname();
-	const { data: session, status } = useSession();
+	const { data: session } = useSession();
 	// Function to get the name initials from the user's name
 	const getNameInitials = ({ name }: { name: string }) => {
 		if (!name) return "OA";
