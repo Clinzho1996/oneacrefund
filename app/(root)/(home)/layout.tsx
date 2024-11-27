@@ -4,20 +4,22 @@ import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 
 const HomeLayout = ({ children }: { children: ReactNode }) => {
 	const session = useSession();
 	const router = useRouter();
 
-	if (session.status === "loading") {
-		return <Loader />;
-	}
+	useEffect(() => {
+		if (session?.status === "authenticated") {
+			router.push("/dashboard");
+		} else if (session?.status === "unauthenticated") {
+			router.push("/");
+		}
+	}, [session?.status, router]);
 
-	if (session.status === "authenticated") {
-		router?.push("/dashboard");
-	} else {
-		router?.push("/");
+	if (session?.status === "loading") {
+		return <Loader />;
 	}
 	return (
 		<main>
