@@ -15,6 +15,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 
+import Modal from "@/components/Modal";
 import {
 	Select,
 	SelectContent,
@@ -30,13 +31,15 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { IconFileExport, IconPlus } from "@tabler/icons-react";
 import {
 	ChevronLeft,
 	ChevronRight,
 	ChevronsLeft,
 	ChevronsRight,
 } from "lucide-react";
-import React from "react";
+import Image from "next/image";
+import React, { useState } from "react";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -54,6 +57,10 @@ export function DataTable<TData, TValue>({
 	const [columnVisibility, setColumnVisibility] =
 		React.useState<VisibilityState>({});
 	const [rowSelection, setRowSelection] = React.useState({});
+	const [isModalOpen, setModalOpen] = useState(false);
+
+	const openModal = () => setModalOpen(true);
+	const closeModal = () => setModalOpen(false);
 
 	const table = useReactTable({
 		data,
@@ -76,6 +83,52 @@ export function DataTable<TData, TValue>({
 
 	return (
 		<div className="rounded-lg border-[1px] py-0">
+			<Modal isOpen={isModalOpen} onClose={closeModal}>
+				<div className="bg-white p-5 rounded-lg w-[500px] transition-transform ease-in-out ">
+					<Image
+						src="/close.png"
+						alt="app"
+						width={40}
+						height={40}
+						className="object-fit absolute right-5 top-5 cursor-pointer"
+						onClick={closeModal}
+					/>
+					<h2 className="text-[28px] lg:text-[40px] font-extrabold font-inter text-primary text-center leading-[32px] sm:leading-[60px]">
+						<span className="text-[#0D142080]">Get the </span>
+						Kuditrak app
+					</h2>
+				</div>
+			</Modal>
+			<div className="bg-white rounded-lg flex flex-row justify-between items-center p-3">
+				<div>
+					<div className="flex flex-row justify-start items-center gap-2">
+						<Image
+							src="/images/staffm.png"
+							alt="staff management"
+							height={20}
+							width={20}
+						/>
+						<p className="text-sm text-dark-1 font-medium font-inter">
+							Staff Management
+						</p>
+					</div>
+
+					<p className="text-xs text-primary-6 mt-3">
+						The process of planning, organizing, and directing employee
+						activities within an organization.
+					</p>
+				</div>
+				<div className="flex flex-row justify-start items-center gap-3 font-inter">
+					<Button className="border-[#E8E8E8] border-[1px]">
+						<IconFileExport /> Export
+					</Button>
+					<Button
+						className="bg-primary-1 text-white font-inter"
+						onClick={openModal}>
+						<IconPlus /> Add Staff
+					</Button>
+				</div>
+			</div>
 			<Table>
 				<TableHeader>
 					{table.getHeaderGroups().map((headerGroup) => (
