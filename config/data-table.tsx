@@ -8,6 +8,7 @@ import {
 	getFilteredRowModel,
 	getPaginationRowModel,
 	getSortedRowModel,
+	RowSelectionState,
 	SortingState,
 	useReactTable,
 	VisibilityState,
@@ -33,7 +34,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { IconFileExport, IconPlus } from "@tabler/icons-react";
+import { IconFileExport, IconPlus, IconTrash } from "@tabler/icons-react";
 import {
 	ChevronLeft,
 	ChevronRight,
@@ -58,14 +59,27 @@ export function DataTable<TData, TValue>({
 	);
 	const [columnVisibility, setColumnVisibility] =
 		React.useState<VisibilityState>({});
-	const [rowSelection, setRowSelection] = React.useState({});
+	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+	const [globalFilter, setGlobalFilter] = useState("");
 	const [isModalOpen, setModalOpen] = useState(false);
+	const [tableData, setTableData] = useState(data);
 
 	const openModal = () => setModalOpen(true);
 	const closeModal = () => setModalOpen(false);
 
+	const handleDelete = () => {
+		const selectedRowIds = Object.keys(rowSelection).filter(
+			(key) => rowSelection[key]
+		);
+		const filteredData = tableData.filter(
+			(_, index) => !selectedRowIds.includes(index.toString())
+		);
+		setTableData(filteredData);
+		setRowSelection({});
+	};
+
 	const table = useReactTable({
-		data,
+		data: tableData,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
@@ -75,11 +89,13 @@ export function DataTable<TData, TValue>({
 		getFilteredRowModel: getFilteredRowModel(),
 		onColumnVisibilityChange: setColumnVisibility,
 		onRowSelectionChange: setRowSelection,
+		onGlobalFilterChange: setGlobalFilter,
 		state: {
 			sorting,
 			columnFilters,
 			columnVisibility,
 			rowSelection,
+			globalFilter,
 		},
 	});
 
@@ -166,6 +182,19 @@ export function DataTable<TData, TValue>({
 						<IconPlus /> Add Staff
 					</Button>
 				</div>
+			</div>
+
+			<div className="p-3 flex flex-row justify-start items-center gap-3">
+				<Input
+					placeholder="Search Staff..."
+					value={globalFilter}
+					onChange={(e) => setGlobalFilter(e.target.value)}
+				/>
+				<Button
+					className="border-[#E8E8E8] border-[1px]"
+					onClick={handleDelete}>
+					<IconTrash /> Delete
+				</Button>
 			</div>
 			<Table>
 				<TableHeader>
