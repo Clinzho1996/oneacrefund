@@ -37,9 +37,9 @@ function HeaderBox() {
 								<Image
 									src={session.user.image}
 									alt="profile"
-									className="object-cover w-full h-full lg:w-[40px] lg:h-[40px]"
-									width={50}
-									height={50}
+									className="object-cover w-full h-full lg:w-[35px] lg:h-[35px]"
+									width={30}
+									height={30}
 								/>
 							) : (
 								<div className="flex items-center justify-center w-full h-full bg-dark-3">

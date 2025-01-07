@@ -3,7 +3,7 @@ import { IconLoader } from "@tabler/icons-react";
 const Loader = () => {
 	return (
 		<div className="flex-center h-screen w-full">
-			<IconLoader />
+			<IconLoader size={40} />
 		</div>
 	);
 };
