@@ -47,7 +47,7 @@ function FarmerEnrollment() {
 						<p className="text-[#0A0D14] font-inter">0</p>
 					</div>{" "}
 				</div>{" "}
-				<div className="border-r-[1px] border-primary-6 hidden lg:flex">
+				<div className="border-r-[1px] border-[#E2E4E9] hidden lg:flex">
 					<p className="text-transparent">|</p>
 				</div>
 				<div className="flex flex-row justify-start gap-2 items-center ">
@@ -64,7 +64,7 @@ function FarmerEnrollment() {
 						<p className="text-[#0A0D14] font-inter">0</p>
 					</div>{" "}
 				</div>{" "}
-				<div className="border-r-[1px] border-primary-6 hidden lg:flex">
+				<div className="border-r-[1px] border-[#E2E4E9] hidden lg:flex">
 					<p className="text-transparent">|</p>
 				</div>
 				<div className="flex flex-row justify-start gap-2 items-center">
@@ -81,7 +81,7 @@ function FarmerEnrollment() {
 						<p className="text-[#0A0D14] font-inter">0</p>
 					</div>{" "}
 				</div>{" "}
-				<div className="border-r-[1px] border-primary-6 hidden lg:flex">
+				<div className="border-r-[1px] border-[#E2E4E9] hidden lg:flex">
 					<p className="text-transparent">|</p>
 				</div>
 				<div className="flex flex-row justify-start gap-2 items-center">

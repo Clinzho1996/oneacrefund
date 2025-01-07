@@ -6,7 +6,7 @@ function Dashboard() {
 	return (
 		<div>
 			<HeaderBox />
-			<div className="bg-primary-5 flex flex-col h-screen px-4 py-2  gap-4">
+			<div className="bg-[#F6F8FA] flex flex-col h-screen px-4 py-2  gap-4">
 				<StaffInfo />
 				<FarmerEnrollment />
 			</div>
