@@ -152,17 +152,17 @@ export const columns: ColumnDef<Staff>[] = [
 						</Button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end" className="bg-white">
-						<DropdownMenuItem className="cursor-pointer hover:bg-secondary-3">
+						<DropdownMenuItem className="action cursor-pointer hover:bg-secondary-3">
 							<IconEye />
 							<p className="text-xs font-inter !important">View</p>
 						</DropdownMenuItem>
-						<DropdownMenuItem>
+						<DropdownMenuItem className="action">
 							<IconRestore />{" "}
 							<p className="text-xs font-inter !important">Suspend</p>
 						</DropdownMenuItem>
-						<DropdownMenuItem>
+						<DropdownMenuItem className="action">
 							<IconTrash color="#F43F5E" />{" "}
-							<p className="text-[#F43F5E] text-xs font-inter !important">
+							<p className="text-[#F43F5E] text-xs font-inter !important delete">
 								Delete
 							</p>
 						</DropdownMenuItem>

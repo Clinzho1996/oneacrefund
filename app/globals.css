@@ -18,6 +18,14 @@ body {
 	text-transform: capitalize;
 }
 
+.delete {
+	color: #f43f5e;
+}
+
+.action:hover {
+	background-color: #f2f4f7;
+	cursor: pointer;
+}
 .status {
 	text-align: center;
 	width: 80px;
