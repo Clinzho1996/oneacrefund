@@ -13,6 +13,37 @@ body {
 	padding: 0px;
 	height: 100vh;
 }
+
+.status {
+	text-align: center;
+	width: 80px;
+	background-color: green; /* Specific inline style */
+	padding: 0.15rem 0.25rem; /* Tailwind px-3 py-1 */
+	border-radius: 9999px; /* Tailwind rounded-full */
+	font-size: 0.875rem; /* Tailwind text-sm */
+	font-weight: 500; /* Tailwind font-medium */
+	text-transform: capitalize; /* Tailwind capitalize */
+	border: 2px solid; /* Tailwind border-2 */
+}
+
+.status.green {
+	background-color: #d1fae5; /* Tailwind bg-green-100 */
+	color: #047857;
+	font-family: "Inter", sans-serif;
+	font-weight: 500;
+	border: 1px solid #a7f3d0;
+	font-size: 12px; /* Tailwind text-green-700 */
+}
+
+.status.red {
+	background-color: #fee2e2; /* Tailwind bg-red-100 */
+	color: #b91c1c;
+	font-family: "Inter", sans-serif;
+	font-weight: 500;
+	border: 1px solid #ffb7b7;
+	font-size: 12px;
+}
+
 @layer utilities {
 	.flex-center {
 		@apply flex justify-center items-center;

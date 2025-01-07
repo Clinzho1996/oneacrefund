@@ -1,12 +1,15 @@
 // components/Modal.js
 
+import { IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
 const Modal = ({
+	title,
 	isOpen,
 	onClose,
 	children,
 }: {
+	title?: string;
 	isOpen: boolean;
 	onClose: () => void;
 	children: React.ReactNode;
@@ -28,14 +31,19 @@ const Modal = ({
 
 	return (
 		<div
-			className={`modal-overlay ${isOpen ? "fade-in" : "fade-out"}`}
+			className={`modal-overlay p-1 ${isOpen ? "fade-in p-1" : "fade-out p-1"}`}
 			onClick={onClose}>
 			<div
-				className={`modal-content ${isOpen ? "slide-in" : "slide-out"}`}
+				className={`modal-content p-1 border-[1px] border-primary-1 ${
+					isOpen ? "slide-in" : "slide-out"
+				}`}
 				onClick={(e) => e.stopPropagation()}>
-				<button className="close-btn" onClick={onClose}>
-					X
-				</button>
+				<div className="flex flex-row justify-between items-center gap-20">
+					<p className="text-sm text-dark-1 font-medium">{title}</p>
+					<button onClick={onClose}>
+						<IconX size={20} color="#28303F" />
+					</button>
+				</div>
 				{children}
 			</div>
 
@@ -46,7 +54,7 @@ const Modal = ({
 					left: 0;
 					width: 100%;
 					height: 100%;
-					background: rgba(0, 0, 0, 0.8);
+					background: rgba(0, 0, 0, 0.5);
 					display: flex;
 					justify-content: center;
 					align-items: center;
@@ -58,20 +66,14 @@ const Modal = ({
 					padding: 2rem;
 					border-radius: 8px;
 					position: relative;
+					max-width: 100%;
+					transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
 				}
 				.fade-in {
 					opacity: 1;
 				}
 				.fade-out {
 					opacity: 0;
-					transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
-				}
-				.modal-content {
-					background: #fff;
-					padding: 2rem;
-					border-radius: 8px;
-					position: relative;
-					max-width: 90%;
 					transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
 				}
 				.close-btn {

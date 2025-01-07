@@ -104,16 +104,21 @@ export const columns: ColumnDef<Staff>[] = [
 	},
 	{
 		accessorKey: "status",
-		header: "Status",
+		header: ({ column }) => {
+			return (
+				<Button
+					variant="ghost"
+					className="text-[13px] text-start items-start"
+					onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+					Status
+					<ArrowUpDown className="ml-2 h-4 w-4" />
+				</Button>
+			);
+		},
 		cell: ({ row }) => {
 			const status = row.getValue<string>("status");
 			return (
-				<div
-					className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${
-						status === ""
-							? "bg-green-100 text-green-700"
-							: "bg-red-100 text-red-700"
-					} border-2 !important`}>
+				<div className={`status ${status === "active" ? "green" : "red"}`}>
 					{status}
 				</div>
 			);
