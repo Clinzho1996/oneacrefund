@@ -130,7 +130,9 @@ export const columns: ColumnDef<Staff>[] = [
 		cell: ({ row }) => {
 			const role = row.getValue<string>("role");
 
-			return <span className="text-xs text-primary-6 capitalize">{role}</span>;
+			return (
+				<span className="role text-xs text-primary-6 capitalize">{role}</span>
+			);
 		},
 	},
 	{

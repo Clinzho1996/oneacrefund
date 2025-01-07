@@ -14,6 +14,10 @@ body {
 	height: 100vh;
 }
 
+.role {
+	text-transform: capitalize;
+}
+
 .status {
 	text-align: center;
 	width: 80px;
@@ -37,7 +41,7 @@ body {
 
 .status.red {
 	background-color: #fee2e2; /* Tailwind bg-red-100 */
-	color: #b91c1c;
+	color: #ee3731;
 	font-family: "Inter", sans-serif;
 	font-weight: 500;
 	border: 1px solid #ffb7b7;
