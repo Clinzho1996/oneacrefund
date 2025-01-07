@@ -153,7 +153,12 @@ export function DataTable<TData, TValue>({
 					</div>
 				</div>
 			</Modal>
-			<div className="bg-white rounded-lg flex flex-row justify-between items-center p-3">
+			<div
+				className="bg-white flex flex-row border-b-[1px] border-[#E2E4E9] justify-between items-center p-3"
+				style={{
+					borderTopLeftRadius: "0.5rem",
+					borderTopRightRadius: "0.5rem",
+				}}>
 				<div>
 					<div className="flex flex-row justify-start items-center gap-2">
 						<Image
@@ -184,7 +189,7 @@ export function DataTable<TData, TValue>({
 				</div>
 			</div>
 
-			<div className="p-3 flex flex-row justify-start items-center gap-3">
+			<div className="p-3 flex flex-row justify-start border-b-[1px] border-[#E2E4E9] items-center gap-3">
 				<Input
 					placeholder="Search Staff..."
 					value={globalFilter}
