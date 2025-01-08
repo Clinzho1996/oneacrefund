@@ -19,15 +19,15 @@ import { IconRectangleFilled } from "@tabler/icons-react";
 
 function CustomerEnrollment() {
 	const chartData = [
-		{ month: "January", total: 186, new: 80 },
-		{ month: "February", total: 105, new: 100 },
-		{ month: "March", total: 137, new: 120 },
-		{ month: "April", total: 73, new: 190 },
-		{ month: "May", total: 109, new: 130 },
-		{ month: "June", total: 130, new: 140 },
-		{ month: "July", total: 93, new: 85 },
-		{ month: "August", total: 134, new: 114 },
-		{ month: "September", total: 148, new: 127 },
+		{ month: "January", total: 186, new: 80, growth: 60 },
+		{ month: "February", total: 105, new: 100, growth: 90 },
+		{ month: "March", total: 137, new: 120, growth: 70 },
+		{ month: "April", total: 73, new: 190, growth: 80 },
+		{ month: "May", total: 109, new: 130, growth: 83 },
+		{ month: "June", total: 130, new: 140, growth: 55 },
+		{ month: "July", total: 93, new: 85, growth: 46 },
+		{ month: "August", total: 134, new: 114, growth: 60 },
+		{ month: "September", total: 148, new: 127, growth: 70 },
 	];
 
 	const chartConfig = {
@@ -38,6 +38,10 @@ function CustomerEnrollment() {
 		New: {
 			label: "New Customers",
 			color: "hsl(var(--chart-2))",
+		},
+		Growth: {
+			label: "Growth Rate",
+			color: "hsl(var(--chart-3))",
 		},
 	} satisfies ChartConfig;
 
@@ -96,6 +100,9 @@ function CustomerEnrollment() {
 								const newCustomers = payload.find(
 									(p) => p.dataKey === "new"
 								)?.value;
+								const growth = payload.find(
+									(p) => p.dataKey === "growth"
+								)?.value;
 								return (
 									<div className="custom-tooltip p-3 bg-white border-[1px] shadow-lg border-[#E4E4E7] rounded-lg w-[280px]">
 										<p className="text-center font-bold font-inter">{label}</p>
@@ -120,7 +127,7 @@ function CustomerEnrollment() {
 											</div>
 											<div>
 												<p className="text-bold font-inter text-xs text-center">
-													{total}
+													{growth}%
 												</p>
 												<div className="flex flex-row justify-start items-center gap-1">
 													<p className="text-primary-6">Customer Growth Rate</p>
@@ -142,6 +149,13 @@ function CustomerEnrollment() {
 							dataKey="new"
 							type="monotone"
 							stroke="#6E3FF3"
+							strokeWidth={2}
+							dot={true}
+						/>
+						<Line
+							dataKey="growth"
+							type="monotone"
+							stroke="#F39C12"
 							strokeWidth={2}
 							dot={true}
 						/>

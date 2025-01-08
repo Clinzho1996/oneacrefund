@@ -38,6 +38,19 @@ body {
 	border: 2px solid; /* Tailwind border-2 */
 }
 
+.check {
+	color: #297c66;
+	background-color: #ecfaf6;
+	border: 1px solid #297c66;
+	border-radius: 6px;
+	width: 20px;
+	height: 20px;
+}
+
+.modal-delete {
+	background-color: #f04f4a;
+}
+
 .status.green {
 	background-color: #d1fae5; /* Tailwind bg-green-100 */
 	color: #047857;

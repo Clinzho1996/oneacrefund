@@ -41,7 +41,7 @@ const Modal = ({
 				<div className="flex flex-row justify-between items-center gap-20">
 					<p className="text-sm text-dark-1 font-medium">{title}</p>
 					<button onClick={onClose}>
-						<IconX size={20} color="#28303F" />
+						<IconX size={16} color="#28303F" />
 					</button>
 				</div>
 				{children}
