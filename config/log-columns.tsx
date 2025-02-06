@@ -7,35 +7,26 @@ import {
 	SortingState,
 	VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { data } from "@/constants";
-import { IconEye, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { data, logData } from "@/constants";
 import React, { useState } from "react";
-import { DataTable } from "./data-table";
+import { LogDataTable } from "./log-table";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
-export type Staff = {
+export type Logs = {
 	id: string;
-	name: string;
+	fullName: string;
 	date: string;
-	role: string;
-	staff: string;
-	status: "active" | "inactive";
-	email: string;
+	module: string;
+	actions: string;
+	description: string;
 };
 
-const Table = () => {
+const LogTable = () => {
 	const [isRestoreModalOpen, setRestoreModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
@@ -68,7 +59,7 @@ const Table = () => {
 		setDeleteModalOpen(false);
 	};
 
-	const columns: ColumnDef<Staff>[] = [
+	const columns: ColumnDef<Logs>[] = [
 		{
 			id: "select",
 			header: ({ table }) => (
@@ -92,54 +83,12 @@ const Table = () => {
 			),
 		},
 		{
-			accessorKey: "name",
-			header: ({ column }) => {
-				return (
-					<Button
-						variant="ghost"
-						className="text-[13px] text-left"
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc")
-						}>
-						Name
-						<ArrowUpDown className="ml-2 h-4 w-4" />
-					</Button>
-				);
-			},
+			accessorKey: "fullName",
+			header: "Full Name",
 			cell: ({ row }) => {
-				const name = row.getValue<string>("name");
+				const fullName = row.getValue<string>("fullName");
 
-				return <span className="text-xs text-black">{name}</span>;
-			},
-		},
-		{
-			accessorKey: "staff",
-			header: "Staff Code",
-			cell: ({ row }) => {
-				const staff = row.getValue<string>("staff");
-
-				return <span className="text-xs text-primary-6">{staff}</span>;
-			},
-		},
-		{
-			accessorKey: "email",
-			header: ({ column }) => {
-				return (
-					<Button
-						variant="ghost"
-						className="text-[13px] text-left"
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc")
-						}>
-						Email address
-						<ArrowUpDown className="ml-2 h-4 w-4" />
-					</Button>
-				);
-			},
-			cell: ({ row }) => {
-				const email = row.getValue<string>("email");
-
-				return <span className="text-xs text-primary-6">{email}</span>;
+				return <span className="text-xs text-black">{fullName}</span>;
 			},
 		},
 		{
@@ -152,77 +101,37 @@ const Table = () => {
 			},
 		},
 		{
-			accessorKey: "status",
-			header: ({ column }) => {
-				return (
-					<Button
-						variant="ghost"
-						className="text-[13px] text-start items-start"
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc")
-						}>
-						Status
-						<ArrowUpDown className="ml-2 h-4 w-4" />
-					</Button>
-				);
-			},
+			accessorKey: "module",
+			header: "Module",
 			cell: ({ row }) => {
-				const status = row.getValue<string>("status");
-				return (
-					<div className={`status ${status === "active" ? "green" : "red"}`}>
-						{status}
-					</div>
-				);
-			},
-		},
-		{
-			accessorKey: "role",
-			header: "Role",
-			cell: ({ row }) => {
-				const role = row.getValue<string>("role");
+				const module = row.getValue<string>("module");
 
-				return (
-					<span className="role text-xs text-primary-6 capitalize">{role}</span>
-				);
+				return <span className="text-xs text-primary-6">{module}</span>;
 			},
 		},
 		{
-			id: "actions",
+			accessorKey: "actions",
 			header: "Action",
 			cell: ({ row }) => {
-				const actions = row.original;
+				const actions = row.getValue<string>("actions");
 
 				return (
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button
-								variant="ghost"
-								className="h-8 w-8 p-2 bg-white border-[1px] bborder-[#E8E8E8]">
-								<span className="sr-only">Open menu</span>
-								<MoreHorizontal className="h-4 w-4" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end" className="bg-white">
-							<DropdownMenuItem className="action cursor-pointer hover:bg-secondary-3">
-								<IconEye />
-								<p className="text-xs font-inter">View</p>
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								className="action cursor-pointer hover:bg-yellow-300"
-								onClick={() => openRestoreModal(row)}>
-								<IconRefresh />
-								<p className="text-xs font-inter">Suspend</p>
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								className="action cursor-pointer hover:bg-red-500"
-								onClick={() => openDeleteModal(row)}>
-								<IconTrash color="#F43F5E" />
-								<p className="text-[#F43F5E] delete text-xs font-inter">
-									Delete
-								</p>
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+					<span className="role text-xs text-primary-6 capitalize">
+						{actions}
+					</span>
+				);
+			},
+		},
+		{
+			accessorKey: "description",
+			header: "Description",
+			cell: ({ row }) => {
+				const description = row.getValue<string>("description");
+
+				return (
+					<span className="role text-xs text-primary-6 capitalize">
+						{description}
+					</span>
 				);
 			},
 		},
@@ -248,7 +157,7 @@ const Table = () => {
 
 	return (
 		<>
-			<DataTable columns={columns} data={data} />
+			<LogDataTable columns={columns} data={logData} />
 
 			{isRestoreModalOpen && (
 				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>
@@ -295,4 +204,4 @@ const Table = () => {
 	);
 };
 
-export default Table;
+export default LogTable;

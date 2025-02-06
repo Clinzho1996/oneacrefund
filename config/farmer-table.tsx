@@ -37,6 +37,7 @@ import {
 import {
 	IconAdjustmentsHorizontal,
 	IconFileExport,
+	IconFileImport,
 	IconPlus,
 	IconTrash,
 } from "@tabler/icons-react";
@@ -54,7 +55,7 @@ interface DataTableProps<TData, TValue> {
 	data: TData[];
 }
 
-export function DataTable<TData, TValue>({
+export function FarmerDataTable<TData, TValue>({
 	columns,
 	data,
 }: DataTableProps<TData, TValue>) {
@@ -174,51 +175,56 @@ export function DataTable<TData, TValue>({
 							width={20}
 						/>
 						<p className="text-sm text-dark-1 font-medium font-inter">
-							Staff Management
+							Farmer Management
 						</p>
 					</div>
 
 					<p className="text-xs text-primary-6 mt-3">
-						The process of planning, organizing, and directing employee
-						activities within an organization.
+						Helping farmers plan, organize, and manage their farms efficiently
+						to increase productivity and profitability.
 					</p>
 				</div>
 				<div className="flex flex-row justify-start items-center gap-3 font-inter">
 					<Button className="border-[#E8E8E8] border-[1px]">
 						<IconFileExport /> Export
 					</Button>
+					<Button className="border-[#E8E8E8] border-[1px]">
+						<IconFileImport /> Import
+					</Button>
 					<Button
 						className="bg-primary-1 text-white font-inter"
 						onClick={openModal}>
-						<IconPlus /> Add Staff
+						<IconPlus /> Add Farmer
 					</Button>
 				</div>
 			</div>
 
 			<div className="p-3 flex flex-row justify-between border-b-[1px] border-[#E2E4E9] bg-white items-center gap-20 max-w-full">
-				<div className="p-0 flex flex-row justify-center align-center gap-3 border-[1px] border-[#E2E4E9] bg-white items-center rounded-lg special-btn">
-					<p className="rounded-none p-2 border-r-[1px] border-[#E2E4E9] text-center text-sm mx-auto cursor-pointer">
+				<div className="p-0 flex flex-row justify-start gap-2 border-[1px] border-[#E2E4E9] bg-white items-center rounded-lg special-btn-farmer">
+					<p className="rounded-none p-2 text-center text-sm cursor-pointer border-r border-[#E2E4E9]">
 						View All
 					</p>
-					<p className="rounded-none p-2 border-l-[1px]  border-[#E2E4E9] text-center text-sm mx-auto cursor-pointer">
-						Active
+					<p className="rounded-none p-2 text-center text-sm cursor-pointer border-r border-[#E2E4E9]">
+						Both
 					</p>
-					<p className="rounded-none p-2 text-center border-l border-[#E2E4E9] text-sm mx-auto cursor-pointer">
-						Inactive
+					<p className="rounded-none p-2 text-center text-sm cursor-pointer border-r border-[#E2E4E9]">
+						Facial
+					</p>
+					<p className="rounded-none p-2 text-center text-sm cursor-pointer border-r border-[#E2E4E9]">
+						Fingerprint
+					</p>
+					<p className="rounded-none p-2 text-center text-sm cursor-pointer">
+						None
 					</p>
 				</div>
+
 				<div className="p-3 flex flex-row justify-start items-center gap-3 w-full ">
 					<Input
-						placeholder="Search Staff..."
+						placeholder="Search Farmer..."
 						value={globalFilter}
 						onChange={(e) => setGlobalFilter(e.target.value)}
 						className="focus:border-none bg-[#F9FAFB]"
 					/>
-					<Button
-						className="border-[#E8E8E8] border-[1px] bg-white"
-						onClick={handleDelete}>
-						<IconTrash /> Delete
-					</Button>
 					{/* filter by type */}
 					<div className="w-[250px]">
 						<Select
@@ -235,6 +241,12 @@ export function DataTable<TData, TValue>({
 							</SelectContent>
 						</Select>
 					</div>
+
+					<Button
+						className="border-[#E8E8E8] border-[1px] bg-white"
+						onClick={handleDelete}>
+						<IconTrash /> Delete
+					</Button>
 				</div>
 			</div>
 

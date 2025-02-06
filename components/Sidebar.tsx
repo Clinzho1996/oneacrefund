@@ -35,7 +35,7 @@ const Sidebar = () => {
 	};
 
 	return (
-		<section className="sticky left-0 top-0 flex h-screen w-fit flex-col border-r-[1px] justify-between  bg-white  text-dark-3 max-sm:hidden lg:w-[234px]">
+		<section className="sticky left-0 top-0 flex h-screen w-fit flex-col border-r-[1px] justify-between  bg-white  text-dark-3 max-sm:hidden lg:w-[234px] z-10">
 			<div className="flex flex-1 flex-col gap-2">
 				<Link
 					href="/"
@@ -71,7 +71,7 @@ const Sidebar = () => {
 							href={item.route}
 							key={item.label}
 							className={cn(
-								"flex gap-2 items-center p-2 justify-start rounded-[8px] mx-4 my-0",
+								"flex gap-2 items-center p-2 justify-center lg:justify-start rounded-[8px] mx-4 my-0",
 								{
 									"bg-primary-5 border-[1px] border-primary-4": isActive,
 								}
@@ -93,8 +93,8 @@ const Sidebar = () => {
 					);
 				})}
 			</div>
-			<div className="flex flex-col gap-2 mb-4">
-				<div className="flex flex-col mx-2 gap-2 border-b-[1px] border-[#E2E4E9] py-3">
+			<div className="flex flex-col gap-1 mb-4">
+				<div className="flex flex-col mx-0 gap-2 border-b-[1px] border-[#E2E4E9] py-2">
 					<div className="flex gap-2 items-center p-2 justify-start rounded-[8px] mx-4 my-0">
 						<Image
 							src="/images/settings.svg"
@@ -123,15 +123,15 @@ const Sidebar = () => {
 					</div>
 				</div>
 				{session?.user && (
-					<div className="md:flex flex-row justify-end gap-2 items-center mx-2 px-2">
+					<div className="md:flex flex-row justify-center gap-2 items-center mx-2 px-2 bg-[#F6F8FA] p-2 rounded-lg mt-2">
 						<div className="flex justify-center items-center border-[1px] border-dark-3 rounded-full overflow-hidden">
 							{session.user.image ? (
 								<Image
 									src={session.user.image}
 									alt="profile"
-									className="object-cover w-full h-full lg:w-[50px] lg:h-[42px]"
-									width={50}
-									height={50}
+									className="object-cover w-full h-full lg:w-[40px] lg:h-[42px] rounded-full"
+									width={30}
+									height={30}
 								/>
 							) : (
 								<div className="flex items-center justify-center w-full h-full bg-dark-3">
@@ -141,7 +141,7 @@ const Sidebar = () => {
 								</div>
 							)}
 						</div>
-						<div className="hidden md:block">
+						<div className="hidden md:hidden lg:block">
 							<h3 className="text-dark-1 text-sm font-normal font-inter">
 								{session.user.name}
 							</h3>

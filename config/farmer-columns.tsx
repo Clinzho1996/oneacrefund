@@ -18,24 +18,25 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { data } from "@/constants";
-import { IconEye, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { data, farmerData } from "@/constants";
+import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
 import React, { useState } from "react";
-import { DataTable } from "./data-table";
+import { FarmerDataTable } from "./farmer-table";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
-export type Staff = {
+export type Farmer = {
 	id: string;
-	name: string;
-	date: string;
-	role: string;
-	staff: string;
-	status: "active" | "inactive";
-	email: string;
+	firstName: string;
+	lastName: string;
+	groupName: string;
+	siteName: string;
+	sector: string;
+	dateJoined: string;
+	biometricStatus: "none" | "facial" | "fingerprint" | "both";
 };
 
-const Table = () => {
+const FarmerTable = () => {
 	const [isRestoreModalOpen, setRestoreModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
@@ -68,7 +69,7 @@ const Table = () => {
 		setDeleteModalOpen(false);
 	};
 
-	const columns: ColumnDef<Staff>[] = [
+	const columns: ColumnDef<Farmer>[] = [
 		{
 			id: "select",
 			header: ({ table }) => (
@@ -92,67 +93,70 @@ const Table = () => {
 			),
 		},
 		{
-			accessorKey: "name",
-			header: ({ column }) => {
-				return (
-					<Button
-						variant="ghost"
-						className="text-[13px] text-left"
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc")
-						}>
-						Name
-						<ArrowUpDown className="ml-2 h-4 w-4" />
-					</Button>
-				);
-			},
+			accessorKey: "id",
+			header: "OAF-ID",
 			cell: ({ row }) => {
-				const name = row.getValue<string>("name");
+				const id = row.getValue<string>("id");
 
-				return <span className="text-xs text-black">{name}</span>;
+				return <span className="text-xs text-black">{id}</span>;
 			},
 		},
 		{
-			accessorKey: "staff",
-			header: "Staff Code",
+			accessorKey: "firstName",
+			header: "First Name",
 			cell: ({ row }) => {
-				const staff = row.getValue<string>("staff");
+				const firstName = row.getValue<string>("firstName");
 
-				return <span className="text-xs text-primary-6">{staff}</span>;
+				return <span className="text-xs text-black">{firstName}</span>;
 			},
 		},
 		{
-			accessorKey: "email",
-			header: ({ column }) => {
-				return (
-					<Button
-						variant="ghost"
-						className="text-[13px] text-left"
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc")
-						}>
-						Email address
-						<ArrowUpDown className="ml-2 h-4 w-4" />
-					</Button>
-				);
-			},
+			accessorKey: "lastName",
+			header: "Last Name",
 			cell: ({ row }) => {
-				const email = row.getValue<string>("email");
+				const lastName = row.getValue<string>("lastName");
 
-				return <span className="text-xs text-primary-6">{email}</span>;
+				return <span className="text-xs text-black">{lastName}</span>;
 			},
 		},
 		{
-			accessorKey: "date",
+			accessorKey: "groupName",
+			header: "Group Name",
+			cell: ({ row }) => {
+				const groupName = row.getValue<string>("groupName");
+
+				return <span className="text-xs text-primary-6">{groupName}</span>;
+			},
+		},
+		{
+			accessorKey: "siteName",
+			header: "Site Name",
+			cell: ({ row }) => {
+				const siteName = row.getValue<string>("siteName");
+
+				return <span className="text-xs text-primary-6">{siteName}</span>;
+			},
+		},
+		{
+			accessorKey: "sector",
+			header: "Sector",
+			cell: ({ row }) => {
+				const sector = row.getValue<string>("sector");
+
+				return <span className="text-xs text-primary-6">{sector}</span>;
+			},
+		},
+		{
+			accessorKey: "dateJoined",
 			header: "Date Joined",
 			cell: ({ row }) => {
-				const date = row.getValue<string>("date");
+				const dateJoined = row.getValue<string>("dateJoined");
 
-				return <span className="text-xs text-primary-6">{date}</span>;
+				return <span className="text-xs text-primary-6">{dateJoined}</span>;
 			},
 		},
 		{
-			accessorKey: "status",
+			accessorKey: "biometricStatus",
 			header: ({ column }) => {
 				return (
 					<Button
@@ -161,28 +165,26 @@ const Table = () => {
 						onClick={() =>
 							column.toggleSorting(column.getIsSorted() === "asc")
 						}>
-						Status
+						Biometric Status
 						<ArrowUpDown className="ml-2 h-4 w-4" />
 					</Button>
 				);
 			},
 			cell: ({ row }) => {
-				const status = row.getValue<string>("status");
+				const status = row.getValue<string>("biometricStatus");
 				return (
-					<div className={`status ${status === "active" ? "green" : "red"}`}>
+					<div
+						className={`status ${
+							status === "both"
+								? "green"
+								: status === "facial"
+								? "blue"
+								: status === "fingerprint"
+								? "yellow"
+								: "red"
+						}`}>
 						{status}
 					</div>
-				);
-			},
-		},
-		{
-			accessorKey: "role",
-			header: "Role",
-			cell: ({ row }) => {
-				const role = row.getValue<string>("role");
-
-				return (
-					<span className="role text-xs text-primary-6 capitalize">{role}</span>
 				);
 			},
 		},
@@ -210,8 +212,8 @@ const Table = () => {
 							<DropdownMenuItem
 								className="action cursor-pointer hover:bg-yellow-300"
 								onClick={() => openRestoreModal(row)}>
-								<IconRefresh />
-								<p className="text-xs font-inter">Suspend</p>
+								<IconPencil />
+								<p className="text-xs font-inter">Edit</p>
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								className="action cursor-pointer hover:bg-red-500"
@@ -248,7 +250,7 @@ const Table = () => {
 
 	return (
 		<>
-			<DataTable columns={columns} data={data} />
+			<FarmerDataTable columns={columns} data={farmerData} />
 
 			{isRestoreModalOpen && (
 				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>
@@ -271,7 +273,9 @@ const Table = () => {
 
 			{isDeleteModalOpen && (
 				<Modal onClose={closeDeleteModal} isOpen={isDeleteModalOpen}>
-					<p>Are you sure you want to delete {selectedRow?.name}'s account?</p>
+					<p className="mt-4">
+						Are you sure you want to delete {selectedRow?.firstName}'s account?
+					</p>
 
 					<p className="text-sm text-primary-6">This can't be undone</p>
 					<div className="flex flex-row justify-end items-center gap-3 font-inter mt-4">
@@ -295,4 +299,4 @@ const Table = () => {
 	);
 };
 
-export default Table;
+export default FarmerTable;

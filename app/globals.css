@@ -27,6 +27,9 @@ body {
 	cursor: pointer;
 }
 .status {
+	justify-content: center;
+	align-items: center;
+	margin-left: 30px;
 	text-align: center;
 	width: 80px;
 	background-color: green; /* Specific inline style */
@@ -51,6 +54,23 @@ body {
 	background-color: #f04f4a;
 }
 
+.special-btn {
+	width: 300px;
+}
+
+.special-btn-farmer {
+	width: 600px;
+}
+
+.special-btn-project {
+	width: 460px;
+}
+
+.table-head {
+	text-align: left;
+	flex-direction: row;
+	justify-content: flex-start;
+}
 .status.green {
 	background-color: #d1fae5; /* Tailwind bg-green-100 */
 	color: #047857;
@@ -66,6 +86,24 @@ body {
 	font-family: "Inter", sans-serif;
 	font-weight: 500;
 	border: 1px solid #ffb7b7;
+	font-size: 12px;
+}
+
+.status.blue {
+	background-color: #f9f5ff; /* Tailwind bg-red-100 */
+	color: #6941c6;
+	font-family: "Inter", sans-serif;
+	font-weight: 500;
+	border: 1px solid #c5b3f0;
+	font-size: 12px;
+}
+
+.status.yellow {
+	background-color: #fff8eb; /* Tailwind bg-red-100 */
+	color: #d98c00;
+	font-family: "Inter", sans-serif;
+	font-weight: 500;
+	border: 1px solid #ffda97;
 	font-size: 12px;
 }
 

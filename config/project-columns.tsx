@@ -7,35 +7,28 @@ import {
 	SortingState,
 	VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { data } from "@/constants";
-import { IconEye, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { data, projectData } from "@/constants";
+import { IconEdit, IconTrash } from "@tabler/icons-react";
+import Link from "next/link";
 import React, { useState } from "react";
-import { DataTable } from "./data-table";
+import { ProjectDataTable } from "./project-table";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
-export type Staff = {
+export type Project = {
 	id: string;
-	name: string;
-	date: string;
-	role: string;
-	staff: string;
-	status: "active" | "inactive";
-	email: string;
+	projectName: string;
+	startDate: string;
+	endDate: string;
+	status: "ongoing" | "yet to start" | "close";
 };
 
-const Table = () => {
+const ProjectTable = () => {
 	const [isRestoreModalOpen, setRestoreModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
@@ -68,7 +61,7 @@ const Table = () => {
 		setDeleteModalOpen(false);
 	};
 
-	const columns: ColumnDef<Staff>[] = [
+	const columns: ColumnDef<Project>[] = [
 		{
 			id: "select",
 			header: ({ table }) => (
@@ -92,63 +85,30 @@ const Table = () => {
 			),
 		},
 		{
-			accessorKey: "name",
-			header: ({ column }) => {
-				return (
-					<Button
-						variant="ghost"
-						className="text-[13px] text-left"
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc")
-						}>
-						Name
-						<ArrowUpDown className="ml-2 h-4 w-4" />
-					</Button>
-				);
-			},
+			accessorKey: "projectName",
+			header: "Project Name",
 			cell: ({ row }) => {
-				const name = row.getValue<string>("name");
+				const name = row.getValue<string>("projectName");
 
 				return <span className="text-xs text-black">{name}</span>;
 			},
 		},
 		{
-			accessorKey: "staff",
-			header: "Staff Code",
+			accessorKey: "startDate",
+			header: "Start Date",
 			cell: ({ row }) => {
-				const staff = row.getValue<string>("staff");
+				const startDate = row.getValue<string>("startDate");
 
-				return <span className="text-xs text-primary-6">{staff}</span>;
+				return <span className="text-xs text-primary-6">{startDate}</span>;
 			},
 		},
 		{
-			accessorKey: "email",
-			header: ({ column }) => {
-				return (
-					<Button
-						variant="ghost"
-						className="text-[13px] text-left"
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc")
-						}>
-						Email address
-						<ArrowUpDown className="ml-2 h-4 w-4" />
-					</Button>
-				);
-			},
+			accessorKey: "endDate",
+			header: "End Date",
 			cell: ({ row }) => {
-				const email = row.getValue<string>("email");
+				const endDate = row.getValue<string>("endDate");
 
-				return <span className="text-xs text-primary-6">{email}</span>;
-			},
-		},
-		{
-			accessorKey: "date",
-			header: "Date Joined",
-			cell: ({ row }) => {
-				const date = row.getValue<string>("date");
-
-				return <span className="text-xs text-primary-6">{date}</span>;
+				return <span className="text-xs text-primary-6">{endDate}</span>;
 			},
 		},
 		{
@@ -169,20 +129,16 @@ const Table = () => {
 			cell: ({ row }) => {
 				const status = row.getValue<string>("status");
 				return (
-					<div className={`status ${status === "active" ? "green" : "red"}`}>
+					<div
+						className={`status ${
+							status === "ongoing"
+								? "green"
+								: status === "yet to start"
+								? "yellow"
+								: "red"
+						}`}>
 						{status}
 					</div>
-				);
-			},
-		},
-		{
-			accessorKey: "role",
-			header: "Role",
-			cell: ({ row }) => {
-				const role = row.getValue<string>("role");
-
-				return (
-					<span className="role text-xs text-primary-6 capitalize">{role}</span>
 				);
 			},
 		},
@@ -193,36 +149,29 @@ const Table = () => {
 				const actions = row.original;
 
 				return (
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button
-								variant="ghost"
-								className="h-8 w-8 p-2 bg-white border-[1px] bborder-[#E8E8E8]">
-								<span className="sr-only">Open menu</span>
-								<MoreHorizontal className="h-4 w-4" />
+					<div className="flex flex-row justify-start items-center gap-5">
+						<Link href={`/projects/${actions.id}`} target="_blank">
+							<Button className="border-[#E8E8E8] border-[1px] text-xs font-medium text-[#6B7280] font-inter">
+								View Verification
 							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end" className="bg-white">
-							<DropdownMenuItem className="action cursor-pointer hover:bg-secondary-3">
-								<IconEye />
-								<p className="text-xs font-inter">View</p>
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								className="action cursor-pointer hover:bg-yellow-300"
-								onClick={() => openRestoreModal(row)}>
-								<IconRefresh />
-								<p className="text-xs font-inter">Suspend</p>
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								className="action cursor-pointer hover:bg-red-500"
-								onClick={() => openDeleteModal(row)}>
-								<IconTrash color="#F43F5E" />
-								<p className="text-[#F43F5E] delete text-xs font-inter">
-									Delete
-								</p>
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+						</Link>
+						<Link href={`/projects/${actions.id}`} target="_blank">
+							<Button className="border-[#E8E8E8] border-[1px] text-xs font-medium text-[#6B7280] font-inter">
+								Close
+							</Button>
+						</Link>
+
+						<Button
+							className="border-[#E8E8E8] border-[1px] text-sm font-medium text-[#6B7280] font-inter"
+							onClick={() => openDeleteModal(row)}>
+							<IconEdit />
+						</Button>
+						<Button
+							className="border-[#E8E8E8] border-[1px] text-sm font-medium text-[#6B7280] font-inter"
+							onClick={() => openDeleteModal(row)}>
+							<IconTrash />
+						</Button>
+					</div>
 				);
 			},
 		},
@@ -248,7 +197,7 @@ const Table = () => {
 
 	return (
 		<>
-			<DataTable columns={columns} data={data} />
+			<ProjectDataTable columns={columns} data={projectData} />
 
 			{isRestoreModalOpen && (
 				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>
@@ -271,7 +220,10 @@ const Table = () => {
 
 			{isDeleteModalOpen && (
 				<Modal onClose={closeDeleteModal} isOpen={isDeleteModalOpen}>
-					<p>Are you sure you want to delete {selectedRow?.name}'s account?</p>
+					<p className="mt-4">
+						Are you sure you want to delete the project:{" "}
+						{selectedRow?.projectName}?
+					</p>
 
 					<p className="text-sm text-primary-6">This can't be undone</p>
 					<div className="flex flex-row justify-end items-center gap-3 font-inter mt-4">
@@ -295,4 +247,4 @@ const Table = () => {
 	);
 };
 
-export default Table;
+export default ProjectTable;
