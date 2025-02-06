@@ -44,7 +44,7 @@ export const sidebarLinks = [
 	},
 ];
 
-export const data: Staff[] = [
+export const staffData: Staff[] = [
 	{
 		id: "728ed52f",
 		name: "Confidence Clinton",

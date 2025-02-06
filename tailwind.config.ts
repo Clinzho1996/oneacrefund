@@ -16,6 +16,9 @@ export default {
 			},
 		},
 		extend: {
+			borderRadius: {
+				lg: "0.5rem",
+			},
 			colors: {
 				primary: {
 					1: "#297C66",

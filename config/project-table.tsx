@@ -34,6 +34,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { projectData } from "@/constants";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import {
 	ChevronLeft,
@@ -61,12 +62,26 @@ export function ProjectDataTable<TData, TValue>({
 		React.useState<VisibilityState>({});
 	const [selectedType, setSelectedType] = useState<string>("");
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+	const [selectedStatus, setSelectedStatus] = useState<string>("View All");
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [tableData, setTableData] = useState(data);
 
 	const openModal = () => setModalOpen(true);
 	const closeModal = () => setModalOpen(false);
+
+	const handleStatusFilter = (status: string) => {
+		setSelectedStatus(status);
+
+		if (status === "View All") {
+			setTableData(data); // Reset to all data
+		} else {
+			const filteredData = projectData?.filter(
+				(farmer) => farmer.status?.toLocaleLowerCase() === status.toLowerCase()
+			);
+			setTableData(filteredData as TData[]);
+		}
+	};
 
 	const handleDelete = () => {
 		const selectedRowIds = Object.keys(rowSelection).filter(
@@ -187,19 +202,23 @@ export function ProjectDataTable<TData, TValue>({
 			</div>
 
 			<div className="p-3 flex flex-row justify-between border-b-[1px] border-[#E2E4E9] bg-white items-center gap-20 max-w-full">
-				<div className="p-0 flex flex-row justify-start gap-2 border-[1px] border-[#E2E4E9] bg-white items-center rounded-lg special-btn-project">
-					<p className="rounded-none p-2 text-center text-sm cursor-pointer border-r border-[#E2E4E9]">
-						View All
-					</p>
-					<p className="rounded-none p-2 text-center text-sm cursor-pointer border-r border-[#E2E4E9]">
-						Ongoing
-					</p>
-					<p className="rounded-none p-2 text-center text-sm cursor-pointer border-r border-[#E2E4E9]">
-						Pending
-					</p>
-					<p className="rounded-none p-2 text-center text-sm cursor-pointer ">
-						Close
-					</p>
+				<div className="flex flex-row justify-center bg-white items-center rounded-lg mx-auto special-btn-farmer pr-2">
+					{["View All", "Ongoing", "Yet to Start", "Close"].map(
+						(status, index, arr) => (
+							<p
+								key={status}
+								className={`px-2 py-2 text-center text-sm cursor-pointer border border-[#E2E4E9] overflow-hidden ${
+									selectedStatus === status
+										? "bg-primary-5 text-dark-1"
+										: "text-[#344054]"
+								} 
+			${index === 0 ? "rounded-l-lg firstRound" : ""} 
+			${index === arr.length - 1 ? "rounded-r-lg lastRound" : ""}`}
+								onClick={() => handleStatusFilter(status)}>
+								{status}
+							</p>
+						)
+					)}
 				</div>
 
 				<div className="p-3 flex flex-row justify-start items-center gap-3 w-full ">

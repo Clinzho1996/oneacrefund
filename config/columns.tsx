@@ -18,7 +18,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { data } from "@/constants";
+import { projectData, staffData } from "@/constants";
 import { IconEye, IconRefresh, IconTrash } from "@tabler/icons-react";
 import Link from "next/link";
 import React, { useState } from "react";
@@ -49,7 +49,7 @@ const Table = () => {
 		React.useState<VisibilityState>({});
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [globalFilter, setGlobalFilter] = useState("");
-	const [tableData, setTableData] = useState(data);
+	const [tableData, setTableData] = useState(projectData);
 
 	const openRestoreModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
@@ -239,7 +239,7 @@ const Table = () => {
 
 		// Filter the data to remove the selected rows
 		const filteredData = tableData.filter(
-			(row) => !selectedRowIds.includes(row.id)
+			(row: { id: string }) => !selectedRowIds.includes(row.id)
 		);
 
 		// Update the table data
@@ -251,7 +251,7 @@ const Table = () => {
 
 	return (
 		<>
-			<DataTable columns={columns} data={data} />
+			<DataTable columns={columns} data={staffData} />
 
 			{isRestoreModalOpen && (
 				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>

@@ -59,7 +59,17 @@ body {
 }
 
 .special-btn-farmer {
-	width: 600px;
+	width: 500px;
+}
+
+.firstRound {
+	border-top-left-radius: 8px;
+	border-bottom-left-radius: 8px;
+}
+
+.lastRound {
+	border-top-right-radius: 8px;
+	border-bottom-right-radius: 8px;
 }
 
 .special-btn-project {

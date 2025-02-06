@@ -229,14 +229,16 @@ export function FarmerDataTable<TData, TValue>({
 			<div className="p-3 flex flex-row justify-between border-b-[1px] border-[#E2E4E9] bg-white items-center gap-20 max-w-full">
 				<div className="flex flex-row justify-center bg-white items-center rounded-lg mx-auto special-btn-farmer pr-2">
 					{["View All", "Both", "Facial", "Fingerprint", "None"].map(
-						(status) => (
+						(status, index, arr) => (
 							<p
 								key={status}
-								className={`px-2 py-2 mr-2 text-center text-sm cursor-pointer border border-[#E2E4E9] rounded-tr-lg ${
+								className={`px-2 py-2 text-center text-sm cursor-pointer border border-[#E2E4E9] overflow-hidden ${
 									selectedStatus === status
-										? "bg-primary-5 text-dark-1 mr-2"
+										? "bg-primary-5 text-dark-1"
 										: "text-dark-1"
-								}`}
+								} 
+			${index === 0 ? "rounded-l-lg firstRound" : ""} 
+			${index === arr.length - 1 ? "rounded-r-lg lastRound" : ""}`}
 								onClick={() => handleStatusFilter(status)}>
 								{status}
 							</p>
