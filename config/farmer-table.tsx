@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 
 import Modal from "@/components/Modal";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
 	Select,
 	SelectContent,
@@ -37,6 +36,7 @@ import {
 import { farmerData } from "@/constants";
 import {
 	IconAdjustmentsHorizontal,
+	IconCloudDownload,
 	IconFileExport,
 	IconFileImport,
 	IconPlus,
@@ -68,14 +68,30 @@ export function FarmerDataTable<TData, TValue>({
 		React.useState<VisibilityState>({});
 	const [selectedType, setSelectedType] = useState<string>("");
 	const [selectedStatus, setSelectedStatus] = useState<string>("View All");
-
+	const [featuredImage, setFeaturedImage] = useState<File | null>(null);
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [globalFilter, setGlobalFilter] = useState("");
+	const [previewImage, setPreviewImage] = useState<string | null>(null);
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [tableData, setTableData] = useState(data);
 
 	const openModal = () => setModalOpen(true);
 	const closeModal = () => setModalOpen(false);
+
+	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0] || null;
+		setFeaturedImage(file);
+
+		if (file) {
+			const reader = new FileReader();
+			reader.onloadend = () => {
+				setPreviewImage(reader.result as string);
+			};
+			reader.readAsDataURL(file);
+		} else {
+			setPreviewImage(null);
+		}
+	};
 
 	const handleStatusFilter = (status: string) => {
 		setSelectedStatus(status);
@@ -91,15 +107,6 @@ export function FarmerDataTable<TData, TValue>({
 		}
 	};
 
-	/*************  ✨ Codeium Command ⭐  *************/
-	/**
-	 * Deletes the selected rows in the table.
-	 *
-	 * This function is called when the user clicks the "Delete" button.
-	 * It filters the table data to remove the selected rows, and
-	 * resets the row selection state after deletion.
-	 */
-	/******  4b2c820d-8893-46f8-9f6f-85670898ab5e  *******/
 	const handleDelete = () => {
 		const selectedRowIds = Object.keys(rowSelection).filter(
 			(key) => rowSelection[key]
@@ -134,45 +141,120 @@ export function FarmerDataTable<TData, TValue>({
 
 	return (
 		<div className="rounded-lg border-[1px] py-0">
-			<Modal isOpen={isModalOpen} onClose={closeModal} title="Add Staff">
-				<div className="bg-white p-5 rounded-lg w-[600px] transition-transform ease-in-out ">
-					<hr className="mt-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+			<Modal isOpen={isModalOpen} onClose={closeModal} title="Add Farmer">
+				<div className="bg-white py-1 rounded-lg w-[600px] transition-transform ease-in-out max-h[70vh] overflow-y-auto">
+					<hr className="mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
 					<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
-						<p className="text-sm text-primary-6">Role</p>
+						<div>
+							<p className="text-sm text-dark-1">Basic Information</p>
 
-						<RadioGroup defaultValue="super-admin">
-							<div className="flex flex-row justify-between items-center gap-5">
-								<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
-									<RadioGroupItem value="admin" id="admin" />
-									<p className="text-sm text-primary-6 whitespace-nowrap">
-										Admin
-									</p>
+							<div className="flex flex-col gap-2 mt-4">
+								<div className="flex flex-row gap-3 justify-between items-center">
+									<div>
+										<p className="text-xs text-primary-6 font-inter">
+											First Name
+										</p>
+										<Input type="text" className="focus:border-none mt-2 h-5" />
+									</div>
+									<div>
+										<p className="text-xs text-primary-6 font-inter">
+											Last Name
+										</p>
+										<Input type="text" className="focus:border-none mt-2 h-5" />
+									</div>
 								</div>
-								<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
-									<RadioGroupItem value="super-admin" id="super-admin" />
-									<p className="text-sm text-primary-6 whitespace-nowrap">
-										Super Admin
-									</p>
-								</div>
-								<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
-									<RadioGroupItem value="field" id="field" />
-									<p className="text-sm text-primary-6 whitespace-nowrap">
-										Field
-									</p>
+								<div className="flex flex-col gap-2">
+									<div>
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											Phone Number
+										</p>
+										<Input type="text" className="focus:border-none mt-2 h-5" />
+									</div>
+									<div>
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											OAFID (One Acre Fund Identification Number)
+										</p>
+										<Input type="text" className="focus:border-none mt-2 h-5" />
+									</div>
 								</div>
 							</div>
-						</RadioGroup>
-
-						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
-						<div className="flex flex-col gap-2">
-							<p className="text-xs text-primary-6">First Name</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
-							<p className="text-xs text-primary-6 mt-2">Last Name</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
-							<p className="text-xs text-primary-6 mt-2">Email Address</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
 						</div>
 						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+						<div className="mt-4">
+							<p className="text-sm text-dark-1">Location</p>
+
+							<div className="flex flex-col gap-2 mt-2">
+								<div className="flex flex-row gap-3 justify-between items-center">
+									<div>
+										<p className="text-xs text-primary-6 font-inter">State</p>
+										<Input type="text" className="focus:border-none mt-2 h-5" />
+									</div>
+									<div>
+										<p className="text-xs text-primary-6 font-inter">
+											District
+										</p>
+										<Input type="text" className="focus:border-none mt-2 h-5" />
+									</div>
+								</div>
+								<div className="flex flex-row gap-3 justify-between items-center">
+									<div>
+										<p className="text-xs text-primary-6 font-inter">
+											POD/Sector
+										</p>
+										<Input type="text" className="focus:border-none mt-2 h-5" />
+									</div>
+									<div>
+										<p className="text-xs text-primary-6 font-inter">
+											Site Name
+										</p>
+										<Input type="text" className="focus:border-none mt-2 h-5" />
+									</div>
+								</div>
+								<div className="flex flex-col gap-2">
+									<div>
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											Group Name
+										</p>
+										<Input type="text" className="focus:border-none mt-2 h-5" />
+									</div>
+								</div>
+							</div>
+						</div>
+						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+
+						<div>
+							<p className="text-xs text-primary-6 font-inter">Upload Image</p>
+							<div className="flex flex-col justify-center items-center gap-3 p-3 border-dashed border rounded-lg mt-3 mb-4">
+								<IconCloudDownload size={14} />
+								<p className="text-xs font-inter text-[#4B5563]">
+									Choose a file
+								</p>
+								<input
+									type="file"
+									accept="image/*"
+									className="hidden"
+									id="fileInput"
+									onChange={handleFileChange}
+								/>
+								<Button
+									className="border text-xs p-2"
+									onClick={() => document.getElementById("fileInput")?.click()}>
+									Browse File
+								</Button>
+								{previewImage && (
+									<div className="mt-2">
+										<Image
+											src={previewImage}
+											width={100}
+											height={100}
+											alt="Preview"
+											className="w-[300px] h-[200px] object-cover rounded-md"
+										/>
+									</div>
+								)}
+							</div>
+						</div>
+
 						<div className="flex flex-row justify-end items-center gap-3 font-inter">
 							<Button
 								className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"

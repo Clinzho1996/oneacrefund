@@ -31,7 +31,9 @@ const Modal = ({
 
 	return (
 		<div
-			className={`modal-overlay p-1 ${isOpen ? "fade-in p-1" : "fade-out p-1"}`}
+			className={`modal-overlay overflow-y-auto p-1 ${
+				isOpen ? "fade-in p-1" : "fade-out p-1"
+			}`}
 			onClick={onClose}>
 			<div
 				className={`modal-content p-1 border-[1px] border-primary-1 ${
