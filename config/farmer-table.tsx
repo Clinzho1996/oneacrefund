@@ -163,7 +163,7 @@ export function FarmerDataTable<TData, TValue>({
 										<Input type="text" className="focus:border-none mt-2 h-5" />
 									</div>
 								</div>
-								<div className="flex flex-col gap-2">
+								<div className="flex flex-row gap-3 justify-between items-center">
 									<div>
 										<p className="text-xs text-primary-6 mt-2 font-inter">
 											Phone Number
@@ -172,7 +172,7 @@ export function FarmerDataTable<TData, TValue>({
 									</div>
 									<div>
 										<p className="text-xs text-primary-6 mt-2 font-inter">
-											OAFID (One Acre Fund Identification Number)
+											OAF-ID (One acre ID)
 										</p>
 										<Input type="text" className="focus:border-none mt-2 h-5" />
 									</div>
