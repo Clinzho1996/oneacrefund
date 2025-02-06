@@ -89,6 +89,32 @@ body {
 	font-size: 12px;
 }
 
+.status-inner.green {
+	background-color: #d1fae5; /* Tailwind bg-green-100 */
+	color: #047857;
+	text-transform: capitalize;
+	padding: 5px 10px;
+	border-radius: 8px;
+	font-family: "Inter", sans-serif;
+	font-weight: 500;
+	width: fit-content;
+	border: 1px solid #a7f3d0;
+	font-size: 12px; /* Tailwind text-green-700 */
+}
+
+.status-inner.red {
+	background-color: #fee2e2; /* Tailwind bg-red-100 */
+	color: #ee3731;
+	text-transform: capitalize;
+	padding: 5px 10px;
+	border-radius: 8px;
+	font-family: "Inter", sans-serif;
+	width: fit-content;
+	font-weight: 500;
+	border: 1px solid #ffb7b7;
+	font-size: 12px;
+}
+
 .status.blue {
 	background-color: #f9f5ff; /* Tailwind bg-red-100 */
 	color: #6941c6;

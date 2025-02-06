@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { data } from "@/constants";
 import { IconEye, IconRefresh, IconTrash } from "@tabler/icons-react";
+import Link from "next/link";
 import React, { useState } from "react";
 import { DataTable } from "./data-table";
 
@@ -203,10 +204,12 @@ const Table = () => {
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="bg-white">
-							<DropdownMenuItem className="action cursor-pointer hover:bg-secondary-3">
-								<IconEye />
-								<p className="text-xs font-inter">View</p>
-							</DropdownMenuItem>
+							<Link href={`/staff-management/${actions.id}`}>
+								<DropdownMenuItem className="action cursor-pointer hover:bg-secondary-3">
+									<IconEye />
+									<p className="text-xs font-inter">View</p>
+								</DropdownMenuItem>
+							</Link>
 							<DropdownMenuItem
 								className="action cursor-pointer hover:bg-yellow-300"
 								onClick={() => openRestoreModal(row)}>
