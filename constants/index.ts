@@ -1,6 +1,8 @@
 import { Staff } from "@/config/columns";
+import { Device } from "@/config/device-columns";
 import { Farmer } from "@/config/farmer-columns";
 import { Logs } from "@/config/log-columns";
+import { Posting } from "@/config/posting-columns";
 import { Project } from "@/config/project-columns";
 
 export const sidebarLinks = [
@@ -481,5 +483,161 @@ export const logData: Logs[] = [
 		module: "Location",
 		actions: "update",
 		description: "Updated irrigation details for Badagry farm.",
+	},
+];
+
+export const deviceData: Device[] = [
+	{
+		id: "00001",
+		serialNumber: "999005927WER",
+		deviceAlias: "OneAcreDevice 001",
+		dateJoined: "25/12/2024",
+		status: "posted",
+	},
+	{
+		id: "00002",
+		serialNumber: "999005928XTR",
+		deviceAlias: "OneAcreDevice 002",
+		dateJoined: "12/11/2024",
+		status: "not posted",
+	},
+	{
+		id: "00003",
+		serialNumber: "999005929YUI",
+		deviceAlias: "OneAcreDevice 003",
+		dateJoined: "05/10/2024",
+		status: "posted",
+	},
+	{
+		id: "00004",
+		serialNumber: "999005930PLM",
+		deviceAlias: "OneAcreDevice 004",
+		dateJoined: "15/09/2024",
+		status: "not posted",
+	},
+	{
+		id: "00005",
+		serialNumber: "999005931ZXC",
+		deviceAlias: "OneAcreDevice 005",
+		dateJoined: "30/08/2024",
+		status: "posted",
+	},
+	{
+		id: "00006",
+		serialNumber: "999005932QWE",
+		deviceAlias: "OneAcreDevice 006",
+		dateJoined: "22/07/2024",
+		status: "not posted",
+	},
+	{
+		id: "00007",
+		serialNumber: "999005933ASD",
+		deviceAlias: "OneAcreDevice 007",
+		dateJoined: "10/06/2024",
+		status: "posted",
+	},
+	{
+		id: "00008",
+		serialNumber: "999005934ZVB",
+		deviceAlias: "OneAcreDevice 008",
+		dateJoined: "27/05/2024",
+		status: "not posted",
+	},
+	{
+		id: "00009",
+		serialNumber: "999005935TYU",
+		deviceAlias: "OneAcreDevice 009",
+		dateJoined: "14/04/2024",
+		status: "posted",
+	},
+	{
+		id: "00010",
+		serialNumber: "999005936IOP",
+		deviceAlias: "OneAcreDevice 010",
+		dateJoined: "02/03/2024",
+		status: "not posted",
+	},
+];
+
+export const postingData: Posting[] = [
+	{
+		id: "00001",
+		serialNumber: "999005927WER",
+		staffName: "Confidence Clinton",
+		date: "25/12/2024",
+		state: "Lagos",
+		district: "Ikeja",
+	},
+	{
+		id: "00002",
+		serialNumber: "999005928XTR",
+		staffName: "Ayomide Esther",
+		date: "12/11/2024",
+		state: "Ogun",
+		district: "Abeokuta",
+	},
+	{
+		id: "00003",
+		serialNumber: "999005929YUI",
+		staffName: "John Doe",
+		date: "05/10/2024",
+		state: "Kano",
+		district: "Tarauni",
+	},
+	{
+		id: "00004",
+		serialNumber: "999005930PLM",
+		staffName: "Jane Smith",
+		date: "15/09/2024",
+		state: "Rivers",
+		district: "Port Harcourt",
+	},
+	{
+		id: "00005",
+		serialNumber: "999005931ZXC",
+		staffName: "Emeka Okonkwo",
+		date: "30/08/2024",
+		state: "Anambra",
+		district: "Awka",
+	},
+	{
+		id: "00006",
+		serialNumber: "999005932QWE",
+		staffName: "Aisha Bello",
+		date: "22/07/2024",
+		state: "Kaduna",
+		district: "Zaria",
+	},
+	{
+		id: "00007",
+		serialNumber: "999005933ASD",
+		staffName: "David Johnson",
+		date: "10/06/2024",
+		state: "Oyo",
+		district: "Ibadan",
+	},
+	{
+		id: "00008",
+		serialNumber: "999005934ZVB",
+		staffName: "Fatima Musa",
+		date: "27/05/2024",
+		state: "Katsina",
+		district: "Funtua",
+	},
+	{
+		id: "00009",
+		serialNumber: "999005935TYU",
+		staffName: "Samuel Eze",
+		date: "14/04/2024",
+		state: "Enugu",
+		district: "Nsukka",
+	},
+	{
+		id: "00010",
+		serialNumber: "999005936IOP",
+		staffName: "Grace Adeyemi",
+		date: "02/03/2024",
+		state: "Ekiti",
+		district: "Ado-Ekiti",
 	},
 ];

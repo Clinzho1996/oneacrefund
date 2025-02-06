@@ -12,23 +12,23 @@ import { ArrowUpDown } from "lucide-react";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { data, projectData } from "@/constants";
+import { data, deviceData } from "@/constants";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import Link from "next/link";
 import React, { useState } from "react";
-import { ProjectDataTable } from "./project-table";
+import { DeviceDataTable } from "./device-table";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
-export type Project = {
+export type Device = {
 	id: string;
-	projectName: string;
-	startDate: string;
-	endDate: string;
-	status: "ongoing" | "yet to start" | "close";
+	serialNumber: string;
+	deviceAlias: string;
+	dateJoined: string;
+	status: string;
 };
 
-const ProjectTable = () => {
+const DeviceTable = () => {
 	const [isRestoreModalOpen, setRestoreModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
@@ -61,7 +61,7 @@ const ProjectTable = () => {
 		setDeleteModalOpen(false);
 	};
 
-	const columns: ColumnDef<Project>[] = [
+	const columns: ColumnDef<Device>[] = [
 		{
 			id: "select",
 			header: ({ table }) => (
@@ -85,30 +85,30 @@ const ProjectTable = () => {
 			),
 		},
 		{
-			accessorKey: "projectName",
-			header: "Project Name",
+			accessorKey: "serialNumber",
+			header: "Serial Number",
 			cell: ({ row }) => {
-				const name = row.getValue<string>("projectName");
+				const serial = row.getValue<string>("serialNumber");
 
-				return <span className="text-xs text-black">{name}</span>;
+				return <span className="text-xs text-black">{serial}</span>;
 			},
 		},
 		{
-			accessorKey: "startDate",
-			header: "Start Date",
+			accessorKey: "deviceAlias",
+			header: "Device Alias",
 			cell: ({ row }) => {
-				const startDate = row.getValue<string>("startDate");
+				const deviceAlias = row.getValue<string>("deviceAlias");
 
-				return <span className="text-xs text-primary-6">{startDate}</span>;
+				return <span className="text-xs text-primary-6">{deviceAlias}</span>;
 			},
 		},
 		{
-			accessorKey: "endDate",
-			header: "End Date",
+			accessorKey: "dateJoined",
+			header: "Date Joined",
 			cell: ({ row }) => {
-				const endDate = row.getValue<string>("endDate");
+				const dateJoined = row.getValue<string>("dateJoined");
 
-				return <span className="text-xs text-primary-6">{endDate}</span>;
+				return <span className="text-xs text-primary-6">{dateJoined}</span>;
 			},
 		},
 		{
@@ -129,14 +129,7 @@ const ProjectTable = () => {
 			cell: ({ row }) => {
 				const status = row.getValue<string>("status");
 				return (
-					<div
-						className={`status ${
-							status === "ongoing"
-								? "green"
-								: status === "yet to start"
-								? "yellow"
-								: "red"
-						}`}>
+					<div className={`status ${status === "posted" ? "green" : "red"}`}>
 						{status}
 					</div>
 				);
@@ -152,13 +145,13 @@ const ProjectTable = () => {
 					<div className="flex flex-row justify-start items-center gap-5">
 						<Link href={`/projects/${actions.id}`} target="_blank">
 							<Button className="border-[#E8E8E8] border-[1px] text-xs font-medium text-[#6B7280] font-inter">
-								View Verification
+								View
 							</Button>
 						</Link>
-						{actions.status === "ongoing" ? (
+						{actions.status === "not posted" ? (
 							<Link href={`/projects/${actions.id}`} target="_blank">
 								<Button className="border-[#E8E8E8] border-[1px] text-xs font-medium text-[#6B7280] font-inter">
-									Close
+									Post
 								</Button>
 							</Link>
 						) : null}
@@ -199,7 +192,7 @@ const ProjectTable = () => {
 
 	return (
 		<>
-			<ProjectDataTable columns={columns} data={projectData} />
+			<DeviceDataTable columns={columns} data={deviceData} />
 
 			{isRestoreModalOpen && (
 				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>
@@ -249,4 +242,4 @@ const ProjectTable = () => {
 	);
 };
 
-export default ProjectTable;
+export default DeviceTable;
