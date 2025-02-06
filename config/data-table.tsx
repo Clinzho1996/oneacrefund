@@ -123,10 +123,10 @@ export function DataTable<TData, TValue>({
 	return (
 		<div className="rounded-lg border-[1px] py-0">
 			<Modal isOpen={isModalOpen} onClose={closeModal} title="Add Staff">
-				<div className="bg-white p-5 rounded-lg w-[600px] transition-transform ease-in-out ">
+				<div className="bg-white p-0 rounded-lg w-[600px] transition-transform ease-in-out ">
 					<hr className="mt-4 text-[#9F9E9E40]" color="#9F9E9E40" />
 					<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
-						<p className="text-sm text-primary-6">Role</p>
+						<p className="text-xs text-primary-6">Role</p>
 
 						<RadioGroup defaultValue="super-admin">
 							<div className="flex flex-row justify-between items-center gap-5">
