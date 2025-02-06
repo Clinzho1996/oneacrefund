@@ -34,6 +34,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { farmerData } from "@/constants";
 import {
 	IconAdjustmentsHorizontal,
 	IconFileExport,
@@ -66,6 +67,8 @@ export function FarmerDataTable<TData, TValue>({
 	const [columnVisibility, setColumnVisibility] =
 		React.useState<VisibilityState>({});
 	const [selectedType, setSelectedType] = useState<string>("");
+	const [selectedStatus, setSelectedStatus] = useState<string>("View All");
+
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [isModalOpen, setModalOpen] = useState(false);
@@ -74,6 +77,29 @@ export function FarmerDataTable<TData, TValue>({
 	const openModal = () => setModalOpen(true);
 	const closeModal = () => setModalOpen(false);
 
+	const handleStatusFilter = (status: string) => {
+		setSelectedStatus(status);
+
+		if (status === "View All") {
+			setTableData(data); // Reset to all data
+		} else {
+			const filteredData = farmerData?.filter(
+				(farmer) =>
+					farmer.biometricStatus?.toLocaleLowerCase() === status.toLowerCase()
+			);
+			setTableData(filteredData as TData[]);
+		}
+	};
+
+	/*************  ✨ Codeium Command ⭐  *************/
+	/**
+	 * Deletes the selected rows in the table.
+	 *
+	 * This function is called when the user clicks the "Delete" button.
+	 * It filters the table data to remove the selected rows, and
+	 * resets the row selection state after deletion.
+	 */
+	/******  4b2c820d-8893-46f8-9f6f-85670898ab5e  *******/
 	const handleDelete = () => {
 		const selectedRowIds = Object.keys(rowSelection).filter(
 			(key) => rowSelection[key]
@@ -199,23 +225,23 @@ export function FarmerDataTable<TData, TValue>({
 				</div>
 			</div>
 
+			{/* filter function */}
 			<div className="p-3 flex flex-row justify-between border-b-[1px] border-[#E2E4E9] bg-white items-center gap-20 max-w-full">
-				<div className="p-0 flex flex-row justify-start gap-2 border-[1px] border-[#E2E4E9] bg-white items-center rounded-lg special-btn-farmer">
-					<p className="rounded-none p-2 text-center text-sm cursor-pointer border-r border-[#E2E4E9]">
-						View All
-					</p>
-					<p className="rounded-none p-2 text-center text-sm cursor-pointer border-r border-[#E2E4E9]">
-						Both
-					</p>
-					<p className="rounded-none p-2 text-center text-sm cursor-pointer border-r border-[#E2E4E9]">
-						Facial
-					</p>
-					<p className="rounded-none p-2 text-center text-sm cursor-pointer border-r border-[#E2E4E9]">
-						Fingerprint
-					</p>
-					<p className="rounded-none p-2 text-center text-sm cursor-pointer">
-						None
-					</p>
+				<div className="flex flex-row justify-center bg-white items-center rounded-lg mx-auto special-btn-farmer pr-2">
+					{["View All", "Both", "Facial", "Fingerprint", "None"].map(
+						(status) => (
+							<p
+								key={status}
+								className={`px-2 py-2 mr-2 text-center text-sm cursor-pointer border border-[#E2E4E9] rounded-tr-lg ${
+									selectedStatus === status
+										? "bg-primary-5 text-dark-1 mr-2"
+										: "text-dark-1"
+								}`}
+								onClick={() => handleStatusFilter(status)}>
+								{status}
+							</p>
+						)
+					)}
 				</div>
 
 				<div className="p-3 flex flex-row justify-start items-center gap-3 w-full ">
