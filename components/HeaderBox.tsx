@@ -2,6 +2,7 @@
 import { IconSettings } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import Link from "next/link";
 
 function HeaderBox() {
 	const { data: session } = useSession();
@@ -29,7 +30,11 @@ function HeaderBox() {
 				</div>
 			)}
 			<div className="hidden lg:flex flex-row justify-start gap-2 items-center">
-				<IconSettings />
+				<Link href="/settings">
+					<div className="p-2 border-[1px] border-dark-3 rounded-md cursor-pointer">
+						<IconSettings size={18} />
+					</div>
+				</Link>
 				{session?.user && (
 					<div className="md:flex flex-row justify-end gap-2 items-center mx-2 px-2">
 						<div className="flex justify-center items-center border-[1px] border-dark-3 rounded-full overflow-hidden">

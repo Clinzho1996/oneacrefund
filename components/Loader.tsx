@@ -1,9 +1,9 @@
-import { IconLoader } from "@tabler/icons-react";
+import Image from "next/image";
 
 const Loader = () => {
 	return (
 		<div className="flex-center h-screen w-full">
-			<IconLoader size={40} />
+			<Image src="/loading.gif" alt="logo" height={50} width={50} />
 		</div>
 	);
 };

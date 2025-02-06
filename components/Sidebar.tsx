@@ -9,6 +9,8 @@ import { toast } from "react-toastify";
 
 const Sidebar = () => {
 	const pathname = usePathname();
+	const isSettingsActive =
+		pathname === "/settings" || pathname.startsWith("/settings");
 	const { data: session } = useSession();
 	// Function to get the name initials from the user's name
 	const getNameInitials = ({ name }: { name: string }) => {
@@ -95,18 +97,28 @@ const Sidebar = () => {
 			</div>
 			<div className="flex flex-col gap-1 mb-4">
 				<div className="flex flex-col mx-0 gap-2 border-b-[1px] border-[#E2E4E9] py-2">
-					<div className="flex gap-2 items-center p-2 justify-start rounded-[8px] mx-4 my-0">
-						<Image
-							src="/images/settings.svg"
-							alt="settings"
-							width={20}
-							height={20}
-							className="w-[20px] h-[20px] object-contain flex"
-						/>
-						<p className="text-sm font-normal font-inter max-lg:hidden">
-							Settings
-						</p>
-					</div>
+					<Link
+						href="/settings"
+						className={cn(
+							"flex gap-2 items-center p-2 justify-start rounded-[8px] mx-4 my-0",
+							{
+								"bg-primary-5 border-[1px] border-primary-4 mx-4":
+									isSettingsActive,
+							}
+						)}>
+						<div className="flex gap-2 items-center justify-start rounded-[8px] my-0">
+							<Image
+								src="/icons/setting.svg"
+								alt="settings"
+								width={20}
+								height={20}
+								className="w-[20px] h-[20px] object-contain flex"
+							/>
+							<p className="text-sm font-normal font-inter max-lg:hidden">
+								Settings
+							</p>
+						</div>
+					</Link>
 					<div
 						className="flex gap-2 items-center p-2 justify-start rounded-[8px] mx-4 my-0 cursor-pointer"
 						onClick={handleLogout}>
