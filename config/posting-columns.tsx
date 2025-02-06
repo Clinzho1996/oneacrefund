@@ -11,7 +11,7 @@ import {
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { data, postingData } from "@/constants";
+import { postingData } from "@/constants";
 import Link from "next/link";
 import React, { useState } from "react";
 import { PostingDataTable } from "./posting-table";
@@ -40,7 +40,7 @@ const PostingTable = () => {
 		React.useState<VisibilityState>({});
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [globalFilter, setGlobalFilter] = useState("");
-	const [tableData, setTableData] = useState(data);
+	const [tableData, setTableData] = useState(postingData);
 
 	const openRestoreModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
@@ -155,7 +155,7 @@ const PostingTable = () => {
 
 		// Filter the data to remove the selected rows
 		const filteredData = tableData.filter(
-			(row) => !selectedRowIds.includes(row.id)
+			(row: { id: string }) => !selectedRowIds.includes(row.id)
 		);
 
 		// Update the table data

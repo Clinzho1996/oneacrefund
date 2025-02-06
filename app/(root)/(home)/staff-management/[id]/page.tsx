@@ -1,6 +1,6 @@
 "use client";
 
-import { data } from "@/constants";
+import { staffData } from "@/constants";
 import { IconArrowBack, IconSettings, IconTrash } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
@@ -20,7 +20,7 @@ function StaffDetails() {
 		return initials.toUpperCase();
 	};
 
-	const staff = data.find((staff) => staff.id === id);
+	const staff = staffData.find((staff) => staff.id === id);
 
 	if (!staff) {
 		return (

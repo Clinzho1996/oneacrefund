@@ -12,7 +12,7 @@ import { ArrowUpDown } from "lucide-react";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { data, deviceData } from "@/constants";
+import { deviceData } from "@/constants";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import Link from "next/link";
 import React, { useState } from "react";
@@ -41,7 +41,7 @@ const DeviceTable = () => {
 		React.useState<VisibilityState>({});
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [globalFilter, setGlobalFilter] = useState("");
-	const [tableData, setTableData] = useState(data);
+	const [tableData, setTableData] = useState(deviceData);
 
 	const openRestoreModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
@@ -180,7 +180,7 @@ const DeviceTable = () => {
 
 		// Filter the data to remove the selected rows
 		const filteredData = tableData.filter(
-			(row) => !selectedRowIds.includes(row.id)
+			(row: { id: string }) => !selectedRowIds.includes(row.id)
 		);
 
 		// Update the table data

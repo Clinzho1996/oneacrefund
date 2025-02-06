@@ -11,7 +11,7 @@ import {
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { data, logData } from "@/constants";
+import { logData } from "@/constants";
 import React, { useState } from "react";
 import { LogDataTable } from "./log-table";
 
@@ -39,7 +39,7 @@ const LogTable = () => {
 		React.useState<VisibilityState>({});
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [globalFilter, setGlobalFilter] = useState("");
-	const [tableData, setTableData] = useState(data);
+	const [tableData, setTableData] = useState(logData);
 
 	const openRestoreModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
@@ -145,7 +145,7 @@ const LogTable = () => {
 
 		// Filter the data to remove the selected rows
 		const filteredData = tableData.filter(
-			(row) => !selectedRowIds.includes(row.id)
+			(row: { id: string }) => !selectedRowIds.includes(row.id)
 		);
 
 		// Update the table data

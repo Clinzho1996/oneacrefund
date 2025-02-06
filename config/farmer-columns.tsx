@@ -18,7 +18,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { data, farmerData } from "@/constants";
+import { farmerData } from "@/constants";
 import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
 import React, { useState } from "react";
 import { FarmerDataTable } from "./farmer-table";
@@ -49,7 +49,7 @@ const FarmerTable = () => {
 		React.useState<VisibilityState>({});
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [globalFilter, setGlobalFilter] = useState("");
-	const [tableData, setTableData] = useState(data);
+	const [tableData, setTableData] = useState(farmerData);
 
 	const openRestoreModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
@@ -238,7 +238,7 @@ const FarmerTable = () => {
 
 		// Filter the data to remove the selected rows
 		const filteredData = tableData.filter(
-			(row) => !selectedRowIds.includes(row.id)
+			(row: { id: string }) => !selectedRowIds.includes(row.id)
 		);
 
 		// Update the table data
