@@ -38,8 +38,8 @@ export default function SignIn() {
 
 	return (
 		<div className="hero bg-primary-5 flex justify-center items-center align-middle h-screen">
-			<div className="bg-primary-1 p-1 rounded-lg w-fit mx-3 lg:mx-0">
-				<div className="bg-white p-4 rounded-lg flex flex-col items-center align-middle justify-center">
+			<div className="bg-[#F0EFEF] shadow-md p-1 rounded-lg w-fit mx-3 lg:mx-0">
+				<div className="bg-white shadow-md p-4 rounded-lg flex flex-col items-center align-middle justify-center">
 					<div className="px-10">
 						<Image
 							src="/images/logo.png"
@@ -74,10 +74,12 @@ export default function SignIn() {
 					</div>
 				</div>
 				<div className="bg-primary p-3 items-center justify-center flex flex-row gap-1">
-					<p className="text-white text-sm font-light">
+					<p className="text-[#7D7C81] text-sm font-light">
 						Experiencing issues signing in?{" "}
 					</p>
-					<Link href="/" className="text-white text-sm font-light underline">
+					<Link
+						href="/"
+						className="text-primary-1 text-sm font-light underline">
 						{" "}
 						Contact Support
 					</Link>
