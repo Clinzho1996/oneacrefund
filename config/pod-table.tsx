@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 
 import Modal from "@/components/Modal";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
 	Select,
 	SelectContent,
@@ -34,20 +33,13 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { staffData } from "@/constants";
-import {
-	IconAdjustmentsHorizontal,
-	IconFileExport,
-	IconPlus,
-	IconTrash,
-} from "@tabler/icons-react";
+import { IconAdjustmentsHorizontal, IconTrash } from "@tabler/icons-react";
 import {
 	ChevronLeft,
 	ChevronRight,
 	ChevronsLeft,
 	ChevronsRight,
 } from "lucide-react";
-import Image from "next/image";
 import React, { useState } from "react";
 
 interface DataTableProps<TData, TValue> {
@@ -55,7 +47,7 @@ interface DataTableProps<TData, TValue> {
 	data: TData[];
 }
 
-export function DataTable<TData, TValue>({
+export function PodDataTable<TData, TValue>({
 	columns,
 	data,
 }: DataTableProps<TData, TValue>) {
@@ -67,26 +59,12 @@ export function DataTable<TData, TValue>({
 		React.useState<VisibilityState>({});
 	const [selectedType, setSelectedType] = useState<string>("");
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-	const [selectedStatus, setSelectedStatus] = useState<string>("View All");
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [tableData, setTableData] = useState(data);
 
 	const openModal = () => setModalOpen(true);
 	const closeModal = () => setModalOpen(false);
-
-	const handleStatusFilter = (status: string) => {
-		setSelectedStatus(status);
-
-		if (status === "View All") {
-			setTableData(data); // Reset to all data
-		} else {
-			const filteredData = staffData?.filter(
-				(farmer) => farmer?.status?.toLocaleLowerCase() === status.toLowerCase()
-			);
-			setTableData(filteredData as TData[]);
-		}
-	};
 
 	const handleDelete = () => {
 		const selectedRowIds = Object.keys(rowSelection).filter(
@@ -100,7 +78,7 @@ export function DataTable<TData, TValue>({
 	};
 
 	const table = useReactTable({
-		data: tableData,
+		data,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
@@ -121,42 +99,21 @@ export function DataTable<TData, TValue>({
 	});
 
 	return (
-		<div className="rounded-lg border-[1px] py-0">
-			<Modal isOpen={isModalOpen} onClose={closeModal} title="Add Staff">
-				<div className="bg-white p-0 rounded-lg w-[600px] transition-transform ease-in-out ">
+		<div className="rounded-lg border-[1px] py-0 border-[#E2E4E9] mt-4">
+			<Modal
+				isOpen={isModalOpen}
+				onClose={closeModal}
+				title="Add Device"
+				className="w-[500px]">
+				<div className="bg-white py-5 rounded-lg transition-transform ease-in-out ">
 					<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
-						<p className="text-xs text-primary-6">Role</p>
-
-						<RadioGroup defaultValue="super-admin">
-							<div className="flex flex-row justify-between items-center gap-5">
-								<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
-									<RadioGroupItem value="admin" id="admin" />
-									<p className="text-sm text-primary-6 whitespace-nowrap">
-										Admin
-									</p>
-								</div>
-								<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
-									<RadioGroupItem value="super-admin" id="super-admin" />
-									<p className="text-sm text-primary-6 whitespace-nowrap">
-										Super Admin
-									</p>
-								</div>
-								<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
-									<RadioGroupItem value="field" id="field" />
-									<p className="text-sm text-primary-6 whitespace-nowrap">
-										Field
-									</p>
-								</div>
-							</div>
-						</RadioGroup>
-
-						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
-						<div className="flex flex-col gap-2">
-							<p className="text-xs text-primary-6">First Name</p>
+						<p className="text-sm text-dark-1 font-inter">Basic Information</p>
+						<div className="flex flex-col gap-2 mt-4">
+							<p className="text-xs text-primary-6 font-inter">Serial Number</p>
 							<Input type="text" className="focus:border-none mt-2 h-5" />
-							<p className="text-xs text-primary-6 mt-2">Last Name</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
-							<p className="text-xs text-primary-6 mt-2">Email Address</p>
+							<p className="text-xs text-primary-6 mt-2 font-inter">
+								Alias / Device Name
+							</p>
 							<Input type="text" className="focus:border-none mt-2 h-5" />
 						</div>
 						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
@@ -173,62 +130,11 @@ export function DataTable<TData, TValue>({
 					</div>
 				</div>
 			</Modal>
-			<div
-				className="bg-white flex flex-row border-b-[1px] border-[#E2E4E9] justify-between items-center p-3"
-				style={{
-					borderTopLeftRadius: "0.5rem",
-					borderTopRightRadius: "0.5rem",
-				}}>
-				<div>
-					<div className="flex flex-row justify-start items-center gap-2">
-						<Image
-							src="/images/staffm.png"
-							alt="staff management"
-							height={20}
-							width={20}
-						/>
-						<p className="text-sm text-dark-1 font-medium font-inter">
-							Staff Management
-						</p>
-					</div>
 
-					<p className="text-xs text-primary-6 mt-3">
-						The process of planning, organizing, and directing employee
-						activities within an organization.
-					</p>
-				</div>
-				<div className="flex flex-row justify-start items-center gap-3 font-inter">
-					<Button className="border-[#E8E8E8] border-[1px]">
-						<IconFileExport /> Export
-					</Button>
-					<Button
-						className="bg-primary-1 text-white font-inter"
-						onClick={openModal}>
-						<IconPlus /> Add Staff
-					</Button>
-				</div>
-			</div>
-
-			<div className="p-3 flex flex-row justify-between border-b-[1px] border-[#E2E4E9] bg-white items-center gap-20 max-w-full">
-				<div className="flex flex-row justify-start bg-white items-center rounded-lg mx-auto special-btn-farmer pr-2">
-					{["View All", "Active", "Inactive"].map((status, index, arr) => (
-						<p
-							key={status}
-							className={`px-4 py-2 text-center text-sm cursor-pointer border border-[#E2E4E9] overflow-hidden ${
-								selectedStatus === status
-									? "bg-primary-5 text-dark-1"
-									: "text-dark-1"
-							} 
-			${index === 0 ? "rounded-l-lg firstRound" : ""} 
-			${index === arr.length - 1 ? "rounded-r-lg lastRound" : ""}`}
-							onClick={() => handleStatusFilter(status)}>
-							{status}
-						</p>
-					))}
-				</div>
+			<div className="p-3 flex flex-row justify-between border-b-[1px] border-[#E2E4E9] bg-white items-center gap-20 max-w-full mt-2">
 				<div className="p-3 flex flex-row justify-start items-center gap-3 w-full ">
 					<Input
-						placeholder="Search Staff..."
+						placeholder="Search Project..."
 						value={globalFilter}
 						onChange={(e) => setGlobalFilter(e.target.value)}
 						className="focus:border-none bg-[#F9FAFB]"
@@ -238,6 +144,7 @@ export function DataTable<TData, TValue>({
 						onClick={handleDelete}>
 						<IconTrash /> Delete
 					</Button>
+
 					{/* filter by type */}
 					<div className="w-[250px]">
 						<Select

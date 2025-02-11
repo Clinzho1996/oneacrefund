@@ -1,6 +1,7 @@
 import { Staff } from "@/config/columns";
 import { Device } from "@/config/device-columns";
 import { Farmer } from "@/config/farmer-columns";
+import { Group } from "@/config/group-columns";
 import { Logs } from "@/config/log-columns";
 import { Posting } from "@/config/posting-columns";
 import { Project } from "@/config/project-columns";
@@ -639,5 +640,88 @@ export const postingData: Posting[] = [
 		date: "02/03/2024",
 		state: "Ekiti",
 		district: "Ado-Ekiti",
+	},
+];
+
+export const groupData: Group[] = [
+	{
+		id: "00001",
+		groupName: "Clinton Group",
+		siteName: "Atunrase",
+		pod: "Gbagada",
+		district: "Ikeja",
+		state: "Lagos",
+	},
+	{
+		id: "00002",
+		groupName: "Green Harvest",
+		siteName: "Ajah Farms",
+		pod: "Lekki",
+		district: "Eti-Osa",
+		state: "Lagos",
+	},
+	{
+		id: "00003",
+		groupName: "Agro Leaders",
+		siteName: "Mainland Farms",
+		pod: "Maryland",
+		district: "Ikeja",
+		state: "Lagos",
+	},
+	{
+		id: "00004",
+		groupName: "Farm Innovators",
+		siteName: "Epe Agro",
+		pod: "Ikorodu",
+		district: "Epe",
+		state: "Lagos",
+	},
+	{
+		id: "00005",
+		groupName: "Sustainable Crops",
+		siteName: "Badagry Greens",
+		pod: "Ojo",
+		district: "Badagry",
+		state: "Lagos",
+	},
+	{
+		id: "00006",
+		groupName: "Green Earth",
+		siteName: "Surulere Hub",
+		pod: "Lagos Island",
+		district: "Surulere",
+		state: "Lagos",
+	},
+	{
+		id: "00007",
+		groupName: "Harvest Kings",
+		siteName: "Agege Produce",
+		pod: "Iyana Ipaja",
+		district: "Agege",
+		state: "Lagos",
+	},
+	{
+		id: "00008",
+		groupName: "AgroTech",
+		siteName: "Ikotun Estate",
+		pod: "Alimosho",
+		district: "Ikotun",
+		state: "Lagos",
+	},
+	{
+		id: "00009",
+		groupName: "Organic Farmers",
+		siteName: "Festac Agro",
+		pod: "Amuwo Odofin",
+		district: "Festac",
+		state: "Lagos",
+	},
+	{
+		id: "00010",
+		groupName: "Golden Fields",
+		siteName: "Mushin Agro Park",
+		pod: "Oshodi",
+		district: "Mushin",
+		state: "Lagos",
 	},
 ];
