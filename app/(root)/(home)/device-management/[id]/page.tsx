@@ -17,7 +17,7 @@ function DeviceDetails() {
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [isModalOpen, setModalOpen] = useState(false);
 
-	const openModal = (row: any) => {
+	const openModal = () => {
 		setModalOpen(true);
 	};
 
