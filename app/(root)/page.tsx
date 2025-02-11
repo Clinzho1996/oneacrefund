@@ -5,11 +5,19 @@ import { signIn, useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { toast } from "react-toastify";
 
 export default function SignIn() {
 	const session = useSession();
 	const router = useRouter();
+
+	useEffect(() => {
+		if (session.status === "authenticated") {
+			toast.success("Login Successful!");
+			router.push("/dashboard");
+		}
+	}, [session.status, router]);
 
 	if (session.status === "loading") {
 		return (
@@ -20,16 +28,12 @@ export default function SignIn() {
 	}
 
 	if (session.status === "authenticated") {
-		// Show success toast after confirming authentication
-		toast.success("Login Successful!");
-		router?.push("/dashboard");
-		return null; // Prevent rendering this component after redirecting
+		return null;
 	}
 
 	const handleGoogleSignIn = async () => {
 		const result = await signIn("google");
 
-		// Handle sign-in error (if any)
 		if (result?.error) {
 			console.error("Google Sign-In error:", result.error);
 			toast.error("Failed to sign in. Please try again.");
@@ -37,7 +41,7 @@ export default function SignIn() {
 	};
 
 	return (
-		<div className="flex bg-white flex-row justify-center lg:justify-between align-middle p-2 w-full">
+		<div className="flex bg-white flex-row justify-center lg:justify-between align-middle p-2 w-full overflow-y-auto">
 			<div className="rounded-lg w-[50%] lg:w-full hidden lg:block">
 				<Image
 					src="/images/logbg.png"
@@ -48,7 +52,7 @@ export default function SignIn() {
 				/>
 			</div>
 			<div className="farmlog w-[50%] lg:w-full">
-				<div className="bg-[#F0EFEF] shadow-md p-1 rounded-lg  mx-10 lg:mx-20 mt-[25%]">
+				<div className="bg-[#F0EFEF] shadow-md p-1 rounded-lg  mx-10 lg:mx-20 mt-[32%]">
 					<div className="bg-white shadow-md p-4 rounded-lg flex flex-col items-center align-middle justify-center">
 						<div className="px-10">
 							<Image
