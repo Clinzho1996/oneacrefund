@@ -1,19 +1,13 @@
 "use client";
 
-import {
-	ColumnDef,
-	ColumnFiltersState,
-	RowSelectionState,
-	SortingState,
-	VisibilityState,
-} from "@tanstack/react-table";
+import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { postingData } from "@/constants";
 import Link from "next/link";
-import React, { useState } from "react";
+import { useState } from "react";
 import { PostingDataTable } from "./posting-table";
 
 // This type is used to define the shape of our data.
@@ -28,23 +22,21 @@ export type Posting = {
 };
 
 const PostingTable = () => {
-	const [isRestoreModalOpen, setRestoreModalOpen] = useState(false);
+	const [isEditModalOpen, setEditModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
-
-	const [sorting, setSorting] = React.useState<SortingState>([]);
-	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-		[]
-	);
-	const [columnVisibility, setColumnVisibility] =
-		React.useState<VisibilityState>({});
+	const [isModalOpen, setModalOpen] = useState(false);
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-	const [globalFilter, setGlobalFilter] = useState("");
 	const [tableData, setTableData] = useState(postingData);
 
-	const openRestoreModal = (row: any) => {
+	const openEditModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
-		setRestoreModalOpen(true);
+		setEditModalOpen(true);
+	};
+
+	const openModal = (row: any) => {
+		setSelectedRow(row.original); // Use row.original to store the full row data
+		setModalOpen(true);
 	};
 
 	const openDeleteModal = (row: any) => {
@@ -52,8 +44,12 @@ const PostingTable = () => {
 		setDeleteModalOpen(true);
 	};
 
-	const closeRestoreModal = () => {
-		setRestoreModalOpen(false);
+	const closeModal = () => {
+		setModalOpen(false);
+	};
+
+	const closeEditModal = () => {
+		setEditModalOpen(false);
 	};
 
 	const closeDeleteModal = () => {
@@ -169,8 +165,8 @@ const PostingTable = () => {
 		<>
 			<PostingDataTable columns={columns} data={postingData} />
 
-			{isRestoreModalOpen && (
-				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>
+			{isEditModalOpen && (
+				<Modal onClose={closeEditModal} isOpen={isEditModalOpen}>
 					<p className="mt-4">
 						Are you sure you want to suspend {selectedRow?.name}'s account?
 					</p>
@@ -178,7 +174,7 @@ const PostingTable = () => {
 					<div className="flex flex-row justify-end items-center gap-3 font-inter mt-4">
 						<Button
 							className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
-							onClick={closeRestoreModal}>
+							onClick={closeEditModal}>
 							Cancel
 						</Button>
 						<Button className="bg-[#F04F4A] text-white font-inter text-xs modal-delete">

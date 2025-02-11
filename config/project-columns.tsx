@@ -2,20 +2,18 @@
 
 import {
 	ColumnDef,
-	ColumnFiltersState,
-	RowSelectionState,
-	SortingState,
-	VisibilityState,
+	RowSelectionState
 } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { projectData } from "@/constants";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import { useState } from "react";
 import { ProjectDataTable } from "./project-table";
 
 // This type is used to define the shape of our data.
@@ -32,15 +30,11 @@ const ProjectTable = () => {
 	const [isRestoreModalOpen, setRestoreModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
+const [isModalOpen, setModalOpen] = useState(false);
 
-	const [sorting, setSorting] = React.useState<SortingState>([]);
-	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-		[]
-	);
-	const [columnVisibility, setColumnVisibility] =
-		React.useState<VisibilityState>({});
+	const openModal = () => setModalOpen(true);
+	const closeModal = () => setModalOpen(false);
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-	const [globalFilter, setGlobalFilter] = useState("");
 	const [tableData, setTableData] = useState(projectData);
 
 	const openRestoreModal = (row: any) => {
@@ -200,6 +194,40 @@ const ProjectTable = () => {
 	return (
 		<>
 			<ProjectDataTable columns={columns} data={projectData} />
+
+			{isModalOpen && (
+					<Modal isOpen={isModalOpen} onClose={closeModal} title="Add Staff">
+					<div className="bg-white p-5 rounded-lg w-[600px] transition-transform ease-in-out ">
+						<hr className="mt-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+						<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
+							<p className="text-sm text-primary-6">Role</p>
+	
+	
+							<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+							<div className="flex flex-col gap-2">
+								<p className="text-xs text-primary-6">First Name</p>
+								<Input type="text" className="focus:border-none mt-2 h-5" />
+								<p className="text-xs text-primary-6 mt-2">Last Name</p>
+								<Input type="text" className="focus:border-none mt-2 h-5" />
+								<p className="text-xs text-primary-6 mt-2">Email Address</p>
+								<Input type="text" className="focus:border-none mt-2 h-5" />
+							</div>
+							<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+							<div className="flex flex-row justify-end items-center gap-3 font-inter">
+								<Button
+									className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
+									onClick={closeModal}>
+									Cancel
+								</Button>
+								<Button className="bg-primary-1 text-white font-inter text-xs">
+									Add
+								</Button>
+							</div>
+						</div>
+					</div>
+				</Modal>
+	
+			)}
 
 			{isRestoreModalOpen && (
 				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>

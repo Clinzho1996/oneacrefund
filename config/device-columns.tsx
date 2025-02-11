@@ -1,21 +1,16 @@
 "use client";
 
-import {
-	ColumnDef,
-	ColumnFiltersState,
-	RowSelectionState,
-	SortingState,
-	VisibilityState,
-} from "@tanstack/react-table";
+import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { deviceData } from "@/constants";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import { useState } from "react";
 import { DeviceDataTable } from "./device-table";
 
 // This type is used to define the shape of our data.
@@ -29,23 +24,22 @@ export type Device = {
 };
 
 const DeviceTable = () => {
-	const [isRestoreModalOpen, setRestoreModalOpen] = useState(false);
+	const [isEditModalOpen, setEditModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+	const [isModalOpen, setModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
 
-	const [sorting, setSorting] = React.useState<SortingState>([]);
-	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-		[]
-	);
-	const [columnVisibility, setColumnVisibility] =
-		React.useState<VisibilityState>({});
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-	const [globalFilter, setGlobalFilter] = useState("");
 	const [tableData, setTableData] = useState(deviceData);
 
-	const openRestoreModal = (row: any) => {
+	const openModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
-		setRestoreModalOpen(true);
+		setModalOpen(true);
+	};
+
+	const openEditModal = (row: any) => {
+		setSelectedRow(row.original); // Use row.original to store the full row data
+		setEditModalOpen(true);
 	};
 
 	const openDeleteModal = (row: any) => {
@@ -53,8 +47,12 @@ const DeviceTable = () => {
 		setDeleteModalOpen(true);
 	};
 
-	const closeRestoreModal = () => {
-		setRestoreModalOpen(false);
+	const closeModal = () => {
+		setModalOpen(false);
+	};
+
+	const closeEditModal = () => {
+		setEditModalOpen(false);
 	};
 
 	const closeDeleteModal = () => {
@@ -149,16 +147,16 @@ const DeviceTable = () => {
 							</Button>
 						</Link>
 						{actions.status === "not posted" ? (
-							<Link href={`/projects/${actions.id}`} target="_blank">
-								<Button className="border-[#E8E8E8] border-[1px] text-xs font-medium text-[#6B7280] font-inter">
-									Post
-								</Button>
-							</Link>
+							<Button
+								className="border-[#E8E8E8] border-[1px] text-xs font-medium text-[#6B7280] font-inter"
+								onClick={() => openModal(row)}>
+								Post
+							</Button>
 						) : null}
 
 						<Button
 							className="border-[#E8E8E8] border-[1px] text-sm font-medium text-[#6B7280] font-inter"
-							onClick={() => openDeleteModal(row)}>
+							onClick={() => openEditModal(row)}>
 							<IconEdit />
 						</Button>
 						<Button
@@ -194,21 +192,106 @@ const DeviceTable = () => {
 		<>
 			<DeviceDataTable columns={columns} data={deviceData} />
 
-			{isRestoreModalOpen && (
-				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>
-					<p className="mt-4">
-						Are you sure you want to suspend {selectedRow?.name}'s account?
-					</p>
-					<p className="text-sm text-primary-6">This can't be undone</p>
-					<div className="flex flex-row justify-end items-center gap-3 font-inter mt-4">
-						<Button
-							className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
-							onClick={closeRestoreModal}>
-							Cancel
-						</Button>
-						<Button className="bg-[#F04F4A] text-white font-inter text-xs modal-delete">
-							Yes, Confirm
-						</Button>
+			{isModalOpen && (
+				<Modal
+					isOpen={isModalOpen}
+					onClose={closeModal}
+					title="Post Device"
+					className="w-[500px]">
+					<div className="bg-white py-5 rounded-lg transition-transform ease-in-out ">
+						<hr className="mt-2 text-[#9F9E9E40]" color="#9F9E9E40" />
+						<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
+							<p className="text-sm text-dark-1 font-inter">
+								Basic Information
+							</p>
+							<div className="flex flex-col gap-2 mt-4">
+								<p className="text-xs text-primary-6 font-inter">Staff Name</p>
+								<Input type="text" className="focus:border-none mt-2 h-5" />
+								<div className="flex flex-row items-center justify-between gap-5">
+									<div className="w-[50%] lg:w-full">
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											State
+										</p>
+										<Input type="text" className="focus:border-none mt-2 h-5" />
+									</div>
+									<div className="w-[50%] lg:w-full">
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											District Name
+										</p>
+										<Input type="text" className="focus:border-none mt-2 h-5" />
+									</div>
+								</div>
+								<p className="text-xs text-primary-6 mt-2 font-inter">POD</p>
+								<Input type="text" className="focus:border-none mt-2 h-5" />
+								<p className="text-xs text-primary-6 mt-2 font-inter">
+									Site Name
+								</p>
+								<Input type="text" className="focus:border-none mt-2 h-5" />
+							</div>
+							<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+							<div className="flex flex-row justify-end items-center gap-3 font-inter">
+								<Button
+									className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
+									onClick={closeModal}>
+									Cancel
+								</Button>
+								<Button className="bg-primary-1 text-white font-inter text-xs">
+									Submit
+								</Button>
+							</div>
+						</div>
+					</div>
+				</Modal>
+			)}
+
+			{isEditModalOpen && (
+				<Modal
+					isOpen={isEditModalOpen}
+					onClose={closeEditModal}
+					title="Edit Posted Device"
+					className="w-[500px]">
+					<div className="bg-white py-5 rounded-lg transition-transform ease-in-out ">
+						<hr className="mt-2 text-[#9F9E9E40]" color="#9F9E9E40" />
+						<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
+							<p className="text-sm text-dark-1 font-inter">
+								Basic Information
+							</p>
+							<div className="flex flex-col gap-2 mt-4">
+								<p className="text-xs text-primary-6 font-inter">Staff Name</p>
+								<Input type="text" className="focus:border-none mt-2 h-5" />
+								<div className="flex flex-row items-center justify-between gap-5">
+									<div className="w-[50%] lg:w-full">
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											State
+										</p>
+										<Input type="text" className="focus:border-none mt-2 h-5" />
+									</div>
+									<div className="w-[50%] lg:w-full">
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											District Name
+										</p>
+										<Input type="text" className="focus:border-none mt-2 h-5" />
+									</div>
+								</div>
+								<p className="text-xs text-primary-6 mt-2 font-inter">POD</p>
+								<Input type="text" className="focus:border-none mt-2 h-5" />
+								<p className="text-xs text-primary-6 mt-2 font-inter">
+									Site Name
+								</p>
+								<Input type="text" className="focus:border-none mt-2 h-5" />
+							</div>
+							<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+							<div className="flex flex-row justify-end items-center gap-3 font-inter">
+								<Button
+									className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
+									onClick={closeEditModal}>
+									Cancel
+								</Button>
+								<Button className="bg-primary-1 text-white font-inter text-xs">
+									Submit
+								</Button>
+							</div>
+						</div>
 					</div>
 				</Modal>
 			)}
@@ -216,8 +299,8 @@ const DeviceTable = () => {
 			{isDeleteModalOpen && (
 				<Modal onClose={closeDeleteModal} isOpen={isDeleteModalOpen}>
 					<p className="mt-4">
-						Are you sure you want to delete the project:{" "}
-						{selectedRow?.projectName}?
+						Are you sure you want to delete this device: {""}
+						{selectedRow?.deviceAlias}?
 					</p>
 
 					<p className="text-sm text-primary-6">This can't be undone</p>
