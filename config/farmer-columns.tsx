@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { farmerData } from "@/constants";
 import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
+import Link from "next/link";
 import React, { useState } from "react";
 import { FarmerDataTable } from "./farmer-table";
 
@@ -205,10 +206,12 @@ const FarmerTable = () => {
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="bg-white">
-							<DropdownMenuItem className="action cursor-pointer hover:bg-secondary-3">
-								<IconEye />
-								<p className="text-xs font-inter">View</p>
-							</DropdownMenuItem>
+							<Link href={`/farmer-management/${actions.id}`}>
+								<DropdownMenuItem className="action cursor-pointer hover:bg-secondary-3">
+									<IconEye />
+									<p className="text-xs font-inter">View</p>
+								</DropdownMenuItem>
+							</Link>
 							<DropdownMenuItem
 								className="action cursor-pointer hover:bg-yellow-300"
 								onClick={() => openRestoreModal(row)}>

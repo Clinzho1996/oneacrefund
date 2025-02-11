@@ -33,7 +33,22 @@ body {
 	margin-left: 30px;
 	text-align: center;
 	width: 80px;
-	background-color: green; /* Specific inline style */
+	background-color: #297c66; /* Specific inline style */
+	padding: 0.15rem 0.25rem; /* Tailwind px-3 py-1 */
+	border-radius: 9999px; /* Tailwind rounded-full */
+	font-size: 0.875rem; /* Tailwind text-sm */
+	font-weight: 500; /* Tailwind font-medium */
+	text-transform: capitalize; /* Tailwind capitalize */
+	border: 2px solid; /* Tailwind border-2 */
+}
+
+.status-inner {
+	justify-content: center;
+	align-items: center;
+	margin-left: 0px;
+	text-align: center;
+	width: 80px;
+	background-color: #297c66; /* Specific inline style */
 	padding: 0.15rem 0.25rem; /* Tailwind px-3 py-1 */
 	border-radius: 9999px; /* Tailwind rounded-full */
 	font-size: 0.875rem; /* Tailwind text-sm */
@@ -142,6 +157,28 @@ body {
 	font-weight: 500;
 	border: 1px solid #ffda97;
 	font-size: 12px;
+}
+
+.status-inner.blue {
+	background-color: #f9f5ff; /* Tailwind bg-red-100 */
+	color: #6941c6;
+	font-family: "Inter", sans-serif;
+	font-weight: 500;
+	border: 1px solid #c5b3f0;
+	font-size: 12px;
+}
+
+.status-inner.yellow {
+	background-color: #fff8eb; /* Tailwind bg-red-100 */
+	color: #d98c00;
+	font-family: "Inter", sans-serif;
+	font-weight: 500;
+	border: 1px solid #ffda97;
+	font-size: 12px;
+}
+
+.bg-primary-1 {
+	background-color: #047857;
 }
 
 @layer utilities {
