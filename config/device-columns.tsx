@@ -141,7 +141,7 @@ const DeviceTable = () => {
 
 				return (
 					<div className="flex flex-row justify-start items-center gap-5">
-						<Link href={`/projects/${actions.id}`} target="_blank">
+						<Link href={`/device-management/${actions.id}`}>
 							<Button className="border-[#E8E8E8] border-[1px] text-xs font-medium text-[#6B7280] font-inter">
 								View
 							</Button>
@@ -199,7 +199,6 @@ const DeviceTable = () => {
 					title="Post Device"
 					className="w-[500px]">
 					<div className="bg-white py-5 rounded-lg transition-transform ease-in-out ">
-						<hr className="mt-2 text-[#9F9E9E40]" color="#9F9E9E40" />
 						<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
 							<p className="text-sm text-dark-1 font-inter">
 								Basic Information
@@ -251,7 +250,6 @@ const DeviceTable = () => {
 					title="Edit Posted Device"
 					className="w-[500px]">
 					<div className="bg-white py-5 rounded-lg transition-transform ease-in-out ">
-						<hr className="mt-2 text-[#9F9E9E40]" color="#9F9E9E40" />
 						<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
 							<p className="text-sm text-dark-1 font-inter">
 								Basic Information

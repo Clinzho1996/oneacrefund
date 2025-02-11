@@ -110,7 +110,6 @@ export function DeviceDataTable<TData, TValue>({
 				title="Add Device"
 				className="w-[500px]">
 				<div className="bg-white py-5 rounded-lg transition-transform ease-in-out ">
-					<hr className="mt-2 text-[#9F9E9E40]" color="#9F9E9E40" />
 					<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
 						<p className="text-sm text-dark-1 font-inter">Basic Information</p>
 						<div className="flex flex-col gap-2 mt-4">

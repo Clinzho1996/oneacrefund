@@ -143,7 +143,6 @@ export function FarmerDataTable<TData, TValue>({
 		<div className="rounded-lg border-[1px] py-0">
 			<Modal isOpen={isModalOpen} onClose={closeModal} title="Add Farmer">
 				<div className="bg-white py-1 rounded-lg w-[600px] transition-transform ease-in-out max-h[70vh] overflow-y-auto">
-					<hr className="mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
 					<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
 						<div>
 							<p className="text-sm text-dark-1">Basic Information</p>
