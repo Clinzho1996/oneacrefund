@@ -236,7 +236,7 @@ export const farmerData: Farmer[] = [
 		groupName: "Ayomide Group",
 		siteName: "Atunrase",
 		sector: "Gbagada",
-		dateJoined: "12th Jan. 2025",
+		dateJoined: "2025-01-12",
 		biometricStatus: "both",
 	},
 	{
@@ -246,7 +246,7 @@ export const farmerData: Farmer[] = [
 		groupName: "Green Harvest",
 		siteName: "Ajah",
 		sector: "Lekki",
-		dateJoined: "5th Feb. 2025",
+		dateJoined: "2025-03-12",
 		biometricStatus: "facial",
 	},
 	{
@@ -256,7 +256,7 @@ export const farmerData: Farmer[] = [
 		groupName: "Agro Leaders",
 		siteName: "Ikeja",
 		sector: "Mainland",
-		dateJoined: "20th Mar. 2025",
+		dateJoined: "2025-02-12",
 		biometricStatus: "fingerprint",
 	},
 	{
@@ -266,7 +266,7 @@ export const farmerData: Farmer[] = [
 		groupName: "Farm Innovators",
 		siteName: "Epe",
 		sector: "Ikorodu",
-		dateJoined: "8th Apr. 2025",
+		dateJoined: "2025-01-14",
 		biometricStatus: "none",
 	},
 	{
@@ -276,7 +276,7 @@ export const farmerData: Farmer[] = [
 		groupName: "Sustainable Crops",
 		siteName: "Badagry",
 		sector: "Ojo",
-		dateJoined: "15th May. 2025",
+		dateJoined: "2025-01-18",
 		biometricStatus: "both",
 	},
 	{
@@ -286,7 +286,7 @@ export const farmerData: Farmer[] = [
 		groupName: "Green Earth",
 		siteName: "Surulere",
 		sector: "Lagos Island",
-		dateJoined: "22nd Jun. 2025",
+		dateJoined: "2025-04-12",
 		biometricStatus: "facial",
 	},
 	{
@@ -296,7 +296,7 @@ export const farmerData: Farmer[] = [
 		groupName: "Harvest Kings",
 		siteName: "Agege",
 		sector: "Iyana Ipaja",
-		dateJoined: "3rd Jul. 2025",
+		dateJoined: "2024-11-12",
 		biometricStatus: "fingerprint",
 	},
 	{
@@ -306,7 +306,7 @@ export const farmerData: Farmer[] = [
 		groupName: "AgroTech",
 		siteName: "Ikotun",
 		sector: "Alimosho",
-		dateJoined: "19th Aug. 2025",
+		dateJoined: "2024-11-24",
 		biometricStatus: "none",
 	},
 	{
@@ -316,7 +316,7 @@ export const farmerData: Farmer[] = [
 		groupName: "Organic Farmers",
 		siteName: "Festac",
 		sector: "Amuwo Odofin",
-		dateJoined: "10th Sep. 2025",
+		dateJoined: "2024-12-12",
 		biometricStatus: "both",
 	},
 	{
@@ -326,7 +326,7 @@ export const farmerData: Farmer[] = [
 		groupName: "Golden Fields",
 		siteName: "Mushin",
 		sector: "Oshodi",
-		dateJoined: "27th Oct. 2025",
+		dateJoined: "2025-12-23",
 		biometricStatus: "facial",
 	},
 ];

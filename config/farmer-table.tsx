@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 import Modal from "@/components/Modal";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Input } from "@/components/ui/input";
 import {
 	Select,
@@ -35,7 +36,6 @@ import {
 } from "@/components/ui/table";
 import { farmerData } from "@/constants";
 import {
-	IconAdjustmentsHorizontal,
 	IconCloudDownload,
 	IconFileExport,
 	IconFileImport,
@@ -50,6 +50,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import React, { useState } from "react";
+import { DateRange } from "react-day-picker";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -74,6 +75,7 @@ export function FarmerDataTable<TData, TValue>({
 	const [previewImage, setPreviewImage] = useState<string | null>(null);
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [tableData, setTableData] = useState(data);
+	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
 	const openModal = () => setModalOpen(true);
 	const closeModal = () => setModalOpen(false);
@@ -92,6 +94,26 @@ export function FarmerDataTable<TData, TValue>({
 			setPreviewImage(null);
 		}
 	};
+
+	// Function to filter data based on date range
+	const filterDataByDateRange = () => {
+		if (!dateRange?.from || !dateRange?.to) {
+			setTableData(data); // Reset to all data if no date range is selected
+			return;
+		}
+
+		const filteredData = data.filter((farmer: any) => {
+			const dateJoined = new Date(farmer.dateJoined);
+			return dateJoined >= dateRange.from! && dateJoined <= dateRange.to!;
+		});
+
+		setTableData(filteredData);
+	};
+
+	// Update the table data whenever the date range changes
+	React.useEffect(() => {
+		filterDataByDateRange();
+	}, [dateRange]);
 
 	const handleStatusFilter = (status: string) => {
 		setSelectedStatus(status);
@@ -342,23 +364,10 @@ export function FarmerDataTable<TData, TValue>({
 						onChange={(e) => setGlobalFilter(e.target.value)}
 						className="focus:border-none bg-[#F9FAFB]"
 					/>
-					{/* filter by type */}
+					{/* filter by date */}
 					<div className="w-[250px]">
-						<Select
-							value={selectedType}
-							onValueChange={(value) => setSelectedType(value)}>
-							<SelectTrigger className="h-19 w-full bg-white z-10 border-[#E8E8E8] border-[1px] flex flex-row gap-2">
-								<IconAdjustmentsHorizontal size={15} className="mr-2 pr-3" />
-								<SelectValue placeholder="Date Range" />
-							</SelectTrigger>
-							<SelectContent side="top" className="bg-white">
-								<SelectItem value="admin">Admin</SelectItem>
-								<SelectItem value="user">User</SelectItem>
-								<SelectItem value="guest">Guest</SelectItem>
-							</SelectContent>
-						</Select>
+						<DateRangePicker dateRange={dateRange} onSelect={setDateRange} />
 					</div>
-
 					<Button
 						className="border-[#E8E8E8] border-[1px] bg-white"
 						onClick={handleDelete}>

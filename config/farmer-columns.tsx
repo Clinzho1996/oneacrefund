@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { farmerData } from "@/constants";
 import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
+import { format, isValid, parseISO } from "date-fns";
 import Link from "next/link";
 import React, { useState } from "react";
 import { FarmerDataTable } from "./farmer-table";
@@ -51,6 +52,8 @@ const FarmerTable = () => {
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [tableData, setTableData] = useState(farmerData);
+	const [date, setDate] = useState<Date | null>(null);
+	const [selectedFilter, setSelectedFilter] = useState<string>("");
 
 	const openRestoreModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
@@ -151,9 +154,12 @@ const FarmerTable = () => {
 			accessorKey: "dateJoined",
 			header: "Date Joined",
 			cell: ({ row }) => {
-				const dateJoined = row.getValue<string>("dateJoined");
-
-				return <span className="text-xs text-primary-6">{dateJoined}</span>;
+				const date = parseISO(row.original.dateJoined); // Convert to Date object
+				return (
+					<span className="text-xs text-primary-6">
+						{isValid(date) ? format(date, "do MMM. yyyy") : "Invalid Date"}
+					</span>
+				); // Format if valid
 			},
 		},
 		{
