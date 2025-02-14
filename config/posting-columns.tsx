@@ -6,6 +6,7 @@ import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { postingData } from "@/constants";
+import { format, isValid, parseISO } from "date-fns";
 import Link from "next/link";
 import { useState } from "react";
 import { PostingDataTable } from "./posting-table";
@@ -101,9 +102,12 @@ const PostingTable = () => {
 			accessorKey: "date",
 			header: "Date",
 			cell: ({ row }) => {
-				const date = row.getValue<string>("date");
-
-				return <span className="text-xs text-primary-6">{date}</span>;
+				const date = parseISO(row.original.date); // Convert to Date object
+				return (
+					<span className="text-xs text-primary-6">
+						{isValid(date) ? format(date, "do MMM. yyyy") : "Invalid Date"}
+					</span>
+				); // Format if valid
 			},
 		},
 		{

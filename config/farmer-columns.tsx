@@ -1,12 +1,6 @@
 "use client";
 
-import {
-	ColumnDef,
-	ColumnFiltersState,
-	RowSelectionState,
-	SortingState,
-	VisibilityState,
-} from "@tanstack/react-table";
+import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
 import Modal from "@/components/Modal";
@@ -22,7 +16,7 @@ import { farmerData } from "@/constants";
 import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
 import { format, isValid, parseISO } from "date-fns";
 import Link from "next/link";
-import React, { useState } from "react";
+import { useState } from "react";
 import { FarmerDataTable } from "./farmer-table";
 
 // This type is used to define the shape of our data.
@@ -42,18 +36,8 @@ const FarmerTable = () => {
 	const [isRestoreModalOpen, setRestoreModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
-
-	const [sorting, setSorting] = React.useState<SortingState>([]);
-	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-		[]
-	);
-	const [columnVisibility, setColumnVisibility] =
-		React.useState<VisibilityState>({});
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-	const [globalFilter, setGlobalFilter] = useState("");
 	const [tableData, setTableData] = useState(farmerData);
-	const [date, setDate] = useState<Date | null>(null);
-	const [selectedFilter, setSelectedFilter] = useState<string>("");
 
 	const openRestoreModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data

@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { deviceData } from "@/constants";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
+import { format, isValid, parseISO } from "date-fns";
 import Link from "next/link";
 import { useState } from "react";
 import { DeviceDataTable } from "./device-table";
@@ -104,9 +105,12 @@ const DeviceTable = () => {
 			accessorKey: "dateJoined",
 			header: "Date Joined",
 			cell: ({ row }) => {
-				const dateJoined = row.getValue<string>("dateJoined");
-
-				return <span className="text-xs text-primary-6">{dateJoined}</span>;
+				const date = parseISO(row.original.dateJoined); // Convert to Date object
+				return (
+					<span className="text-xs text-primary-6">
+						{isValid(date) ? format(date, "do MMM. yyyy") : "Invalid Date"}
+					</span>
+				); // Format if valid
 			},
 		},
 		{
