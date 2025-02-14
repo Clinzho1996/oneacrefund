@@ -12,6 +12,8 @@ export default function SignIn() {
 	const session = useSession();
 	const router = useRouter();
 
+	console.log("session", session);
+
 	useEffect(() => {
 		if (session.status === "authenticated") {
 			toast.success("Login Successful!");
