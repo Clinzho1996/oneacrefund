@@ -11,10 +11,9 @@ const HomeLayout = ({ children }: { children: ReactNode }) => {
 	const router = useRouter();
 
 	useEffect(() => {
-		if (session?.status === "authenticated") {
-			router.push("/dashboard");
-		} else if (session?.status === "unauthenticated") {
-			router.push("/");
+		// Redirect unauthenticated users to login page
+		if (session?.status === "unauthenticated") {
+			router.replace("/");
 		}
 	}, [session?.status, router]);
 
