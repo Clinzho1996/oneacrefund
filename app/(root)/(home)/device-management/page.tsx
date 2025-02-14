@@ -37,16 +37,16 @@ function DeviceManagement() {
 
 				<div className="w-full bg-white rounded-b-lg py-5 border-x-[1px] border-b-[1px] border-[#E2E4E9]">
 					<Tabs defaultValue="device" className="bg-transparent">
-						<TabsList className="flex flex-row h-fit flex-wrap justify-start bg-[#EFF1F5] w-fit ml-4 mr-4 gap-3 items-center border-[1px] border-[#E2E4E9] rounded-lg">
+						<TabsList className="flex flex-row h-fit flex-wrap justify-start bg-[#fff] w-fit ml-4 mr-4 gap-3 items-center border-[1px] border-[#E2E4E9] rounded-lg">
 							<TabsTrigger
 								value="device"
-								className="p-2 rounded-md data-[state=active]:bg-[#ECFAF6] data-[state=active]:text-primary-6">
+								className="p-2 rounded-md data-[state=active]:bg-[#ECFAF6] data-[state=active]:text-primary-6 text-sm">
 								Device Administration
 							</TabsTrigger>
 							|
 							<TabsTrigger
 								value="posting"
-								className="p-2 rounded-md data-[state=active]:bg-[#ECFAF6] data-[state=active]:text-primary-6">
+								className="p-2 rounded-md data-[state=active]:bg-[#ECFAF6] data-[state=active]:text-primary-6 text-sm">
 								Posting Devices
 							</TabsTrigger>
 						</TabsList>

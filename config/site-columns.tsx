@@ -12,6 +12,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { groupData } from "@/constants";
 import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
 import { MoreHorizontal } from "lucide-react";
@@ -148,7 +149,9 @@ const SiteTable = () => {
 									<p className="text-xs font-inter">View</p>
 								</DropdownMenuItem>
 							</Link>
-							<DropdownMenuItem className="action cursor-pointer hover:bg-yellow-300">
+							<DropdownMenuItem
+								className="action cursor-pointer hover:bg-yellow-300"
+								onClick={() => openEditModal(row)}>
 								<IconPencil />
 								<p className="text-xs font-inter">Edit</p>
 							</DropdownMenuItem>
@@ -244,36 +247,63 @@ const SiteTable = () => {
 				<Modal
 					isOpen={isEditModalOpen}
 					onClose={closeEditModal}
-					title="Edit Posted Device"
+					title="Edit Site"
 					className="w-[500px]">
 					<div className="bg-white py-5 rounded-lg transition-transform ease-in-out ">
-						<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
-							<p className="text-sm text-dark-1 font-inter">
-								Basic Information
+						<hr className="mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+						<div className="mt-3  pt-2">
+							<p className="text-xs text-primary-6 font-inter">
+								Location Preference
 							</p>
-							<div className="flex flex-col gap-2 mt-4">
-								<p className="text-xs text-primary-6 font-inter">Staff Name</p>
-								<Input type="text" className="focus:border-none mt-2 h-5" />
-								<div className="flex flex-row items-center justify-between gap-5">
-									<div className="w-[50%] lg:w-full">
-										<p className="text-xs text-primary-6 mt-2 font-inter">
-											State
+							<RadioGroup defaultValue="site">
+								<div className="flex flex-row justify-between items-center gap-5">
+									<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg w-full mt-2">
+										<RadioGroupItem value="site" id="super-admin" />
+										<p className="text-sm text-primary-6 whitespace-nowrap">
+											Site
 										</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
-									</div>
-									<div className="w-[50%] lg:w-full">
-										<p className="text-xs text-primary-6 mt-2 font-inter">
-											District Name
-										</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
 									</div>
 								</div>
-								<p className="text-xs text-primary-6 mt-2 font-inter">POD</p>
-								<Input type="text" className="focus:border-none mt-2 h-5" />
+							</RadioGroup>
+							<div className="flex flex-col gap-2 mt-4">
+								<p className="text-xs text-primary-6 font-inter">State</p>
+								<Input
+									type="text"
+									className="focus:border-none mt-2 h-5 border-[#E8E8E8] border-[1px]"
+									disabled
+								/>
+								<p className="text-xs text-primary-6 mt-2 font-inter">
+									District
+								</p>
+								<Input
+									type="text"
+									className="focus:border-none mt-2 h-5"
+									disabled
+								/>
+								<p className="text-xs text-primary-6 mt-2 font-inter">
+									POD / Sector
+								</p>
+								<Input
+									type="text"
+									className="focus:border-none mt-2 h-5"
+									disabled
+								/>
 								<p className="text-xs text-primary-6 mt-2 font-inter">
 									Site Name
 								</p>
-								<Input type="text" className="focus:border-none mt-2 h-5" />
+								<Input
+									type="text"
+									placeholder="Edit Site Name"
+									className="focus:border-none mt-2 h-5 border border-primary-1"
+								/>
+								<p className="text-xs text-primary-6 mt-2 font-inter">
+									Group Name
+								</p>
+								<Input
+									type="text"
+									className="focus:border-none mt-2 h-5"
+									disabled
+								/>
 							</div>
 							<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
 							<div className="flex flex-row justify-end items-center gap-3 font-inter">
@@ -283,7 +313,7 @@ const SiteTable = () => {
 									Cancel
 								</Button>
 								<Button className="bg-primary-1 text-white font-inter text-xs">
-									Submit
+									Save and Close
 								</Button>
 							</div>
 						</div>
@@ -294,8 +324,8 @@ const SiteTable = () => {
 			{isDeleteModalOpen && (
 				<Modal onClose={closeDeleteModal} isOpen={isDeleteModalOpen}>
 					<p className="mt-4">
-						Are you sure you want to delete this device: {""}
-						{selectedRow?.deviceAlias}?
+						Are you sure you want to delete {""}
+						{selectedRow?.siteName} site?
 					</p>
 
 					<p className="text-sm text-primary-6">This can't be undone</p>

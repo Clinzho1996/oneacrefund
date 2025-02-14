@@ -241,14 +241,22 @@ export function FarmerDataTable<TData, TValue>({
 									Browse File
 								</Button>
 								{previewImage && (
-									<div className="mt-2">
+									<div className="mt-2 flex flex-row justify-start items-center gap-3">
 										<Image
 											src={previewImage}
 											width={100}
 											height={100}
 											alt="Preview"
-											className="w-[300px] h-[200px] object-cover rounded-md"
+											className="w-[200px] h-[200px] object-cover rounded-md"
 										/>
+										<Button
+											onClick={() => {
+												setFeaturedImage(null);
+												setPreviewImage(null);
+											}}
+											className="border text-xs p-2">
+											Remove
+										</Button>{" "}
 									</div>
 								)}
 							</div>
