@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 import Modal from "@/components/Modal";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
@@ -34,7 +35,6 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { IconAdjustmentsHorizontal } from "@tabler/icons-react";
 import {
 	ChevronLeft,
 	ChevronRight,
@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import React, { useState } from "react";
+import { DateRange } from "react-day-picker";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -64,20 +65,29 @@ export function LogDataTable<TData, TValue>({
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [tableData, setTableData] = useState(data);
+	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
 	const openModal = () => setModalOpen(true);
 	const closeModal = () => setModalOpen(false);
 
-	const handleDelete = () => {
-		const selectedRowIds = Object.keys(rowSelection).filter(
-			(key) => rowSelection[key]
-		);
-		const filteredData = tableData.filter(
-			(_, index) => !selectedRowIds.includes(index.toString())
-		);
+	// Function to filter data based on date range
+	const filterDataByDateRange = () => {
+		if (!dateRange?.from || !dateRange?.to) {
+			setTableData(data);
+			return;
+		}
+
+		const filteredData = data.filter((farmer: any) => {
+			const dateJoined = new Date(farmer.date);
+			return dateJoined >= dateRange.from! && dateJoined <= dateRange.to!;
+		});
+
 		setTableData(filteredData);
-		setRowSelection({});
 	};
+
+	React.useEffect(() => {
+		filterDataByDateRange();
+	}, [dateRange]);
 
 	const table = useReactTable({
 		data: tableData,
@@ -180,43 +190,15 @@ export function LogDataTable<TData, TValue>({
 			</div>
 
 			<div className="p-3 flex flex-row justify-between border-b-[1px] border-[#E2E4E9] bg-white items-center gap-20 max-w-full">
-				<div className="p-3 flex flex-row justify-start items-center gap-3 w-full ">
+				<div className="p-3 flex flex-row justify-between items-center gap-3 w-full ">
 					<Input
 						placeholder="Search Activity..."
 						value={globalFilter}
 						onChange={(e) => setGlobalFilter(e.target.value)}
-						className="focus:border-none bg-[#F9FAFB]"
+						className="focus:border-none bg-[#F9FAFB] w-[50%]"
 					/>
 					<div className="w-[250px]">
-						<Select
-							value={selectedType}
-							onValueChange={(value) => setSelectedType(value)}>
-							<SelectTrigger className="h-19 w-full bg-white z-10 border-[#E8E8E8] border-[1px] flex flex-row gap-2">
-								<IconAdjustmentsHorizontal size={15} className="mr-2 pr-3" />
-								<SelectValue placeholder="Date range" />
-							</SelectTrigger>
-							<SelectContent side="top" className="bg-white">
-								<SelectItem value="admin">Admin</SelectItem>
-								<SelectItem value="user">User</SelectItem>
-								<SelectItem value="guest">Guest</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
-					{/* filter by type */}
-					<div className="w-[250px]">
-						<Select
-							value={selectedType}
-							onValueChange={(value) => setSelectedType(value)}>
-							<SelectTrigger className="h-19 w-full bg-white z-10 border-[#E8E8E8] border-[1px] flex flex-row gap-2">
-								<IconAdjustmentsHorizontal size={15} className="mr-2 pr-3" />
-								<SelectValue placeholder="Filter by Type" />
-							</SelectTrigger>
-							<SelectContent side="top" className="bg-white">
-								<SelectItem value="admin">Admin</SelectItem>
-								<SelectItem value="user">User</SelectItem>
-								<SelectItem value="guest">Guest</SelectItem>
-							</SelectContent>
-						</Select>
+						<DateRangePicker dateRange={dateRange} onSelect={setDateRange} />
 					</div>
 				</div>
 			</div>

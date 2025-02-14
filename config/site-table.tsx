@@ -33,7 +33,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { IconAdjustmentsHorizontal, IconTrash } from "@tabler/icons-react";
+import { IconTrash } from "@tabler/icons-react";
 import {
 	ChevronLeft,
 	ChevronRight,
@@ -132,35 +132,18 @@ export function SiteDataTable<TData, TValue>({
 			</Modal>
 
 			<div className="p-3 flex flex-row justify-between border-b-[1px] border-[#E2E4E9] bg-white items-center gap-20 max-w-full mt-2">
-				<div className="p-3 flex flex-row justify-start items-center gap-3 w-full ">
+				<div className="p-3 flex flex-row justify-between items-center gap-3 w-full ">
 					<Input
 						placeholder="Search Site..."
 						value={globalFilter}
 						onChange={(e) => setGlobalFilter(e.target.value)}
-						className="focus:border-none bg-[#F9FAFB]"
+						className="focus:border-none bg-[#F9FAFB] w-[50%]"
 					/>
 					<Button
 						className="border-[#E8E8E8] border-[1px] bg-white"
 						onClick={handleDelete}>
 						<IconTrash /> Delete
 					</Button>
-
-					{/* filter by type */}
-					<div className="w-[250px]">
-						<Select
-							value={selectedType}
-							onValueChange={(value) => setSelectedType(value)}>
-							<SelectTrigger className="h-19 w-full bg-white z-10 border-[#E8E8E8] border-[1px] flex flex-row gap-2">
-								<IconAdjustmentsHorizontal size={15} className="mr-2 pr-3" />
-								<SelectValue placeholder="Filter by Type" />
-							</SelectTrigger>
-							<SelectContent side="top" className="bg-white">
-								<SelectItem value="admin">Admin</SelectItem>
-								<SelectItem value="user">User</SelectItem>
-								<SelectItem value="guest">Guest</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
 				</div>
 			</div>
 

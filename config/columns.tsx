@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { projectData, staffData } from "@/constants";
 import { IconEye, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { format, isValid, parseISO } from "date-fns";
 import Link from "next/link";
 import React, { useState } from "react";
 import { DataTable } from "./data-table";
@@ -147,9 +148,12 @@ const Table = () => {
 			accessorKey: "date",
 			header: "Date Joined",
 			cell: ({ row }) => {
-				const date = row.getValue<string>("date");
-
-				return <span className="text-xs text-primary-6">{date}</span>;
+				const date = parseISO(row.original.date); // Convert to Date object
+				return (
+					<span className="text-xs text-primary-6">
+						{isValid(date) ? format(date, "do MMM. yyyy") : "Invalid Date"}
+					</span>
+				); // Format if valid
 			},
 		},
 		{
