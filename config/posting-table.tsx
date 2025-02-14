@@ -91,7 +91,7 @@ export function PostingDataTable<TData, TValue>({
 			<div className="p-3 flex flex-row justify-between border-b-[1px] border-[#E2E4E9] bg-white items-center gap-20 max-w-full mt-3">
 				<div className="p-3 flex flex-row justify-start items-center gap-3 w-full ">
 					<Input
-						placeholder="Search Project..."
+						placeholder="Search Device..."
 						value={globalFilter}
 						onChange={(e) => setGlobalFilter(e.target.value)}
 						className="focus:border-none bg-[#F9FAFB]"
