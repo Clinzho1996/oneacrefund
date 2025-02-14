@@ -17,7 +17,7 @@ export function DateRangePicker({
 	dateRange,
 	onSelect,
 }: {
-	dateRange: DateRange | undefined;
+	dateRange: DateRange | any;
 	onSelect: (range: DateRange | undefined) => void;
 }) {
 	const [isOpen, setIsOpen] = useState(false);
@@ -27,7 +27,7 @@ export function DateRangePicker({
 			<PopoverTrigger asChild>
 				<Button
 					variant="outline"
-					className="w-[260px] justify-start text-left font-normal">
+					className="w-[300px] justify-start text-left font-normal">
 					<CalendarIcon className="mr-2 h-4 w-4" />
 					{dateRange?.from ? (
 						dateRange.to ? (
@@ -39,7 +39,7 @@ export function DateRangePicker({
 							format(dateRange.from, "MMM dd, yyyy")
 						)
 					) : (
-						<span>Pick a Date Range</span>
+						<span>Pick a date range</span>
 					)}
 				</Button>
 			</PopoverTrigger>
@@ -51,6 +51,30 @@ export function DateRangePicker({
 					selected={dateRange}
 					onSelect={onSelect}
 					numberOfMonths={2}
+					modifiers={{
+						start: dateRange?.from || null, // Use null instead of undefined
+						end: dateRange?.to || null, // Use null instead of undefined
+						rangeMiddle: (date) => {
+							if (!dateRange?.from || !dateRange?.to) return false;
+							return date > dateRange.from && date < dateRange.to;
+						},
+					}}
+					modifiersStyles={{
+						start: {
+							backgroundColor: "#297C66", // Solid green for start date
+							color: "white",
+							borderRadius: "4px",
+						},
+						end: {
+							backgroundColor: "#297C66", // Solid green for end date
+							color: "white",
+							borderRadius: "4px",
+						},
+						rangeMiddle: {
+							backgroundColor: "#ECFDF5", // Light green for intermediate dates
+							borderRadius: "4px",
+						},
+					}}
 				/>
 			</PopoverContent>
 		</Popover>
