@@ -17,10 +17,20 @@ export function DateRangePicker({
 	dateRange,
 	onSelect,
 }: {
-	dateRange: DateRange | any;
+	dateRange: DateRange | undefined;
 	onSelect: (range: DateRange | undefined) => void;
 }) {
 	const [isOpen, setIsOpen] = useState(false);
+
+	// Build the modifiers object dynamically
+	const modifiers = {
+		...(dateRange?.from && { start: dateRange.from }), // Only add start if dateRange.from is defined
+		...(dateRange?.to && { end: dateRange.to }), // Only add end if dateRange.to is defined
+		rangeMiddle: (date: Date) => {
+			if (!dateRange?.from || !dateRange?.to) return false;
+			return date > dateRange.from && date < dateRange.to;
+		},
+	};
 
 	return (
 		<Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -51,14 +61,7 @@ export function DateRangePicker({
 					selected={dateRange}
 					onSelect={onSelect}
 					numberOfMonths={2}
-					modifiers={{
-						start: dateRange?.from || null, // Use null instead of undefined
-						end: dateRange?.to || null, // Use null instead of undefined
-						rangeMiddle: (date) => {
-							if (!dateRange?.from || !dateRange?.to) return false;
-							return date > dateRange.from && date < dateRange.to;
-						},
-					}}
+					modifiers={modifiers} // Use the dynamically built modifiers object
 					modifiersStyles={{
 						start: {
 							backgroundColor: "#297C66", // Solid green for start date
