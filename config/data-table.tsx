@@ -245,7 +245,7 @@ export function DataTable<TData, TValue>({
 							onValueChange={(value) => setSelectedType(value)}>
 							<SelectTrigger className="h-19 w-full bg-white z-10 border-[#E8E8E8] border-[1px] flex flex-row gap-2">
 								<IconAdjustmentsHorizontal size={15} className="mr-2 pr-3" />
-								<SelectValue placeholder="Filter by Type" />
+								<SelectValue placeholder="Date Range" />
 							</SelectTrigger>
 							<SelectContent side="top" className="bg-white">
 								<SelectItem value="admin">Admin</SelectItem>

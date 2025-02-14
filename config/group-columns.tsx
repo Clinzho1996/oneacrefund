@@ -186,7 +186,7 @@ const GroupTable = () => {
 		);
 
 		// Filter the data to remove the selected rows
-		const filteredData = tableData.filter(
+		const filteredData = groupData.filter(
 			(row: { id: string }) => !selectedRowIds.includes(row.id)
 		);
 

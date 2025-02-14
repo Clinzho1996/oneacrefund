@@ -78,7 +78,7 @@ export function GroupDataTable<TData, TValue>({
 	};
 
 	const table = useReactTable({
-		data,
+		data: tableData,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
