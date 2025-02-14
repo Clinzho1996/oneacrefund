@@ -1,15 +1,14 @@
-// components/ui/date-range-picker.tsx
 "use client";
 
-import { Button } from "@/components/ui/button"; // Assuming you have a Button component
-import { Calendar } from "@/components/ui/calendar"; // Assuming you have a Calendar component
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
-} from "@/components/ui/popover"; // Assuming you have a Popover component
+} from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react"; // Assuming you have the CalendarIcon
+import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
 
@@ -22,10 +21,9 @@ export function DateRangePicker({
 }) {
 	const [isOpen, setIsOpen] = useState(false);
 
-	// Build the modifiers object dynamically
 	const modifiers = {
-		...(dateRange?.from && { start: dateRange.from }), // Only add start if dateRange.from is defined
-		...(dateRange?.to && { end: dateRange.to }), // Only add end if dateRange.to is defined
+		...(dateRange?.from && { start: dateRange.from }),
+		...(dateRange?.to && { end: dateRange.to }),
 		rangeMiddle: (date: Date) => {
 			if (!dateRange?.from || !dateRange?.to) return false;
 			return date > dateRange.from && date < dateRange.to;
@@ -61,20 +59,20 @@ export function DateRangePicker({
 					selected={dateRange}
 					onSelect={onSelect}
 					numberOfMonths={2}
-					modifiers={modifiers} // Use the dynamically built modifiers object
+					modifiers={modifiers}
 					modifiersStyles={{
 						start: {
-							backgroundColor: "#297C66", // Solid green for start date
+							backgroundColor: "#297C66",
 							color: "white",
 							borderRadius: "4px",
 						},
 						end: {
-							backgroundColor: "#297C66", // Solid green for end date
+							backgroundColor: "#297C66",
 							color: "white",
 							borderRadius: "4px",
 						},
 						rangeMiddle: {
-							backgroundColor: "#ECFDF5", // Light green for intermediate dates
+							backgroundColor: "#ECFDF5",
 							borderRadius: "4px",
 						},
 					}}
