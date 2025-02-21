@@ -17,11 +17,11 @@ export const sidebarLinks = [
 		route: "/farmer-management",
 		imgUrl: "/icons/farmer.svg",
 	},
-	{
-		label: "Project Management",
-		route: "/project-management",
-		imgUrl: "/icons/project.svg",
-	},
+	// {
+	// 	label: "Project Management",
+	// 	route: "/project-management",
+	// 	imgUrl: "/icons/project.svg",
+	// },
 	{
 		label: "Device Management",
 		route: "/device-management",
