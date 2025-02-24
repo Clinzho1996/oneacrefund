@@ -5,7 +5,7 @@ import StaffInfo from "@/components/StaffInfo";
 
 function Dashboard() {
 	return (
-		<div>
+		<div className="h-full">
 			<HeaderBox />
 			<div className="bg-[#F6F8FA] flex flex-col h-full px-4 py-2  gap-4">
 				<StaffInfo />
