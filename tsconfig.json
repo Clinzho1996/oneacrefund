@@ -29,6 +29,6 @@
 		".next/types/**/*.ts",
 		"next.config.mjs",
 		"types/next-auth.d.ts"
-	],
+, "app/api/auth/[...nextauth]/route.js"	],
 	"exclude": ["node_modules"]
 }
