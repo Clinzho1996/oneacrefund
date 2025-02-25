@@ -20,7 +20,7 @@ const handler = NextAuth({
 			if (account.provider === "google" && account.access_token) {
 				try {
 					const response = await fetch(
-						"http://api.wowdev.com.ng/api/v1/auth/google",
+						"https://api.wowdev.com.ng/api/v1/auth/google",
 						{
 							method: "POST",
 							headers: {

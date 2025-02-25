@@ -2,7 +2,7 @@
 
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
-import { farmerData } from "@/constants";
+import { Farmer } from "@/config/farmer-columns";
 import {
 	IconArrowBack,
 	IconCircleCheckFilled,
@@ -12,15 +12,22 @@ import {
 	IconSettings,
 	IconTrash,
 } from "@tabler/icons-react";
-import { useSession } from "next-auth/react";
+import axios from "axios";
+import { getSession, useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+interface ApiResponse {
+	data: Farmer; // Adjust to match your API structure
+}
 
 function FarmerDetails() {
 	const { id } = useParams();
 	const { data: session } = useSession();
+	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [userData, setUserData] = useState<Farmer | null>(null);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
 	const openDeleteModal = () => {
@@ -40,20 +47,69 @@ function FarmerDetails() {
 		return initials.toUpperCase();
 	};
 
-	const farmer = farmerData.find((farmer) => farmer.id === id);
+	const fetchFarmer = useCallback(async () => {
+		setIsLoading(true);
+		try {
+			const session = await getSession();
 
-	if (!farmer) {
-		return (
-			<section className="bg-primary py-[4%] px-[6%]">
-				<p className="text-white text-[16px]">Farmer not found</p>
-			</section>
-		);
-	}
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
 
+			const response = await axios.get<ApiResponse>(
+				`https://api.wowdev.com.ng/api/v1/farmer/${id}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			console.log("data", response?.data?.data);
+			setUserData(response?.data?.data);
+			setIsLoading(false);
+		} catch (error: unknown) {
+			if (axios.isAxiosError(error)) {
+				console.log(
+					"Error fetching post:",
+					error.response?.data || error.message
+				);
+			} else {
+				console.log("Unexpected error:", error);
+			}
+		} finally {
+			setIsLoading(false);
+		}
+	}, [id]);
+
+	useEffect(() => {
+		fetchFarmer();
+	}, [fetchFarmer]);
 	const handleDelete = () => {
 		// Get the selected row IDs
 		console.log("item deleted");
 	};
+
+	const formatDate = (rawDate?: string | Date) => {
+		if (!rawDate) return "Unknown"; // Handle undefined case
+		const options: Intl.DateTimeFormatOptions = {
+			year: "numeric",
+			month: "long",
+			day: "numeric",
+		};
+		const parsedDate =
+			typeof rawDate === "string" ? new Date(rawDate) : rawDate;
+		return new Intl.DateTimeFormat("en-US", options).format(parsedDate);
+	};
+
+	if (isLoading) {
+		return <p>Loading...</p>;
+	}
 
 	return (
 		<section className="bg-[#F6F8F9] h-screen">
@@ -111,29 +167,26 @@ function FarmerDetails() {
 					<div>
 						<Image src="/images/avat.png" width={50} height={50} alt="avatar" />
 						<div className="py-4 border-b-[1px] border-[#E2E4E9]">
-							<p className="text-[16px] text-dark-1 font-medium font-inter mt-2">
-								{farmer.firstName} {farmer.lastName}
+							<p className="text-[16px] text-dark-1 font-medium font-inter mt-2 capitalize">
+								{userData?.first_name} {userData?.last_name}
 							</p>
 							<p className="text-sm text-[#6B7280B7] font-inter">
 								Captured by:{" "}
 								<span className="text-dark-1">OneAcreFund Staff</span>
 							</p>
 						</div>
-						<div className="py-4 w-full  border-b-[1px] border-[#E2E4E9]">
+						<div className="py-4 w-full border-b-[1px] border-[#E2E4E9]">
 							<h2 className="text-sm text-[#6B7280B7] font-inter">Status</h2>
 							<p
 								className={`status-inner mt-4 ${
-									farmer.biometricStatus === "both"
-										? "green"
-										: farmer.biometricStatus === "facial"
-										? "blue"
-										: farmer.biometricStatus === "fingerprint"
-										? "yellow"
-										: "red"
+									userData?.finger_bio && userData?.facial_bio ? "green" : "red"
 								}`}>
-								{farmer.biometricStatus}
+								{userData?.finger_bio && userData?.facial_bio
+									? "Captured"
+									: "Not Captured"}
 							</p>
 						</div>
+
 						<div className="py-4 w-full  border-b-[1px] border-[#E2E4E9]">
 							<div
 								className="flex flex-row justify-start gap-1 items-center cursor-pointer"
@@ -143,7 +196,9 @@ function FarmerDetails() {
 							</div>
 							<p className="text-sm text-[#6B7280B7] font-inter mt-2">
 								Date captured{" "}
-								<span className="text-dark-1">{farmer.dateJoined}</span>
+								<span className="text-dark-1">
+									{formatDate(userData?.created_at)}
+								</span>
 							</p>
 						</div>
 						<div className="py-4">
@@ -170,16 +225,16 @@ function FarmerDetails() {
 									<h2 className="text-sm text-[#6B7280B7] font-inter">
 										First Name
 									</h2>
-									<p className="text-sm text-dark-1 font-inter mt-2">
-										{farmer.firstName}
+									<p className="text-sm text-dark-1 font-inter mt-2 capitalize">
+										{userData?.first_name}
 									</p>
 								</div>
 								<div className="w-[50%] lg:w-full">
 									<h2 className="text-sm text-[#6B7280B7] font-inter">
 										Last Name
 									</h2>
-									<p className="text-sm text-dark-1 font-inter mt-2">
-										{farmer.lastName}
+									<p className="text-sm text-dark-1 font-inter mt-2 capitalize">
+										{userData?.last_name}
 									</p>
 								</div>
 							</div>
@@ -195,7 +250,7 @@ function FarmerDetails() {
 										Phone Number
 									</h2>
 									<p className="text-sm text-dark-1 font-inter mt-2">
-										+2348100000000
+										{userData?.phone_number}
 									</p>
 								</div>
 							</div>
@@ -213,8 +268,8 @@ function FarmerDetails() {
 										<p className="text-xs text-dark-1 font-inter">Face ID</p>
 									</div>
 
-									{farmer.biometricStatus === "both" ||
-									farmer.biometricStatus === "facial" ? (
+									{userData?.facial_bio === "both" ||
+									userData?.facial_bio === "facial" ? (
 										<IconCircleCheckFilled
 											className="text-green-500"
 											color="#2B7F68"
@@ -236,8 +291,8 @@ function FarmerDetails() {
 										</p>
 									</div>
 
-									{farmer.biometricStatus === "both" ||
-									farmer.biometricStatus === "fingerprint" ? (
+									{userData?.finger_bio === "both" ||
+									userData?.finger_bio === "fingerprint" ? (
 										<IconCircleCheckFilled
 											color="#2B7F68"
 											className="text-green-500"
@@ -256,7 +311,7 @@ function FarmerDetails() {
 										OAFID (One Acre Fund Identification Number)
 									</h2>
 									<p className="text-sm text-dark-1 font-inter mt-2">
-										{farmer.id}
+										{userData?.oaf_id}
 									</p>
 								</div>
 							</div>
@@ -276,21 +331,23 @@ function FarmerDetails() {
 										District Name
 									</h2>
 									<p className="text-sm text-dark-1 font-inter mt-2">
-										{farmer.sector}
+										{userData?.district?.name}
 									</p>
 								</div>
 							</div>
 							<div className="flex flex-row justify-start gap-20 items-center p-2 border-b-[1px] border-[#E2E4E9]">
 								<div className="w-[50%] lg:w-full">
 									<h2 className="text-sm text-[#6B7280B7] font-inter">POD</h2>
-									<p className="text-sm text-dark-1 font-inter mt-2">---</p>
+									<p className="text-sm text-dark-1 font-inter mt-2">
+										{userData?.pod.name}
+									</p>
 								</div>
 								<div className="w-[50%] lg:w-full">
 									<h2 className="text-sm text-[#6B7280B7] font-inter">
 										Site Name
 									</h2>
 									<p className="text-sm text-dark-1 font-inter mt-2">
-										{farmer.siteName}
+										{userData?.site?.name}
 									</p>
 								</div>
 							</div>
@@ -300,7 +357,7 @@ function FarmerDetails() {
 										Group Name
 									</h2>
 									<p className="text-sm text-dark-1 font-inter mt-2">
-										{farmer.groupName}
+										{userData?.group?.name}
 									</p>
 								</div>
 							</div>
@@ -311,7 +368,8 @@ function FarmerDetails() {
 			{isDeleteModalOpen && (
 				<Modal onClose={closeDeleteModal} isOpen={isDeleteModalOpen}>
 					<p className="mt-4">
-						Are you sure you want to delete {farmer?.firstName}&apos;s account?
+						Are you sure you want to delete {userData?.first_name}&apos;s
+						account?
 					</p>
 
 					<p className="text-sm text-primary-6">This can&apos;t be undone</p>

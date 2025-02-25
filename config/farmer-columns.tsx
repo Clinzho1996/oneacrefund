@@ -12,32 +12,104 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { farmerData } from "@/constants";
 import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
-import { format, isValid, parseISO } from "date-fns";
+import axios from "axios";
+import { getSession } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { FarmerDataTable } from "./farmer-table";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
 export type Farmer = {
 	id: string;
-	firstName: string;
-	lastName: string;
-	groupName: string;
-	siteName: string;
-	sector: string;
-	dateJoined: string;
-	biometricStatus: "none" | "facial" | "fingerprint" | "both";
+	oaf_id: string;
+	first_name: string;
+	last_name: string;
+	other_name: string;
+	gender: string;
+	email: string;
+	phone_number: string;
+	dob: string;
+	state_id: string;
+	district_id: string;
+	pod_id: string;
+	site_id: string;
+	group_id: string;
+	pic: string;
+	finger_bio: string | null;
+	facial_bio: string | null;
+	created_at: string;
+	updated_at: string;
+	group: {
+		id: string;
+		state_id: string;
+		district_id: string;
+		pod_id: string;
+		site_id: string;
+		name: string;
+		created_at: string;
+		updated_at: string;
+	};
+	site: {
+		id: string;
+		state_id: string;
+		district_id: string;
+		pod_id: string;
+		name: string;
+		created_at: string;
+		updated_at: string;
+	};
+	pod: {
+		id: string;
+		state_id: string;
+		district_id: string;
+		name: string;
+		created_at: string;
+		updated_at: string;
+	};
+	district: {
+		id: string;
+		state_id: string;
+		name: string;
+		created_at: string;
+		updated_at: string;
+	};
+	state: {
+		id: string;
+		name: string;
+	};
 };
+
+interface ApiResponse {
+	id: string;
+	first_name: string;
+	last_name: string;
+	email: string;
+	picture: string | null;
+	staff_code: string;
+	role: string;
+	is_active: boolean;
+	last_logged_in: string | null;
+	created_at: string;
+	updated_at: string;
+	status?: string;
+}
+
+declare module "next-auth" {
+	interface Session {
+		accessToken?: string;
+	}
+}
 
 const FarmerTable = () => {
 	const [isRestoreModalOpen, setRestoreModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-	const [tableData, setTableData] = useState(farmerData);
+	const [tableData, setTableData] = useState<Farmer[]>([]);
 
 	const openRestoreModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
@@ -55,6 +127,131 @@ const FarmerTable = () => {
 
 	const closeDeleteModal = () => {
 		setDeleteModalOpen(false);
+	};
+
+	const fetchFarmers = async () => {
+		try {
+			setIsLoading(true);
+			const session = await getSession();
+
+			console.log("session", session);
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+
+			const response = await axios.get<{
+				status: string;
+				message: string;
+				data: Farmer[];
+			}>("https://api.wowdev.com.ng/api/v1/farmer", {
+				headers: {
+					Accept: "application/json",
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			const fetchedData = response.data.data;
+
+			console.log("Farmer Data:", fetchedData);
+
+			// Map the API response to match the `Farmer` type
+			const mappedData = fetchedData.map((item) => ({
+				id: item.id,
+				oaf_id: item.oaf_id,
+				first_name: item.first_name,
+				last_name: item.last_name,
+				other_name: item.other_name,
+				gender: item.gender,
+				email: item.email,
+				phone_number: item.phone_number,
+				dob: item.dob,
+				state_id: item.state_id,
+				district_id: item.district_id,
+				pod_id: item.pod_id,
+				site_id: item.site_id,
+				group_id: item.group_id,
+				pic: item.pic,
+				finger_bio: item.finger_bio,
+				facial_bio: item.facial_bio,
+				created_at: item.created_at,
+				updated_at: item.updated_at,
+				group: item.group || "N/A",
+				site: item.site || "N/A",
+				pod: item.pod || "N/A",
+				district: item.district || "N/A",
+				state: item.state || "N/A",
+			}));
+
+			console.log("Mapped Data:", mappedData);
+			setTableData(mappedData);
+		} catch (error) {
+			console.error("Error fetching farmer data:", error);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchFarmers();
+	}, []);
+
+	const deleteFarmer = async (id: string) => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.delete(
+				`https://api.wowdev.com.ng/api/v1/farmer/${id}`,
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				// Remove the deleted farmer from the table
+				setTableData((prevData) =>
+					prevData.filter((farmer) => farmer.id !== id)
+				);
+
+				toast.success("Farmer deleted successfully.");
+			}
+		} catch (error) {
+			console.error("Error deleting farmer:", error);
+		}
+	};
+	const formatDate = (rawDate: string | Date | null | undefined) => {
+		const options: Intl.DateTimeFormatOptions = {
+			year: "numeric",
+			month: "long",
+			day: "numeric",
+		};
+
+		// Handle null or undefined values
+		if (!rawDate) {
+			return "N/A";
+		}
+
+		const parsedDate =
+			typeof rawDate === "string" ? new Date(rawDate) : rawDate;
+
+		if (isNaN(parsedDate.getTime())) {
+			return "Invalid Date";
+		}
+
+		// Format the valid date
+		return new Intl.DateTimeFormat("en-US", options).format(parsedDate);
 	};
 
 	const columns: ColumnDef<Farmer>[] = [
@@ -81,69 +278,63 @@ const FarmerTable = () => {
 			),
 		},
 		{
-			accessorKey: "id",
+			accessorKey: "oaf_id",
 			header: "OAF-ID",
 			cell: ({ row }) => {
-				const id = row.getValue<string>("id");
-
-				return <span className="text-xs text-black">{id}</span>;
+				const oafId = row.getValue<string>("oaf_id");
+				return <span className="text-xs text-black">{oafId}</span>;
 			},
 		},
 		{
-			accessorKey: "firstName",
+			accessorKey: "first_name",
 			header: "First Name",
 			cell: ({ row }) => {
-				const firstName = row.getValue<string>("firstName");
-
+				const firstName = row.getValue<string>("first_name");
 				return <span className="text-xs text-black">{firstName}</span>;
 			},
 		},
 		{
-			accessorKey: "lastName",
+			accessorKey: "last_name",
 			header: "Last Name",
 			cell: ({ row }) => {
-				const lastName = row.getValue<string>("lastName");
-
+				const lastName = row.getValue<string>("last_name");
 				return <span className="text-xs text-black">{lastName}</span>;
 			},
 		},
 		{
-			accessorKey: "groupName",
+			accessorKey: "group.name",
 			header: "Group Name",
 			cell: ({ row }) => {
-				const groupName = row.getValue<string>("groupName");
-
+				const groupName = row.original.group?.name || "N/A"; // Fix applied here
 				return <span className="text-xs text-primary-6">{groupName}</span>;
 			},
 		},
 		{
-			accessorKey: "siteName",
+			accessorKey: "site.name",
 			header: "Site Name",
 			cell: ({ row }) => {
-				const siteName = row.getValue<string>("siteName");
-
+				const siteName = row.original.site?.name || "N/A"; // Fix applied here
 				return <span className="text-xs text-primary-6">{siteName}</span>;
 			},
 		},
 		{
-			accessorKey: "sector",
-			header: "Sector",
+			accessorKey: "pod.name",
+			header: "Pod Name",
 			cell: ({ row }) => {
-				const sector = row.getValue<string>("sector");
-
-				return <span className="text-xs text-primary-6">{sector}</span>;
+				const podName = row.original.pod?.name || "N/A"; // Fix applied here
+				return <span className="text-xs text-primary-6">{podName}</span>;
 			},
 		},
 		{
-			accessorKey: "dateJoined",
+			accessorKey: "created_at",
 			header: "Date Joined",
 			cell: ({ row }) => {
-				const date = parseISO(row.original.dateJoined); // Convert to Date object
+				const rawDate = row.original.created_at;
+				const date = new Date(rawDate);
+
 				return (
-					<span className="text-xs text-primary-6">
-						{isValid(date) ? format(date, "do MMM. yyyy") : "Invalid Date"}
-					</span>
-				); // Format if valid
+					<span className="text-xs text-primary-6">{formatDate(date)}</span>
+				);
 			},
 		},
 		{
@@ -162,13 +353,15 @@ const FarmerTable = () => {
 				);
 			},
 			cell: ({ row }) => {
-				const status = row.getValue<string>("biometricStatus");
+				const status = row.original.facial_bio
+					? "facial"
+					: row.original.finger_bio
+					? "fingerprint"
+					: "none";
 				return (
 					<div
 						className={`status ${
-							status === "both"
-								? "green"
-								: status === "facial"
+							status === "facial"
 								? "blue"
 								: status === "fingerprint"
 								? "yellow"
@@ -243,7 +436,7 @@ const FarmerTable = () => {
 
 	return (
 		<>
-			<FarmerDataTable columns={columns} data={farmerData} />
+			<FarmerDataTable columns={columns} data={tableData} />
 
 			{isRestoreModalOpen && (
 				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>

@@ -34,7 +34,7 @@ function StaffInfo() {
 			}
 
 			const response = await axios.get<ApiResponse>(
-				"http://api.wowdev.com.ng/api/v1/analytics/staff-stats",
+				"https://api.wowdev.com.ng/api/v1/analytics/staff-stats",
 				{
 					headers: {
 						Accept: "application/json",

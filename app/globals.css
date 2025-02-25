@@ -159,6 +159,10 @@ body {
 	font-size: 12px;
 }
 
+.t-data {
+	text-transform: capitalize;
+}
+
 .status-inner.blue {
 	background-color: #f9f5ff; /* Tailwind bg-red-100 */
 	color: #6941c6;

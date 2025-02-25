@@ -1,14 +1,36 @@
 "use client";
 
-import { staffData } from "@/constants";
 import { IconArrowBack, IconSettings, IconTrash } from "@tabler/icons-react";
-import { useSession } from "next-auth/react";
+import axios from "axios";
+import { getSession, useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+
+export type Staff = {
+	id: string;
+	name: string;
+	first_name: string;
+	last_name: string;
+	date: string;
+	role: string;
+	staff: string;
+	staff_code: string;
+	status?: string;
+	email: string;
+	created_at: string;
+	is_active: boolean;
+};
+
+interface ApiResponse {
+	data: Staff; // Adjust to match your API structure
+}
 
 function StaffDetails() {
 	const { id } = useParams();
+	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [userData, setUserData] = useState<Staff | null>(null);
 	const { data: session } = useSession();
 	// Function to get the name initials from the user's name
 	const getNameInitials = ({ name }: { name: string }) => {
@@ -20,15 +42,66 @@ function StaffDetails() {
 		return initials.toUpperCase();
 	};
 
-	const staff = staffData.find((staff) => staff.id === id);
+	const fetchStaff = useCallback(async () => {
+		setIsLoading(true);
+		try {
+			const session = await getSession();
 
-	if (!staff) {
-		return (
-			<section className="bg-primary py-[4%] px-[6%]">
-				<p className="text-white text-[16px]">Staff not found</p>
-			</section>
-		);
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+
+			const response = await axios.get<ApiResponse>(
+				`https://api.wowdev.com.ng/api/v1/user/${id}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			console.log("data", response?.data?.data);
+			setUserData(response?.data?.data);
+			setIsLoading(false);
+		} catch (error: unknown) {
+			if (axios.isAxiosError(error)) {
+				console.log(
+					"Error fetching post:",
+					error.response?.data || error.message
+				);
+			} else {
+				console.log("Unexpected error:", error);
+			}
+		} finally {
+			setIsLoading(false);
+		}
+	}, [id]);
+
+	useEffect(() => {
+		fetchStaff();
+	}, [fetchStaff]);
+
+	const formatDate = (rawDate?: string | Date) => {
+		if (!rawDate) return "Unknown"; // Handle undefined case
+		const options: Intl.DateTimeFormatOptions = {
+			year: "numeric",
+			month: "long",
+			day: "numeric",
+		};
+		const parsedDate =
+			typeof rawDate === "string" ? new Date(rawDate) : rawDate;
+		return new Intl.DateTimeFormat("en-US", options).format(parsedDate);
+	};
+
+	if (isLoading) {
+		return <p>Loading...</p>;
 	}
+
 	return (
 		<section className="bg-[#F6F8F9] h-screen">
 			<div className="flex flex-row justify-between items-center bg-white p-4 border-b-[1px] border-[#E2E4E9] h-[80px]">
@@ -86,7 +159,7 @@ function StaffDetails() {
 						<Image src="/images/avat.png" width={50} height={50} alt="avatar" />
 						<div className="py-4 border-b-[1px] border-[#E2E4E9]">
 							<p className="text-[16px] text-dark-1 font-medium font-inter mt-2">
-								{staff.name}
+								{userData?.first_name} {userData?.last_name}
 							</p>
 							<p className="text-sm text-[#6B7280B7] font-inter">
 								Last signed in 3h ago
@@ -96,9 +169,9 @@ function StaffDetails() {
 							<h2 className="text-sm text-[#6B7280B7] font-inter">Status</h2>
 							<p
 								className={`status-inner mt-4 ${
-									staff.status === "active" ? "green" : "red"
+									userData?.is_active ? "green" : "red"
 								}`}>
-								{staff.status}
+								{userData?.is_active ? "Active" : "Inactive"}
 							</p>
 						</div>
 						<div className="py-4">
@@ -107,7 +180,10 @@ function StaffDetails() {
 								<p className="text-sm text-red">Delete</p>
 							</div>
 							<p className="text-sm text-[#6B7280B7] font-inter mt-2">
-								Date joined <span className="text-dark-1">{staff.date}</span>
+								Date joined{" "}
+								<span className="text-dark-1">
+									{formatDate(userData?.created_at)}
+								</span>
 							</p>
 						</div>
 					</div>
@@ -127,30 +203,30 @@ function StaffDetails() {
 								<h2 className="text-sm text-[#6B7280B7] font-inter">
 									Full Name
 								</h2>
-								<p className="text-sm text-dark-1 font-inter mt-2">
-									{staff.name}
+								<p className="text-sm text-dark-1 font-inter mt-2 capitalize">
+									{userData?.first_name} {userData?.last_name}
 								</p>
 							</div>
 							<div className="p-2 border-b-[1px] border-[#E2E4E9]">
 								<h2 className="text-sm text-[#6B7280B7] font-inter">
 									Email Address
 								</h2>
-								<p className="text-sm text-dark-1 font-inter mt-2">
-									{staff.email}
+								<p className="text-sm text-dark-1 font-inter mt-2 capitalize">
+									{userData?.email}
 								</p>
 							</div>
 							<div className="p-2 border-b-[1px] border-[#E2E4E9]">
 								<h2 className="text-sm text-[#6B7280B7] font-inter">Role</h2>
-								<p className="text-sm text-dark-1 font-inter mt-2">
-									{staff.role}
+								<p className="text-sm text-dark-1 font-inter mt-2 capitalize">
+									{userData?.role}
 								</p>
 							</div>
 							<div className="p-2 border-b-[1px] border-[#E2E4E9]">
 								<h2 className="text-sm text-[#6B7280B7] font-inter">
 									Staff Code
 								</h2>
-								<p className="text-sm text-dark-1 font-inter mt-2">
-									{staff.staff}
+								<p className="text-sm text-dark-1 font-inter mt-2 uppercase">
+									{userData?.staff_code}
 								</p>
 							</div>
 						</div>

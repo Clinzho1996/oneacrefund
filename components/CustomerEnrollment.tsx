@@ -68,7 +68,7 @@ function CustomerEnrollment() {
 			}
 
 			const response = await axios.post<ApiResponse>(
-				`http://api.wowdev.com.ng/api/v1/analytics/monthly-farmers`,
+				`https://api.wowdev.com.ng/api/v1/analytics/monthly-farmers`,
 				{ year: selectedYear },
 				{
 					headers: {

@@ -34,7 +34,6 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { farmerData } from "@/constants";
 import {
 	IconCloudDownload,
 	IconFileExport,
@@ -49,7 +48,7 @@ import {
 	ChevronsRight,
 } from "lucide-react";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 
 interface DataTableProps<TData, TValue> {
@@ -67,7 +66,6 @@ export function FarmerDataTable<TData, TValue>({
 	);
 	const [columnVisibility, setColumnVisibility] =
 		React.useState<VisibilityState>({});
-	const [selectedType, setSelectedType] = useState<string>("");
 	const [selectedStatus, setSelectedStatus] = useState<string>("View All");
 	const [featuredImage, setFeaturedImage] = useState<File | null>(null);
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -98,20 +96,21 @@ export function FarmerDataTable<TData, TValue>({
 	// Function to filter data based on date range
 	const filterDataByDateRange = () => {
 		if (!dateRange?.from || !dateRange?.to) {
-			setTableData(data); // Reset to all data if no date range is selected
+			console.log("No date range selected. Resetting to all data.");
+			setTableData(data); // Reset to all data
 			return;
 		}
 
 		const filteredData = data.filter((farmer: any) => {
-			const dateJoined = new Date(farmer.dateJoined);
+			const dateJoined = new Date(farmer.date);
 			return dateJoined >= dateRange.from! && dateJoined <= dateRange.to!;
 		});
 
+		console.log("Filtered data by date range:", filteredData);
 		setTableData(filteredData);
 	};
 
-	// Update the table data whenever the date range changes
-	React.useEffect(() => {
+	useEffect(() => {
 		filterDataByDateRange();
 	}, [dateRange]);
 
@@ -121,13 +120,17 @@ export function FarmerDataTable<TData, TValue>({
 		if (status === "View All") {
 			setTableData(data); // Reset to all data
 		} else {
-			const filteredData = farmerData?.filter(
+			const filteredData = data?.filter(
 				(farmer) =>
-					farmer.biometricStatus?.toLocaleLowerCase() === status.toLowerCase()
+					(farmer as any)?.status?.toLowerCase() === status.toLowerCase()
 			);
 			setTableData(filteredData as TData[]);
 		}
 	};
+
+	useEffect(() => {
+		setTableData(data); // Sync `tableData` with `data` prop
+	}, [data]);
 
 	const handleDelete = () => {
 		const selectedRowIds = Object.keys(rowSelection).filter(

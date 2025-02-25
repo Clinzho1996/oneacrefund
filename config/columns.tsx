@@ -1,12 +1,6 @@
 "use client";
 
-import {
-	ColumnDef,
-	ColumnFiltersState,
-	RowSelectionState,
-	SortingState,
-	VisibilityState,
-} from "@tanstack/react-table";
+import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
 import Modal from "@/components/Modal";
@@ -18,47 +12,71 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { projectData, staffData } from "@/constants";
-import { IconEye, IconRefresh, IconTrash } from "@tabler/icons-react";
-import { format, isValid, parseISO } from "date-fns";
+import {
+	IconEye,
+	IconRestore,
+	IconTrash,
+	IconUserPause,
+} from "@tabler/icons-react";
+import axios from "axios";
+import { getSession } from "next-auth/react";
 import Link from "next/link";
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { DataTable } from "./data-table";
 
 // This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
 export type Staff = {
 	id: string;
-	name: string;
+	name?: string;
 	date: string;
 	role: string;
 	staff: string;
-	status: "active" | "inactive";
+	status?: string;
 	email: string;
 };
 
+interface ApiResponse {
+	id: string;
+	first_name: string;
+	last_name: string;
+	email: string;
+	picture: string | null;
+	staff_code: string;
+	role: string;
+	is_active: boolean;
+	last_logged_in: string | null;
+	created_at: string;
+	updated_at: string;
+	status?: string;
+}
+
+declare module "next-auth" {
+	interface Session {
+		accessToken?: string;
+	}
+}
+
 const Table = () => {
 	const [isRestoreModalOpen, setRestoreModalOpen] = useState(false);
+	const [isReactivateModalOpen, setReactivateModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
-
-	const [sorting, setSorting] = React.useState<SortingState>([]);
-	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-		[]
-	);
-	const [columnVisibility, setColumnVisibility] =
-		React.useState<VisibilityState>({});
-	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-	const [globalFilter, setGlobalFilter] = useState("");
-	const [tableData, setTableData] = useState(projectData);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [tableData, setTableData] = useState<Staff[]>([]);
 
 	const openRestoreModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
+		setSelectedRow(row.original);
 		setRestoreModalOpen(true);
 	};
 
+	const openReactivateModal = (row: any) => {
+		setSelectedRow(row.original);
+		setReactivateModalOpen(true);
+	};
+
 	const openDeleteModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
+		setSelectedRow(row.original);
 		setDeleteModalOpen(true);
 	};
 
@@ -66,8 +84,181 @@ const Table = () => {
 		setRestoreModalOpen(false);
 	};
 
+	const closeReactivateModal = () => {
+		setReactivateModalOpen(false);
+	};
+
 	const closeDeleteModal = () => {
 		setDeleteModalOpen(false);
+	};
+
+	const fetchStaffs = async () => {
+		try {
+			setIsLoading(true);
+			const session = await getSession();
+
+			console.log("session", session);
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+
+			const response = await axios.get<{
+				status: string;
+				message: string;
+				data: ApiResponse[];
+			}>("https://api.wowdev.com.ng/api/v1/user", {
+				headers: {
+					Accept: "application/json",
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			const fetchedData = response.data.data;
+
+			console.log("Staff Data:", fetchedData);
+
+			// Map the API response to match the `Staff` type
+			const mappedData = fetchedData.map((item) => ({
+				id: item.id,
+				name: `${item.first_name} ${item.last_name}` || "N/A",
+				date: item.created_at,
+				role: item.role,
+				staff: item.staff_code,
+				status: item.is_active ? "active" : "inactive",
+				email: item.email,
+			}));
+
+			console.log("Mapped Data:", mappedData);
+			setTableData(mappedData);
+		} catch (error) {
+			console.error("Error fetching user data:", error);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchStaffs();
+	}, []);
+
+	const deleteStaff = async (id: string) => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.delete(
+				`https://api.wowdev.com.ng/api/v1/user/${id}`,
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				// Remove the deleted staff from the table
+				setTableData((prevData) => prevData.filter((staff) => staff.id !== id));
+
+				toast.success("Staff deleted successfully.");
+			}
+		} catch (error) {
+			console.error("Error deleting staff:", error);
+		}
+	};
+
+	const suspendStaff = async (id: string) => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.put(
+				`https://api.wowdev.com.ng/api/v1/user/suspend/${id}`,
+				{},
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				// Update the staff status in the table
+				setTableData((prevData) =>
+					prevData.map((staff) =>
+						staff.id === id ? { ...staff, status: "inactive" } : staff
+					)
+				);
+
+				toast.success("Staff suspended successfully.");
+			}
+		} catch (error) {
+			console.error("Error suspending staff:", error);
+			toast.error("Failed to suspend staff. Please try again.");
+		}
+	};
+
+	const reactivateStaff = async (id: string) => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.put(
+				`https://api.wowdev.com.ng/api/v1/user/reactivate/${id}`,
+				{},
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				// Update the staff status in the table
+				setTableData((prevData) =>
+					prevData.map((staff) =>
+						staff.id === id ? { ...staff, status: "active" } : staff
+					)
+				);
+
+				toast.success("Staff reactivated successfully.");
+			}
+		} catch (error) {
+			console.error("Error suspending staff:", error);
+			toast.error("Failed to reactivate staff. Please try again.");
+		}
+	};
+
+	const formatDate = (rawDate: string | Date) => {
+		const options: Intl.DateTimeFormatOptions = {
+			year: "numeric",
+			month: "long",
+			day: "numeric",
+		};
+		const parsedDate =
+			typeof rawDate === "string" ? new Date(rawDate) : rawDate;
+		return new Intl.DateTimeFormat("en-US", options).format(parsedDate);
 	};
 
 	const columns: ColumnDef<Staff>[] = [
@@ -95,23 +286,13 @@ const Table = () => {
 		},
 		{
 			accessorKey: "name",
-			header: ({ column }) => {
-				return (
-					<Button
-						variant="ghost"
-						className="text-[13px] text-left"
-						onClick={() =>
-							column.toggleSorting(column.getIsSorted() === "asc")
-						}>
-						Name
-						<ArrowUpDown className="ml-2 h-4 w-4" />
-					</Button>
-				);
-			},
+			header: "Full Name",
 			cell: ({ row }) => {
-				const name = row.getValue<string>("name");
-
-				return <span className="text-xs text-black">{name}</span>;
+				if (!row) return null; // or return a placeholder
+				const name = row.getValue<string>("name") || "N/A";
+				return (
+					<span className="text-xs text-black capitalize t-data">{name}</span>
+				);
 			},
 		},
 		{
@@ -141,19 +322,19 @@ const Table = () => {
 			cell: ({ row }) => {
 				const email = row.getValue<string>("email");
 
-				return <span className="text-xs text-primary-6">{email}</span>;
+				return <span className="text-xs text-primary-6 t-data">{email}</span>;
 			},
 		},
 		{
 			accessorKey: "date",
 			header: "Date Joined",
 			cell: ({ row }) => {
-				const date = parseISO(row.original.date); // Convert to Date object
+				const rawDate = row.original.date;
+				const date = new Date(rawDate); // ✅ Convert it to a Date object
+
 				return (
-					<span className="text-xs text-primary-6">
-						{isValid(date) ? format(date, "do MMM. yyyy") : "Invalid Date"}
-					</span>
-				); // Format if valid
+					<span className="text-xs text-primary-6">{formatDate(date)}</span>
+				);
 			},
 		},
 		{
@@ -214,12 +395,21 @@ const Table = () => {
 									<p className="text-xs font-inter">View</p>
 								</DropdownMenuItem>
 							</Link>
-							<DropdownMenuItem
-								className="action cursor-pointer hover:bg-yellow-300"
-								onClick={() => openRestoreModal(row)}>
-								<IconRefresh />
-								<p className="text-xs font-inter">Suspend</p>
-							</DropdownMenuItem>
+							{actions.status === "active" ? (
+								<DropdownMenuItem
+									className="action cursor-pointer hover:bg-yellow-300"
+									onClick={() => openRestoreModal(row)}>
+									<IconUserPause />
+									<p className="text-xs font-inter">Suspend</p>
+								</DropdownMenuItem>
+							) : (
+								<DropdownMenuItem
+									className="action cursor-pointer hover:bg-yellow-300"
+									onClick={() => openReactivateModal(row)}>
+									<IconRestore />
+									<p className="text-xs font-inter">Reactivate</p>
+								</DropdownMenuItem>
+							)}
 							<DropdownMenuItem
 								className="action cursor-pointer hover:bg-red-500"
 								onClick={() => openDeleteModal(row)}>
@@ -235,27 +425,9 @@ const Table = () => {
 		},
 	];
 
-	const handleDelete = () => {
-		// Get the selected row IDs
-		const selectedRowIds = Object.keys(rowSelection).filter(
-			(key) => rowSelection[key]
-		);
-
-		// Filter the data to remove the selected rows
-		const filteredData = tableData.filter(
-			(row: { id: string }) => !selectedRowIds.includes(row.id)
-		);
-
-		// Update the table data
-		setTableData(filteredData);
-
-		// Clear the row selection after deletion
-		setRowSelection({});
-	};
-
 	return (
 		<>
-			<DataTable columns={columns} data={staffData} />
+			<DataTable columns={columns} data={tableData} />
 
 			{isRestoreModalOpen && (
 				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>
@@ -269,7 +441,36 @@ const Table = () => {
 							onClick={closeRestoreModal}>
 							Cancel
 						</Button>
-						<Button className="bg-[#F04F4A] text-white font-inter text-xs modal-delete">
+						<Button
+							className="bg-[#F04F4A] text-white font-inter text-xs modal-delete"
+							onClick={async () => {
+								await suspendStaff(selectedRow.id);
+								closeRestoreModal();
+							}}>
+							Yes, Confirm
+						</Button>
+					</div>
+				</Modal>
+			)}
+
+			{isReactivateModalOpen && (
+				<Modal onClose={closeReactivateModal} isOpen={isReactivateModalOpen}>
+					<p className="mt-4">
+						Are you sure you want to reactivate {selectedRow?.name}'s account?
+					</p>
+					<p className="text-sm text-primary-6">This can't be undone</p>
+					<div className="flex flex-row justify-end items-center gap-3 font-inter mt-4">
+						<Button
+							className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
+							onClick={closeReactivateModal}>
+							Cancel
+						</Button>
+						<Button
+							className="bg-[#F04F4A] text-white font-inter text-xs modal-delete"
+							onClick={async () => {
+								await reactivateStaff(selectedRow.id);
+								closeReactivateModal();
+							}}>
 							Yes, Confirm
 						</Button>
 					</div>
@@ -289,8 +490,8 @@ const Table = () => {
 						</Button>
 						<Button
 							className="bg-[#F04F4A] text-white font-inter text-xs modal-delete"
-							onClick={() => {
-								handleDelete();
+							onClick={async () => {
+								await deleteStaff(selectedRow.id);
 								closeDeleteModal();
 							}}>
 							Yes, Confirm

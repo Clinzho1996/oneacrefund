@@ -35,17 +35,19 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { staffData } from "@/constants";
 import { IconFileExport, IconPlus, IconTrash } from "@tabler/icons-react";
+import axios from "axios";
 import {
 	ChevronLeft,
 	ChevronRight,
 	ChevronsLeft,
 	ChevronsRight,
 } from "lucide-react";
+import { getSession } from "next-auth/react";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
+import { toast } from "react-toastify";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -62,22 +64,33 @@ export function DataTable<TData, TValue>({
 	);
 	const [columnVisibility, setColumnVisibility] =
 		React.useState<VisibilityState>({});
-	const [selectedType, setSelectedType] = useState<string>("");
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [selectedStatus, setSelectedStatus] = useState<string>("View All");
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [isModalOpen, setModalOpen] = useState(false);
-	const [tableData, setTableData] = useState(data);
+	const [tableData, setTableData] = useState<TData[]>(data);
+	const [isLoading, setIsLoading] = useState(false);
 
 	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
+	// State for form inputs
+	const [firstName, setFirstName] = useState("");
+	const [lastName, setLastName] = useState("");
+	const [email, setEmail] = useState("");
+	const [role, setRole] = useState("super_admin");
 
 	const openModal = () => setModalOpen(true);
 	const closeModal = () => setModalOpen(false);
 
+	// Sync `tableData` with `data` prop
+	useEffect(() => {
+		setTableData(data);
+	}, [data]);
+
 	// Function to filter data based on date range
 	const filterDataByDateRange = () => {
 		if (!dateRange?.from || !dateRange?.to) {
-			setTableData(data);
+			setTableData(data); // Reset to all data
 			return;
 		}
 
@@ -89,7 +102,7 @@ export function DataTable<TData, TValue>({
 		setTableData(filteredData);
 	};
 
-	React.useEffect(() => {
+	useEffect(() => {
 		filterDataByDateRange();
 	}, [dateRange]);
 
@@ -99,23 +112,137 @@ export function DataTable<TData, TValue>({
 		if (status === "View All") {
 			setTableData(data); // Reset to all data
 		} else {
-			const filteredData = staffData?.filter(
-				(farmer) => farmer?.status?.toLocaleLowerCase() === status.toLowerCase()
+			const filteredData = data?.filter(
+				(farmer) =>
+					(farmer as any)?.status?.toLowerCase() === status.toLowerCase()
 			);
+
 			setTableData(filteredData as TData[]);
 		}
 	};
 
-	const handleDelete = () => {
-		const selectedRowIds = Object.keys(rowSelection).filter(
-			(key) => rowSelection[key]
-		);
-		const filteredData = tableData.filter(
-			(_, index) => !selectedRowIds.includes(index.toString())
-		);
-		setTableData(filteredData);
-		setRowSelection({});
+	const handleAddStaff = async () => {
+		setIsLoading(true);
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const payload = {
+				first_name: firstName,
+				last_name: lastName,
+				email: email,
+				role: role,
+			};
+
+			const response = await axios.post(
+				"https://api.wowdev.com.ng/api/v1/user/create",
+				payload,
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200 || response.status === 201) {
+				// Option 1: Update the table data with the new staff member
+				const newStaff = response.data.data;
+				setTableData((prevData) => [...prevData, newStaff] as TData[]);
+
+				// Option 2: Refetch the staff list to ensure the table is up-to-date
+				// await fetchStaffs();
+
+				toast.success("Staff member added successfully!");
+
+				// Close the modal and reset form fields
+				closeModal();
+				setFirstName("");
+				setLastName("");
+				setEmail("");
+				setRole("super_admin");
+			}
+		} catch (error: unknown) {
+			if (axios.isAxiosError(error)) {
+				console.log(
+					"Error Adding Staff:",
+					error.response?.data || error.message
+				);
+				toast.error(
+					error.response?.data?.message ||
+						"An error occurred. Please try again."
+				);
+			} else {
+				console.log("Unexpected error:", error);
+				toast.error("Unexpected error occurred.");
+			}
+		} finally {
+			setIsLoading(false);
+		}
 	};
+
+	const bulkDeleteStaff = async () => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				toast.error("No access token found. Please log in again.");
+				return;
+			}
+
+			const selectedIds = Object.keys(rowSelection).map(
+				(index) => (tableData[parseInt(index)] as any)?.id
+			);
+
+			if (selectedIds.length === 0) {
+				toast.warn("No staff selected for deletion.");
+				return;
+			}
+
+			console.log("Selected IDs for deletion:", selectedIds);
+
+			const response = await axios.delete(
+				"https://api.wowdev.com.ng/api/v1/user/bulk/delete",
+				{
+					data: { user_ids: selectedIds }, // Ensure this matches the API's expected payload
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				toast.success("Selected staff deleted successfully!");
+
+				// Update the table data by filtering out the deleted staff
+				setTableData((prevData) =>
+					prevData.filter((staff) => !selectedIds.includes((staff as any).id))
+				);
+
+				// Clear the selection
+				setRowSelection({});
+			}
+		} catch (error) {
+			console.error("Error bulk deleting staff:", error);
+			if (axios.isAxiosError(error)) {
+				toast.error(
+					error.response?.data?.message ||
+						"Failed to delete staff. Please try again."
+				);
+			} else {
+				toast.error("An unexpected error occurred. Please try again.");
+			}
+		}
+	};
+	1;
 
 	const table = useReactTable({
 		data: tableData,
@@ -145,7 +272,9 @@ export function DataTable<TData, TValue>({
 					<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
 						<p className="text-xs text-primary-6">Role</p>
 
-						<RadioGroup defaultValue="super-admin">
+						<RadioGroup
+							defaultValue="super_admin"
+							onValueChange={(value) => setRole(value)}>
 							<div className="flex flex-row justify-between items-center gap-5">
 								<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
 									<RadioGroupItem value="admin" id="admin" />
@@ -154,13 +283,13 @@ export function DataTable<TData, TValue>({
 									</p>
 								</div>
 								<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
-									<RadioGroupItem value="super-admin" id="super-admin" />
+									<RadioGroupItem value="super_admin" id="super_admin" />
 									<p className="text-sm text-primary-6 whitespace-nowrap">
 										Super Admin
 									</p>
 								</div>
 								<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
-									<RadioGroupItem value="field" id="field" />
+									<RadioGroupItem value="field_officer" id="field_officer" />
 									<p className="text-sm text-primary-6 whitespace-nowrap">
 										Field
 									</p>
@@ -171,11 +300,26 @@ export function DataTable<TData, TValue>({
 						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
 						<div className="flex flex-col gap-2">
 							<p className="text-xs text-primary-6">First Name</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
+							<Input
+								type="text"
+								className="focus:border-none mt-2 h-5"
+								value={firstName}
+								onChange={(e) => setFirstName(e.target.value)}
+							/>
 							<p className="text-xs text-primary-6 mt-2">Last Name</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
+							<Input
+								type="text"
+								className="focus:border-none mt-2 h-5"
+								value={lastName}
+								onChange={(e) => setLastName(e.target.value)}
+							/>
 							<p className="text-xs text-primary-6 mt-2">Email Address</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
+							<Input
+								type="text"
+								className="focus:border-none mt-2 h-5"
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+							/>
 						</div>
 						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
 						<div className="flex flex-row justify-end items-center gap-3 font-inter">
@@ -184,8 +328,11 @@ export function DataTable<TData, TValue>({
 								onClick={closeModal}>
 								Cancel
 							</Button>
-							<Button className="bg-primary-1 text-white font-inter text-xs">
-								Add
+							<Button
+								className="bg-primary-1 text-white font-inter text-xs"
+								onClick={handleAddStaff}
+								disabled={isLoading}>
+								{isLoading ? "Adding Staff..." : "Add Staff"}
 							</Button>
 						</div>
 					</div>
@@ -253,7 +400,7 @@ export function DataTable<TData, TValue>({
 					/>
 					<Button
 						className="border-[#E8E8E8] border-[1px] bg-white"
-						onClick={handleDelete}>
+						onClick={bulkDeleteStaff}>
 						<IconTrash /> Delete
 					</Button>
 					<div className="w-[250px]">
