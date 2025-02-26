@@ -19,8 +19,37 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
+interface State {
+	id: string;
+	name: string;
+}
+
+interface District {
+	id: string;
+	name: string;
+	stateId: string;
+}
+
+interface Pod {
+	id: string;
+	name: string;
+	districtId: string;
+}
+
+interface Site {
+	id: string;
+	name: string;
+	podId: string;
+}
+
+interface Staff {
+	id: string;
+	name: string;
+	role: string;
+	siteId: string;
+}
 interface ApiResponse {
-	data: Device; // Adjust to match your API structure
+	data: Device;
 }
 
 function DeviceDetails() {
@@ -63,11 +92,11 @@ function DeviceDetails() {
 		return initials.toUpperCase();
 	};
 
-	const [states, setStates] = useState<any[]>([]);
-	const [districts, setDistricts] = useState<any[]>([]);
-	const [pods, setPods] = useState<any[]>([]);
-	const [sites, setSites] = useState<any[]>([]);
-	const [staffs, setStaffs] = useState<any[]>([]);
+	const [states, setStates] = useState<State[]>([]);
+	const [districts, setDistricts] = useState<District[]>([]);
+	const [pods, setPods] = useState<Pod[]>([]);
+	const [sites, setSites] = useState<Site[]>([]);
+	const [staffs, setStaffs] = useState<Staff[]>([]);
 
 	const fetchStates = async () => {
 		try {
