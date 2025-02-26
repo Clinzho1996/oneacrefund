@@ -262,14 +262,14 @@ function FarmerDetails() {
 								</h2>
 
 								{/* Face ID Section */}
+								{/* Face ID Section */}
 								<div className="flex flex-row justify-between items-center border shadow-md rounded-lg p-2 mt-3">
 									<div className="flex flex-row justify-start items-center gap-2">
 										<IconFaceId color="#2B7F68" size={18} />
 										<p className="text-xs text-dark-1 font-inter">Face ID</p>
 									</div>
 
-									{userData?.facial_bio === "both" ||
-									userData?.facial_bio === "facial" ? (
+									{userData?.facial_bio ? (
 										<IconCircleCheckFilled
 											className="text-green-500"
 											color="#2B7F68"
@@ -277,7 +277,7 @@ function FarmerDetails() {
 									) : (
 										<IconCircleXFilled
 											className="text-red-500"
-											color=" #F04F4A"
+											color="#F04F4A"
 										/>
 									)}
 								</div>
@@ -291,11 +291,10 @@ function FarmerDetails() {
 										</p>
 									</div>
 
-									{userData?.finger_bio === "both" ||
-									userData?.finger_bio === "fingerprint" ? (
+									{userData?.finger_bio ? (
 										<IconCircleCheckFilled
-											color="#2B7F68"
 											className="text-green-500"
+											color="#2B7F68"
 										/>
 									) : (
 										<IconCircleXFilled

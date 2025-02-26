@@ -72,7 +72,7 @@ export function FarmerDataTable<TData, TValue>({
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [previewImage, setPreviewImage] = useState<string | null>(null);
 	const [isModalOpen, setModalOpen] = useState(false);
-	const [tableData, setTableData] = useState(data);
+	const [tableData, setTableData] = useState<TData[]>(data);
 	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
 	const openModal = () => setModalOpen(true);
@@ -119,14 +119,24 @@ export function FarmerDataTable<TData, TValue>({
 
 		if (status === "View All") {
 			setTableData(data); // Reset to all data
-		} else {
-			const filteredData = data?.filter(
-				(farmer) =>
-					(farmer as any)?.status?.toLowerCase() === status.toLowerCase()
-			);
-			setTableData(filteredData as TData[]);
+			return;
 		}
+
+		const filteredData = data.filter((farmer: any) => {
+			// Ensure biometricStatus exists before calling toLowerCase()
+			const farmerStatus = farmer?.biometricStatus
+				? farmer.biometricStatus.toLowerCase()
+				: "";
+
+			return farmerStatus === status.toLowerCase();
+		});
+
+		setTableData(filteredData);
 	};
+
+	useEffect(() => {
+		handleStatusFilter(selectedStatus);
+	}, [data]);
 
 	useEffect(() => {
 		setTableData(data); // Sync `tableData` with `data` prop

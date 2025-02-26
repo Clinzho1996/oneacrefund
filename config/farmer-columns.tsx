@@ -171,6 +171,14 @@ const FarmerTable = () => {
 				pod: item.pod || "N/A",
 				district: item.district || "N/A",
 				state: item.state || "N/A",
+				biometricStatus:
+					item.finger_bio && item.facial_bio
+						? "both"
+						: item.facial_bio
+						? "facial"
+						: item.finger_bio
+						? "fingerprint"
+						: "none",
 			}));
 
 			console.log("Mapped Data:", mappedData);
@@ -322,15 +330,22 @@ const FarmerTable = () => {
 				);
 			},
 			cell: ({ row }) => {
-				const status = row.original.facial_bio
-					? "facial"
-					: row.original.finger_bio
-					? "fingerprint"
-					: "none";
+				const { facial_bio, finger_bio } = row.original;
+				const status =
+					facial_bio && finger_bio
+						? "both"
+						: facial_bio
+						? "facial"
+						: finger_bio
+						? "fingerprint"
+						: "none";
+
 				return (
 					<div
 						className={`status ${
-							status === "facial"
+							status === "both"
+								? "green"
+								: status === "facial"
 								? "blue"
 								: status === "fingerprint"
 								? "yellow"
@@ -341,6 +356,7 @@ const FarmerTable = () => {
 				);
 			},
 		},
+
 		{
 			id: "actions",
 			header: "Action",
