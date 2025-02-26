@@ -2,6 +2,7 @@
 
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 
+import Loader from "@/components/Loader";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,23 +13,30 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { groupData } from "@/constants";
 import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
+import axios from "axios";
 import { MoreHorizontal } from "lucide-react";
+import { getSession } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
-import { SiteDataTable } from "./site-table";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { DistrictDataTable } from "./district-table";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
-export type Group = {
+export type District = {
 	id: string;
-	groupName?: string;
-	siteName?: string;
-	pod?: string;
-	district?: string;
-	state?: string;
+	state_id: string;
+	district_id: string;
+	pod_id: string;
+	site_id: string;
+	name: string;
+	created_at: string;
+	updated_at: string;
+	state: {
+		id: string;
+		name: string;
+	};
 };
 
 const DistrictTable = () => {
@@ -36,10 +44,95 @@ const DistrictTable = () => {
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
 
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-	const [tableData, setTableData] = useState(groupData);
+	const [tableData, setTableData] = useState<District[]>([]);
 
+	const fetchDistricts = async () => {
+		try {
+			setIsLoading(true);
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.get<{
+				status: string;
+				message: string;
+				data: District[];
+			}>("https://api.wowdev.com.ng/api/v1/district", {
+				headers: {
+					Accept: "application/json",
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			const fetchedData = response.data.data;
+
+			console.log("Site Data:", fetchedData);
+
+			const mappedData = fetchedData.map((item) => ({
+				id: item.id,
+				state_id: item.state_id,
+				district_id: item.district_id,
+				pod_id: item.pod_id,
+				site_id: item.site_id,
+				name: item.name,
+				created_at: item.created_at,
+				updated_at: item.updated_at,
+				state: item.state,
+			}));
+
+			console.log("Mapped Data:", mappedData);
+			setTableData(mappedData);
+
+			setIsLoading(false);
+		} catch (error) {
+			console.error("Error fetching district data:", error);
+			toast.error("Failed to fetch district data. Please try again.");
+		}
+	};
+
+	useEffect(() => {
+		fetchDistricts();
+	}, []);
+
+	const deleteDistrict = async (id: string) => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.delete(
+				`https://api.wowdev.com.ng/api/v1/district/${id}`,
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				// Remove the deleted farmer from the table
+				setTableData((prevData) =>
+					prevData.filter((farmer) => farmer.id !== id)
+				);
+
+				toast.success("District deleted successfully.");
+			}
+		} catch (error) {
+			console.error("Error deleting district:", error);
+		}
+	};
 	const openModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
 		setModalOpen(true);
@@ -67,7 +160,7 @@ const DistrictTable = () => {
 		setDeleteModalOpen(false);
 	};
 
-	const columns: ColumnDef<Group>[] = [
+	const columns: ColumnDef<District>[] = [
 		{
 			id: "select",
 			header: ({ table }) => (
@@ -91,21 +184,19 @@ const DistrictTable = () => {
 			),
 		},
 		{
-			accessorKey: "district",
+			accessorKey: "district.name",
 			header: "District",
 			cell: ({ row }) => {
-				const district = row.getValue<string>("district");
-
-				return <span className="text-xs text-primary-6">{district}</span>;
+				const districtName = row.original.name;
+				return <span className="text-xs text-primary-6">{districtName}</span>;
 			},
 		},
 		{
-			accessorKey: "state",
+			accessorKey: "state.name",
 			header: "State",
 			cell: ({ row }) => {
-				const state = row.getValue<string>("state");
-
-				return <span className="text-xs text-primary-6">{state}</span>;
+				const stateName = row.original.state.name;
+				return <span className="text-xs text-primary-6">{stateName}</span>;
 			},
 		},
 		{
@@ -119,19 +210,21 @@ const DistrictTable = () => {
 						<DropdownMenuTrigger asChild>
 							<Button
 								variant="ghost"
-								className="h-8 w-8 p-2 bg-white border-[1px] bborder-[#E8E8E8]">
+								className="h-8 w-8 p-2 bg-white border-[1px] border-[#E8E8E8]">
 								<span className="sr-only">Open menu</span>
 								<MoreHorizontal className="h-4 w-4" />
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="bg-white">
-							<Link href={`/staff-management/${actions.id}`}>
+							<Link href={`/group-management/${actions.id}`}>
 								<DropdownMenuItem className="action cursor-pointer hover:bg-secondary-3">
 									<IconEye />
 									<p className="text-xs font-inter">View</p>
 								</DropdownMenuItem>
 							</Link>
-							<DropdownMenuItem className="action cursor-pointer hover:bg-yellow-300">
+							<DropdownMenuItem
+								className="action cursor-pointer hover:bg-yellow-300"
+								onClick={() => openEditModal(row)}>
 								<IconPencil />
 								<p className="text-xs font-inter">Edit</p>
 							</DropdownMenuItem>
@@ -170,7 +263,11 @@ const DistrictTable = () => {
 
 	return (
 		<>
-			<DistrictDataTable columns={columns} data={groupData} />
+			{isLoading ? (
+				<Loader />
+			) : (
+				<DistrictDataTable columns={columns} data={tableData} />
+			)}
 
 			{isModalOpen && (
 				<Modal
@@ -277,8 +374,8 @@ const DistrictTable = () => {
 			{isDeleteModalOpen && (
 				<Modal onClose={closeDeleteModal} isOpen={isDeleteModalOpen}>
 					<p className="mt-4">
-						Are you sure you want to delete this device: {""}
-						{selectedRow?.deviceAlias}?
+						Are you sure you want to delete this district: {""}
+						{selectedRow?.name}?
 					</p>
 
 					<p className="text-sm text-primary-6">This can't be undone</p>
@@ -290,8 +387,8 @@ const DistrictTable = () => {
 						</Button>
 						<Button
 							className="bg-[#F04F4A] text-white font-inter text-xs modal-delete"
-							onClick={() => {
-								handleDelete();
+							onClick={async () => {
+								await deleteDistrict(selectedRow.id);
 								closeDeleteModal();
 							}}>
 							Yes, Confirm

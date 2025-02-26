@@ -1,61 +1,118 @@
 "use client";
 
-import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
-
-import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { postingData } from "@/constants";
+import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
+import axios from "axios";
 import { format, isValid, parseISO } from "date-fns";
+import { getSession } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { PostingDataTable } from "./posting-table";
 
-// This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
 export type Posting = {
 	id: string;
-	serialNumber: string;
-	staffName: string;
-	date: string;
-	state: string;
-	district: string;
+	user_id: string;
+	device_id: string;
+	state_id: string;
+	district_id: string;
+	pod_id: string;
+	sites: { id: string; name: string }[];
+	is_active: boolean;
+	created_at: string;
+	updated_at: string;
+	state: { id: string; name: string };
+	district: { id: string; name: string };
+	pod: { id: string; name: string };
+	user: {
+		id: string;
+		first_name: string;
+		last_name: string;
+		email: string;
+		picture: string;
+		staff_code: string;
+		role: string;
+		is_active: boolean;
+		last_logged_in: string;
+		created_at: string;
+		updated_at: string;
+	};
+	device: {
+		id: string;
+		serial_number: string;
+		alias: string;
+		status: string;
+		created_at: string;
+		updated_at: string;
+	};
 };
 
 const PostingTable = () => {
-	const [isEditModalOpen, setEditModalOpen] = useState(false);
-	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-	const [selectedRow, setSelectedRow] = useState<any>(null);
-	const [isModalOpen, setModalOpen] = useState(false);
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-	const [tableData, setTableData] = useState(postingData);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [tableData, setTableData] = useState<Posting[]>([]);
 
-	const openEditModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
-		setEditModalOpen(true);
+	const fetchPosting = async () => {
+		try {
+			setIsLoading(true);
+			const session = await getSession();
+
+			console.log("session", session);
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+
+			const response = await axios.get<{
+				status: string;
+				message: string;
+				data: Posting[];
+			}>("https://api.wowdev.com.ng/api/v1/posting", {
+				headers: {
+					Accept: "application/json",
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			const fetchedData = response.data.data;
+
+			console.log("Posting Data:", fetchedData);
+
+			const mappedData = fetchedData.map((item) => ({
+				id: item.id,
+				user_id: item.user_id,
+				device_id: item.device_id,
+				state_id: item.state_id,
+				district_id: item.district_id,
+				pod_id: item.pod_id,
+				sites: item.sites,
+				is_active: item.is_active,
+				created_at: item.created_at,
+				updated_at: item.updated_at,
+				state: item.state,
+				district: item.district,
+				pod: item.pod,
+				user: item.user,
+				device: item.device,
+			}));
+
+			console.log("Mapped Data:", mappedData);
+			setTableData(mappedData);
+		} catch (error) {
+			console.error("Error fetching posting data:", error);
+			toast.error("Failed to fetch posting data. Please try again.");
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
-	const openModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
-		setModalOpen(true);
-	};
-
-	const openDeleteModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
-		setDeleteModalOpen(true);
-	};
-
-	const closeModal = () => {
-		setModalOpen(false);
-	};
-
-	const closeEditModal = () => {
-		setEditModalOpen(false);
-	};
-
-	const closeDeleteModal = () => {
-		setDeleteModalOpen(false);
-	};
+	useEffect(() => {
+		fetchPosting();
+	}, []);
 
 	const columns: ColumnDef<Posting>[] = [
 		{
@@ -81,28 +138,28 @@ const PostingTable = () => {
 			),
 		},
 		{
-			accessorKey: "serialNumber",
+			accessorKey: "device.serial_number",
 			header: "Serial Number",
 			cell: ({ row }) => {
-				const serial = row.getValue<string>("serialNumber");
-
+				const serial = row.original.device.serial_number;
 				return <span className="text-xs text-black">{serial}</span>;
 			},
 		},
 		{
-			accessorKey: "staffName",
+			accessorKey: "user.first_name",
 			header: "Staff Name",
 			cell: ({ row }) => {
-				const staffName = row.getValue<string>("staffName");
-
-				return <span className="text-xs text-primary-6">{staffName}</span>;
+				const staffName = `${row.original.user.first_name} ${row.original.user.last_name}`;
+				return (
+					<span className="text-xs text-dark-1 capitalize">{staffName}</span>
+				);
 			},
 		},
 		{
-			accessorKey: "date",
+			accessorKey: "created_at",
 			header: "Date",
 			cell: ({ row }) => {
-				const date = parseISO(row.original.date); // Convert to Date object
+				const date = parseISO(row.original.created_at); // Convert to Date object
 				return (
 					<span className="text-xs text-primary-6">
 						{isValid(date) ? format(date, "do MMM. yyyy") : "Invalid Date"}
@@ -111,21 +168,28 @@ const PostingTable = () => {
 			},
 		},
 		{
-			accessorKey: "state",
+			accessorKey: "state.name",
 			header: "State",
 			cell: ({ row }) => {
-				const state = row.getValue<string>("state");
-
+				const state = row.original.state.name;
 				return <span className="text-xs text-primary-6">{state}</span>;
 			},
 		},
 		{
-			accessorKey: "district",
+			accessorKey: "district.name",
 			header: "District",
 			cell: ({ row }) => {
-				const district = row.getValue<string>("district");
-
+				const district = row.original.district.name;
 				return <span className="text-xs text-primary-6">{district}</span>;
+			},
+		},
+		{
+			accessorKey: "sites",
+			header: "Sites",
+			cell: ({ row }) => {
+				const sites = row.original.sites;
+				const siteNames = sites.map((site) => site.name).join(", ");
+				return <span className="text-xs text-primary-6">{siteNames}</span>;
 			},
 		},
 		{
@@ -167,52 +231,7 @@ const PostingTable = () => {
 
 	return (
 		<>
-			<PostingDataTable columns={columns} data={postingData} />
-
-			{isEditModalOpen && (
-				<Modal onClose={closeEditModal} isOpen={isEditModalOpen}>
-					<p className="mt-4">
-						Are you sure you want to suspend {selectedRow?.name}'s account?
-					</p>
-					<p className="text-sm text-primary-6">This can't be undone</p>
-					<div className="flex flex-row justify-end items-center gap-3 font-inter mt-4">
-						<Button
-							className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
-							onClick={closeEditModal}>
-							Cancel
-						</Button>
-						<Button className="bg-[#F04F4A] text-white font-inter text-xs modal-delete">
-							Yes, Confirm
-						</Button>
-					</div>
-				</Modal>
-			)}
-
-			{isDeleteModalOpen && (
-				<Modal onClose={closeDeleteModal} isOpen={isDeleteModalOpen}>
-					<p className="mt-4">
-						Are you sure you want to delete the project:{" "}
-						{selectedRow?.projectName}?
-					</p>
-
-					<p className="text-sm text-primary-6">This can't be undone</p>
-					<div className="flex flex-row justify-end items-center gap-3 font-inter mt-4">
-						<Button
-							className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
-							onClick={closeDeleteModal}>
-							Cancel
-						</Button>
-						<Button
-							className="bg-[#F04F4A] text-white font-inter text-xs modal-delete"
-							onClick={() => {
-								handleDelete();
-								closeDeleteModal();
-							}}>
-							Yes, Confirm
-						</Button>
-					</div>
-				</Modal>
-			)}
+			<PostingDataTable columns={columns} data={tableData} />
 		</>
 	);
 };

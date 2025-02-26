@@ -3,6 +3,7 @@
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
+import Loader from "@/components/Loader";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
 import axios from "axios";
+import { format, isValid, parseISO } from "date-fns";
 import { getSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -81,21 +83,6 @@ export type Farmer = {
 		name: string;
 	};
 };
-
-interface ApiResponse {
-	id: string;
-	first_name: string;
-	last_name: string;
-	email: string;
-	picture: string | null;
-	staff_code: string;
-	role: string;
-	is_active: boolean;
-	last_logged_in: string | null;
-	created_at: string;
-	updated_at: string;
-	status?: string;
-}
 
 declare module "next-auth" {
 	interface Session {
@@ -231,28 +218,6 @@ const FarmerTable = () => {
 			console.error("Error deleting farmer:", error);
 		}
 	};
-	const formatDate = (rawDate: string | Date | null | undefined) => {
-		const options: Intl.DateTimeFormatOptions = {
-			year: "numeric",
-			month: "long",
-			day: "numeric",
-		};
-
-		// Handle null or undefined values
-		if (!rawDate) {
-			return "N/A";
-		}
-
-		const parsedDate =
-			typeof rawDate === "string" ? new Date(rawDate) : rawDate;
-
-		if (isNaN(parsedDate.getTime())) {
-			return "Invalid Date";
-		}
-
-		// Format the valid date
-		return new Intl.DateTimeFormat("en-US", options).format(parsedDate);
-	};
 
 	const columns: ColumnDef<Farmer>[] = [
 		{
@@ -290,7 +255,9 @@ const FarmerTable = () => {
 			header: "First Name",
 			cell: ({ row }) => {
 				const firstName = row.getValue<string>("first_name");
-				return <span className="text-xs text-black">{firstName}</span>;
+				return (
+					<span className="text-xs text-black capitalize">{firstName}</span>
+				);
 			},
 		},
 		{
@@ -298,7 +265,9 @@ const FarmerTable = () => {
 			header: "Last Name",
 			cell: ({ row }) => {
 				const lastName = row.getValue<string>("last_name");
-				return <span className="text-xs text-black">{lastName}</span>;
+				return (
+					<span className="text-xs text-black capitalize">{lastName}</span>
+				);
 			},
 		},
 		{
@@ -329,11 +298,11 @@ const FarmerTable = () => {
 			accessorKey: "created_at",
 			header: "Date Joined",
 			cell: ({ row }) => {
-				const rawDate = row.original.created_at;
-				const date = new Date(rawDate);
-
+				const date = parseISO(row.original.created_at);
 				return (
-					<span className="text-xs text-primary-6">{formatDate(date)}</span>
+					<span className="text-xs text-primary-6">
+						{isValid(date) ? format(date, "do MMM. yyyy") : "Invalid Date"}
+					</span>
 				);
 			},
 		},
@@ -416,32 +385,19 @@ const FarmerTable = () => {
 		},
 	];
 
-	const handleDelete = () => {
-		// Get the selected row IDs
-		const selectedRowIds = Object.keys(rowSelection).filter(
-			(key) => rowSelection[key]
-		);
-
-		// Filter the data to remove the selected rows
-		const filteredData = tableData.filter(
-			(row: { id: string }) => !selectedRowIds.includes(row.id)
-		);
-
-		// Update the table data
-		setTableData(filteredData);
-
-		// Clear the row selection after deletion
-		setRowSelection({});
-	};
-
 	return (
 		<>
-			<FarmerDataTable columns={columns} data={tableData} />
+			{isLoading ? (
+				<Loader />
+			) : (
+				<FarmerDataTable columns={columns} data={tableData} />
+			)}
 
 			{isRestoreModalOpen && (
 				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>
 					<p className="mt-4">
-						Are you sure you want to suspend {selectedRow?.name}&apos;s account?
+						Are you sure you want to suspend {selectedRow?.first_name}&apos;s
+						account?
 					</p>
 					<p className="text-sm text-primary-6">This can&apos;t be undone</p>
 					<div className="flex flex-row justify-end items-center gap-3 font-inter mt-4">
@@ -460,7 +416,7 @@ const FarmerTable = () => {
 			{isDeleteModalOpen && (
 				<Modal onClose={closeDeleteModal} isOpen={isDeleteModalOpen}>
 					<p className="mt-4">
-						Are you sure you want to delete {selectedRow?.firstName}'s account?
+						Are you sure you want to delete {selectedRow?.first_name}'s account?
 					</p>
 
 					<p className="text-sm text-primary-6">This can't be undone</p>
@@ -472,8 +428,8 @@ const FarmerTable = () => {
 						</Button>
 						<Button
 							className="bg-[#F04F4A] text-white font-inter text-xs modal-delete"
-							onClick={() => {
-								handleDelete();
+							onClick={async () => {
+								await deleteFarmer(selectedRow.id);
 								closeDeleteModal();
 							}}>
 							Yes, Confirm

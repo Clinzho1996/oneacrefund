@@ -1,22 +1,25 @@
 "use client";
 
-import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
+import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { deviceData } from "@/constants";
 import { IconEdit, IconTrash } from "@tabler/icons-react";
+import axios from "axios";
 import { format, isValid, parseISO } from "date-fns";
+import { getSession } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { DeviceDataTable } from "./device-table";
 
-// This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
 export type Device = {
+	alias: string;
+	created_at: string;
+	serial_number: string;
 	id: string;
 	serialNumber: string;
 	deviceAlias: string;
@@ -24,27 +27,32 @@ export type Device = {
 	status: string;
 };
 
+declare module "next-auth" {
+	interface Session {
+		accessToken?: string;
+	}
+}
+
 const DeviceTable = () => {
 	const [isEditModalOpen, setEditModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
-
-	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-	const [tableData, setTableData] = useState(deviceData);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [tableData, setTableData] = useState<Device[]>([]);
 
 	const openModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
+		setSelectedRow(row.original);
 		setModalOpen(true);
 	};
 
 	const openEditModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
+		setSelectedRow(row.original);
 		setEditModalOpen(true);
 	};
 
 	const openDeleteModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
+		setSelectedRow(row.original);
 		setDeleteModalOpen(true);
 	};
 
@@ -58,6 +66,128 @@ const DeviceTable = () => {
 
 	const closeDeleteModal = () => {
 		setDeleteModalOpen(false);
+	};
+
+	const fetchDevices = async () => {
+		try {
+			setIsLoading(true);
+			const session = await getSession();
+
+			console.log("session", session);
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+
+			const response = await axios.get<{
+				status: string;
+				message: string;
+				data: Device[];
+			}>("https://api.wowdev.com.ng/api/v1/device", {
+				headers: {
+					Accept: "application/json",
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			const fetchedData = response.data.data;
+
+			console.log("Device Data:", fetchedData);
+
+			const mappedData = fetchedData.map((item) => ({
+				id: item.id,
+				serialNumber: item.serial_number || "N/A",
+				dateJoined: item.created_at,
+				deviceAlias: item.alias,
+				alias: item.alias,
+				created_at: item.created_at,
+				serial_number: item.serial_number,
+				status: item.status || "not posted",
+			}));
+
+			console.log("Mapped Data:", mappedData);
+			setTableData(mappedData);
+		} catch (error) {
+			console.error("Error fetching device data:", error);
+			toast.error("Failed to fetch devices. Please try again.");
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchDevices();
+	}, []);
+
+	const deleteDevice = async (id: string) => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.delete(
+				`https://api.wowdev.com.ng/api/v1/device/${id}`,
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				setTableData((prevData) =>
+					prevData.filter((device) => device.id !== id)
+				);
+				toast.success("Device deleted successfully.");
+			}
+		} catch (error) {
+			console.error("Error deleting device:", error);
+			toast.error("Failed to delete device. Please try again.");
+		}
+	};
+
+	const handleEdit = async (updatedDevice: Device) => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.put(
+				`https://api.wowdev.com.ng/api/v1/device/${updatedDevice.id}`,
+				updatedDevice,
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				setTableData((prevData) =>
+					prevData.map((device) =>
+						device.id === updatedDevice.id ? updatedDevice : device
+					)
+				);
+
+				toast.success("Device updated successfully.");
+			}
+		} catch (error) {
+			console.error("Error updating device:", error);
+			toast.error("Failed to update device. Please try again.");
+		}
 	};
 
 	const columns: ColumnDef<Device>[] = [
@@ -105,12 +235,12 @@ const DeviceTable = () => {
 			accessorKey: "dateJoined",
 			header: "Date Joined",
 			cell: ({ row }) => {
-				const date = parseISO(row.original.dateJoined); // Convert to Date object
+				const date = parseISO(row.original.dateJoined);
 				return (
 					<span className="text-xs text-primary-6">
 						{isValid(date) ? format(date, "do MMM. yyyy") : "Invalid Date"}
 					</span>
-				); // Format if valid
+				);
 			},
 		},
 		{
@@ -150,7 +280,7 @@ const DeviceTable = () => {
 								View
 							</Button>
 						</Link>
-						{actions.status === "not posted" ? (
+						{actions.status === "unposted" ? (
 							<Button
 								className="border-[#E8E8E8] border-[1px] text-xs font-medium text-[#6B7280] font-inter"
 								onClick={() => openModal(row)}>
@@ -174,27 +304,9 @@ const DeviceTable = () => {
 		},
 	];
 
-	const handleDelete = () => {
-		// Get the selected row IDs
-		const selectedRowIds = Object.keys(rowSelection).filter(
-			(key) => rowSelection[key]
-		);
-
-		// Filter the data to remove the selected rows
-		const filteredData = tableData.filter(
-			(row: { id: string }) => !selectedRowIds.includes(row.id)
-		);
-
-		// Update the table data
-		setTableData(filteredData);
-
-		// Clear the row selection after deletion
-		setRowSelection({});
-	};
-
 	return (
 		<>
-			<DeviceDataTable columns={columns} data={deviceData} />
+			<DeviceDataTable columns={columns} data={tableData} />
 
 			{isModalOpen && (
 				<Modal
@@ -289,7 +401,12 @@ const DeviceTable = () => {
 									onClick={closeEditModal}>
 									Cancel
 								</Button>
-								<Button className="bg-primary-1 text-white font-inter text-xs">
+								<Button
+									className="bg-primary-1 text-white font-inter text-xs"
+									onClick={() => {
+										handleEdit(selectedRow);
+										closeEditModal();
+									}}>
 									Submit
 								</Button>
 							</div>
@@ -314,8 +431,8 @@ const DeviceTable = () => {
 						</Button>
 						<Button
 							className="bg-[#F04F4A] text-white font-inter text-xs modal-delete"
-							onClick={() => {
-								handleDelete();
+							onClick={async () => {
+								await deleteDevice(selectedRow.id);
 								closeDeleteModal();
 							}}>
 							Yes, Confirm

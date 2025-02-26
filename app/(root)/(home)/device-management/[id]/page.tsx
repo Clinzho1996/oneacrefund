@@ -3,19 +3,26 @@
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { deviceData } from "@/constants";
+import { Device } from "@/config/device-columns";
 import { IconArrowBack, IconSettings } from "@tabler/icons-react";
-import { useSession } from "next-auth/react";
+import axios from "axios";
+import { getSession, useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+interface ApiResponse {
+	data: Device; // Adjust to match your API structure
+}
 
 function DeviceDetails() {
 	const { id } = useParams();
 	const { data: session } = useSession();
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [isModalOpen, setModalOpen] = useState(false);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [userData, setUserData] = useState<Device | null>(null);
 
 	const openModal = () => {
 		setModalOpen(true);
@@ -42,14 +49,64 @@ function DeviceDetails() {
 		return initials.toUpperCase();
 	};
 
-	const device = deviceData.find((device) => device.id === id);
+	const fetchDevice = useCallback(async () => {
+		setIsLoading(true);
+		try {
+			const session = await getSession();
 
-	if (!device) {
-		return (
-			<section className="bg-primary py-[4%] px-[6%]">
-				<p className="text-white text-[16px]">Device not found</p>
-			</section>
-		);
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+
+			const response = await axios.get<ApiResponse>(
+				`https://api.wowdev.com.ng/api/v1/device/${id}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			console.log("data", response?.data?.data);
+			setUserData(response?.data?.data);
+			setIsLoading(false);
+		} catch (error: unknown) {
+			if (axios.isAxiosError(error)) {
+				console.log(
+					"Error fetching post:",
+					error.response?.data || error.message
+				);
+			} else {
+				console.log("Unexpected error:", error);
+			}
+		} finally {
+			setIsLoading(false);
+		}
+	}, [id]);
+
+	useEffect(() => {
+		fetchDevice();
+	}, [fetchDevice]);
+
+	const formatDate = (rawDate?: string | Date) => {
+		if (!rawDate) return "Unknown"; // Handle undefined case
+		const options: Intl.DateTimeFormatOptions = {
+			year: "numeric",
+			month: "long",
+			day: "numeric",
+		};
+		const parsedDate =
+			typeof rawDate === "string" ? new Date(rawDate) : rawDate;
+		return new Intl.DateTimeFormat("en-US", options).format(parsedDate);
+	};
+
+	if (isLoading) {
+		return <p>Loading...</p>;
 	}
 
 	const handleDelete = () => {
@@ -114,7 +171,7 @@ function DeviceDetails() {
 						<Image src="/images/avat.png" width={50} height={50} alt="avatar" />
 						<div className="py-4 border-b-[1px] border-[#E2E4E9]">
 							<p className="text-[16px] text-dark-1 font-medium font-inter mt-2">
-								{device.deviceAlias}
+								{userData?.alias}
 							</p>
 							<p className="text-sm text-[#6B7280B7] font-inter">
 								Posted by:{" "}
@@ -125,9 +182,9 @@ function DeviceDetails() {
 							<h2 className="text-sm text-[#6B7280B7] font-inter">Status</h2>
 							<p
 								className={`status-inner mt-4 ${
-									device.status === "posted" ? "green" : "red"
+									userData?.status === "posted" ? "green" : "red"
 								}`}>
-								{device.status}
+								{userData?.status}
 							</p>
 						</div>
 						<div className="py-4 w-full  border-b-[1px] border-[#E2E4E9]">
@@ -135,7 +192,9 @@ function DeviceDetails() {
 								Date of Posting{" "}
 							</p>
 							<p className="text-sm text-[#6B7280B7] font-inter mt-2">
-								<span className="text-dark-1">{device.dateJoined}</span>
+								<span className="text-dark-1">
+									{formatDate(userData?.created_at)}
+								</span>
 							</p>
 						</div>
 					</div>
@@ -150,13 +209,13 @@ function DeviceDetails() {
 								</p>
 							</div>
 
-							{device.status === "posted" && (
+							{userData?.status === "posted" && (
 								<Button className="bg-white mr-10" onClick={openDeleteModal}>
 									Unpost
 								</Button>
 							)}
 
-							{device.status === "not posted" && (
+							{userData?.status === "unposted" && (
 								<Button className="bg-white mr-10" onClick={openModal}>
 									Post
 								</Button>
@@ -171,7 +230,7 @@ function DeviceDetails() {
 										Device Alias
 									</h2>
 									<p className="text-sm text-dark-1 font-inter mt-2">
-										{device.deviceAlias}
+										{userData?.alias}
 									</p>
 								</div>
 							</div>
@@ -211,7 +270,7 @@ function DeviceDetails() {
 										Site Name
 									</h2>
 									<p className="text-sm text-dark-1 font-inter mt-2">
-										{device.serialNumber}
+										{userData?.serial_number}
 									</p>
 								</div>
 							</div>
@@ -222,7 +281,7 @@ function DeviceDetails() {
 			{isDeleteModalOpen && (
 				<Modal onClose={closeDeleteModal} isOpen={isDeleteModalOpen}>
 					<p className="mt-4">
-						Are you sure you want to unpost {device?.deviceAlias} device ?
+						Are you sure you want to unpost {userData?.alias} device ?
 					</p>
 
 					<p className="text-sm text-primary-6">This can&apos;t be undone</p>

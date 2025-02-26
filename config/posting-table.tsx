@@ -33,14 +33,18 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { IconTrash } from "@tabler/icons-react";
+import axios from "axios";
 import {
 	ChevronLeft,
 	ChevronRight,
 	ChevronsLeft,
 	ChevronsRight,
 } from "lucide-react";
-import React, { useState } from "react";
+import { getSession } from "next-auth/react";
+import React, { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
+import { toast } from "react-toastify";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -75,7 +79,7 @@ export function PostingDataTable<TData, TValue>({
 		}
 
 		const filteredData = data.filter((farmer: any) => {
-			const dateJoined = new Date(farmer.date);
+			const dateJoined = new Date(farmer.created_at);
 			return dateJoined >= dateRange.from! && dateJoined <= dateRange.to!;
 		});
 
@@ -86,6 +90,67 @@ export function PostingDataTable<TData, TValue>({
 	React.useEffect(() => {
 		filterDataByDateRange();
 	}, [dateRange]);
+
+	useEffect(() => {
+		setTableData(data); // Sync `tableData` with `data` prop
+	}, [data]);
+
+	const bulkDeletePosting = async () => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				toast.error("No access token found. Please log in again.");
+				return;
+			}
+
+			const selectedIds = Object.keys(rowSelection).map(
+				(index) => (tableData[parseInt(index)] as any)?.id
+			);
+
+			if (selectedIds.length === 0) {
+				toast.warn("No posting device selected for deletion.");
+				return;
+			}
+
+			console.log("Selected IDs for deletion:", selectedIds);
+
+			const response = await axios.delete(
+				"https://api.wowdev.com.ng/api/v1/posting/bulk/delete",
+				{
+					data: { user_ids: selectedIds }, // Ensure this matches the API's expected payload
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				toast.success("Selected devices deleted successfully!");
+
+				// Update the table data by filtering out the deleted staff
+				setTableData((prevData) =>
+					prevData.filter((staff) => !selectedIds.includes((staff as any).id))
+				);
+
+				// Clear the selection
+				setRowSelection({});
+			}
+		} catch (error) {
+			console.error("Error bulk deleting staff:", error);
+			if (axios.isAxiosError(error)) {
+				toast.error(
+					error.response?.data?.message ||
+						"Failed to delete staff. Please try again."
+				);
+			} else {
+				toast.error("An unexpected error occurred. Please try again.");
+			}
+		}
+	};
 
 	const table = useReactTable({
 		data: tableData,
@@ -118,6 +183,11 @@ export function PostingDataTable<TData, TValue>({
 						onChange={(e) => setGlobalFilter(e.target.value)}
 						className="focus:border-none bg-[#F9FAFB]"
 					/>
+					<Button
+						className="border-[#E8E8E8] border-[1px] bg-white"
+						onClick={bulkDeletePosting}>
+						<IconTrash /> Delete
+					</Button>
 					{/* filter by type */}
 					<div className="w-[250px]">
 						<DateRangePicker dateRange={dateRange} onSelect={setDateRange} />

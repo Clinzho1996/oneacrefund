@@ -164,7 +164,7 @@ export function DataTable<TData, TValue>({
 				closeModal();
 				setFirstName("");
 				setLastName("");
-				setEmail("");
+				setEmail(" ");
 				setRole("super_admin");
 			}
 		} catch (error: unknown) {
@@ -242,7 +242,6 @@ export function DataTable<TData, TValue>({
 			}
 		}
 	};
-	1;
 
 	const table = useReactTable({
 		data: tableData,

@@ -33,14 +33,14 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { IconTrash } from "@tabler/icons-react";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import {
 	ChevronLeft,
 	ChevronRight,
 	ChevronsLeft,
 	ChevronsRight,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -98,6 +98,10 @@ export function SiteDataTable<TData, TValue>({
 		},
 	});
 
+	useEffect(() => {
+		setTableData(data);
+	}, [data]);
+
 	return (
 		<div className="rounded-lg border-[1px] py-0 border-[#E2E4E9] mt-4">
 			<Modal
@@ -139,11 +143,16 @@ export function SiteDataTable<TData, TValue>({
 						onChange={(e) => setGlobalFilter(e.target.value)}
 						className="focus:border-none bg-[#F9FAFB] w-[50%]"
 					/>
-					<Button
-						className="border-[#E8E8E8] border-[1px] bg-white"
-						onClick={handleDelete}>
-						<IconTrash /> Delete
-					</Button>
+					<div className="flex flex-row justify-start items-center gap-3">
+						<Button className="bg-primary-1 text-white">
+							<IconPlus /> Create Site
+						</Button>
+						<Button
+							className="border-[#E8E8E8] border-[1px] bg-white"
+							onClick={handleDelete}>
+							<IconTrash /> Delete
+						</Button>
+					</div>
 				</div>
 			</div>
 

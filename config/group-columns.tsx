@@ -1,7 +1,6 @@
 "use client";
 
-import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
-
+import Loader from "@/components/Loader";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,32 +12,136 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { groupData } from "@/constants";
 import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
+import { ColumnDef } from "@tanstack/react-table";
+import axios from "axios";
 import { MoreHorizontal } from "lucide-react";
+import { getSession } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { GroupDataTable } from "./group-table";
 
-// This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
 export type Group = {
 	id: string;
-	groupName?: string;
-	siteName?: string;
-	pod?: string;
-	district?: string;
-	state?: string;
+	state_id: string;
+	district_id: string;
+	pod_id: string;
+	site_id: string;
+	name: string;
+	created_at: string;
+	updated_at: string;
+	site: {
+		id: string;
+		name: string;
+	};
+	pod: {
+		id: string;
+		name: string;
+	};
+	district: {
+		id: string;
+		name: string;
+	};
+	state: {
+		id: string;
+		name: string;
+	};
 };
-
 const GroupTable = () => {
 	const [isEditModalOpen, setEditModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [tableData, setTableData] = useState<Group[]>([]);
 
-	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-	const [tableData, setTableData] = useState(groupData);
+	const fetchGroups = async () => {
+		try {
+			setIsLoading(true);
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.get<{
+				status: string;
+				message: string;
+				data: Group[];
+			}>("https://api.wowdev.com.ng/api/v1/group", {
+				headers: {
+					Accept: "application/json",
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			const fetchedData = response.data.data;
+
+			console.log("Group Data:", fetchedData);
+
+			const mappedData = fetchedData.map((item) => ({
+				id: item.id,
+				state_id: item.state_id,
+				district_id: item.district_id,
+				pod_id: item.pod_id,
+				site_id: item.site_id,
+				name: item.name,
+				created_at: item.created_at,
+				updated_at: item.updated_at,
+				site: item.site,
+				pod: item.pod,
+				district: item.district,
+				state: item.state,
+			}));
+
+			console.log("Mapped Data:", mappedData);
+			setTableData(mappedData);
+			setIsLoading(false);
+		} catch (error) {
+			console.error("Error fetching group data:", error);
+			toast.error("Failed to fetch group data. Please try again.");
+		}
+	};
+
+	useEffect(() => {
+		fetchGroups();
+	}, []);
+
+	const deleteGroup = async (id: string) => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.delete(
+				`https://api.wowdev.com.ng/api/v1/group/${id}`,
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				// Remove the deleted farmer from the table
+				setTableData((prevData) =>
+					prevData.filter((farmer) => farmer.id !== id)
+				);
+
+				toast.success("Farmer deleted successfully.");
+			}
+		} catch (error) {
+			console.error("Error deleting farmer:", error);
+		}
+	};
 
 	const openModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
@@ -91,48 +194,43 @@ const GroupTable = () => {
 			),
 		},
 		{
-			accessorKey: "groupName",
+			accessorKey: "name",
 			header: "Group Name",
 			cell: ({ row }) => {
-				const group = row.getValue<string>("groupName");
-
-				return <span className="text-xs text-black">{group}</span>;
+				const groupName = row.original.name;
+				return <span className="text-xs text-black">{groupName}</span>;
 			},
 		},
 		{
-			accessorKey: "siteName",
+			accessorKey: "site.name",
 			header: "Site Name",
 			cell: ({ row }) => {
-				const site = row.getValue<string>("siteName");
-
-				return <span className="text-xs text-primary-6">{site}</span>;
+				const siteName = row.original.site.name;
+				return <span className="text-xs text-primary-6">{siteName}</span>;
 			},
 		},
 		{
-			accessorKey: "pod",
+			accessorKey: "pod.name",
 			header: "POD / Sector",
 			cell: ({ row }) => {
-				const pod = row.getValue<string>("pod");
-
-				return <span className="text-xs text-primary-6">{pod}</span>;
+				const podName = row.original.pod.name;
+				return <span className="text-xs text-primary-6">{podName}</span>;
 			},
 		},
 		{
-			accessorKey: "district",
+			accessorKey: "district.name",
 			header: "District",
 			cell: ({ row }) => {
-				const district = row.getValue<string>("district");
-
-				return <span className="text-xs text-primary-6">{district}</span>;
+				const districtName = row.original.district.name;
+				return <span className="text-xs text-primary-6">{districtName}</span>;
 			},
 		},
 		{
-			accessorKey: "state",
+			accessorKey: "state.name",
 			header: "State",
 			cell: ({ row }) => {
-				const state = row.getValue<string>("state");
-
-				return <span className="text-xs text-primary-6">{state}</span>;
+				const stateName = row.original.state.name;
+				return <span className="text-xs text-primary-6">{stateName}</span>;
 			},
 		},
 		{
@@ -146,13 +244,13 @@ const GroupTable = () => {
 						<DropdownMenuTrigger asChild>
 							<Button
 								variant="ghost"
-								className="h-8 w-8 p-2 bg-white border-[1px] bborder-[#E8E8E8]">
+								className="h-8 w-8 p-2 bg-white border-[1px] border-[#E8E8E8]">
 								<span className="sr-only">Open menu</span>
 								<MoreHorizontal className="h-4 w-4" />
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="bg-white">
-							<Link href={`/staff-management/${actions.id}`}>
+							<Link href={`/group-management/${actions.id}`}>
 								<DropdownMenuItem className="action cursor-pointer hover:bg-secondary-3">
 									<IconEye />
 									<p className="text-xs font-inter">View</p>
@@ -179,27 +277,13 @@ const GroupTable = () => {
 		},
 	];
 
-	const handleDelete = () => {
-		// Get the selected row IDs
-		const selectedRowIds = Object.keys(rowSelection).filter(
-			(key) => rowSelection[key]
-		);
-
-		// Filter the data to remove the selected rows
-		const filteredData = groupData.filter(
-			(row: { id: string }) => !selectedRowIds.includes(row.id)
-		);
-
-		// Update the table data
-		setTableData(filteredData);
-
-		// Clear the row selection after deletion
-		setRowSelection({});
-	};
-
 	return (
 		<>
-			<GroupDataTable columns={columns} data={groupData} />
+			{isLoading ? (
+				<Loader />
+			) : (
+				<GroupDataTable columns={columns} data={tableData} />
+			)}
 
 			{isModalOpen && (
 				<Modal
@@ -297,7 +381,7 @@ const GroupTable = () => {
 				<Modal
 					isOpen={isEditModalOpen}
 					onClose={closeEditModal}
-					title="Edit Location"
+					title="Edit Group"
 					className="w-[500px]">
 					<div className="bg-white py-5 rounded-lg transition-transform ease-in-out ">
 						<hr className="mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
@@ -375,7 +459,7 @@ const GroupTable = () => {
 				<Modal onClose={closeDeleteModal} isOpen={isDeleteModalOpen}>
 					<p className="mt-4">
 						Are you sure you want to delete {""}
-						{selectedRow?.groupName}?
+						{selectedRow?.name}?
 					</p>
 
 					<p className="text-sm text-primary-6">This can't be undone</p>
@@ -387,8 +471,8 @@ const GroupTable = () => {
 						</Button>
 						<Button
 							className="bg-[#F04F4A] text-white font-inter text-xs modal-delete"
-							onClick={() => {
-								handleDelete();
+							onClick={async () => {
+								await deleteGroup(selectedRow.id);
 								closeDeleteModal();
 							}}>
 							Yes, Delete

@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
+import Loader from "@/components/Loader";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -427,7 +428,11 @@ const Table = () => {
 
 	return (
 		<>
-			<DataTable columns={columns} data={tableData} />
+			{isLoading ? (
+				<Loader />
+			) : (
+				<DataTable columns={columns} data={tableData} />
+			)}
 
 			{isRestoreModalOpen && (
 				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>
