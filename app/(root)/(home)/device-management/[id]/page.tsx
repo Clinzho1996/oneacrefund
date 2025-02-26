@@ -1,9 +1,14 @@
 "use client";
 
-import Loader from "@/components/Loader";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Device } from "@/config/device-columns";
 import { IconArrowBack, IconSettings } from "@tabler/icons-react";
 import axios from "axios";
@@ -12,6 +17,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 interface ApiResponse {
 	data: Device; // Adjust to match your API structure
@@ -24,6 +30,13 @@ function DeviceDetails() {
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [userData, setUserData] = useState<Device | null>(null);
+	const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
+	const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(
+		null
+	);
+	const [selectedPodId, setSelectedPodId] = useState<string | null>(null);
+	const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+	const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
 
 	const openModal = () => {
 		setModalOpen(true);
@@ -49,6 +62,177 @@ function DeviceDetails() {
 			.join("");
 		return initials.toUpperCase();
 	};
+
+	const [states, setStates] = useState<any[]>([]);
+	const [districts, setDistricts] = useState<any[]>([]);
+	const [pods, setPods] = useState<any[]>([]);
+	const [sites, setSites] = useState<any[]>([]);
+	const [staffs, setStaffs] = useState<any[]>([]);
+
+	const fetchStates = async () => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				"https://api.wowdev.com.ng/api/v1/state",
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setStates(response.data.data);
+
+			console.log("States fetched:", response.data);
+		} catch (error) {
+			console.error("Error fetching states:", error);
+		}
+	};
+
+	const fetchDistricts = async (stateId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/district/state/${stateId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setDistricts(response.data.data);
+
+			console.log("Districts fetched:", response.data);
+		} catch (error) {
+			console.error("Error fetching districts:", error);
+		}
+	};
+
+	const fetchStaffs = async () => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/user`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setStaffs(response.data.data);
+
+			console.log("Staffs fetched:", response.data);
+		} catch (error) {
+			console.error("Error fetching staffs:", error);
+		}
+	};
+
+	const fetchPods = async (districtId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/pod/district/${districtId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setPods(response.data.data);
+		} catch (error) {
+			console.error("Error fetching PODs:", error);
+		}
+	};
+
+	const fetchSites = async (podId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/site/pod/${podId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setSites(response.data.data);
+		} catch (error) {
+			console.error("Error fetching sites:", error);
+		}
+	};
+
+	useEffect(() => {
+		fetchStates();
+		fetchStaffs();
+	}, []);
+
+	useEffect(() => {
+		if (selectedStateId) {
+			fetchDistricts(selectedStateId);
+			setSelectedDistrictId(null);
+			setSelectedPodId(null);
+			setSelectedSiteId(null);
+		}
+	}, [selectedStateId]);
+
+	useEffect(() => {
+		if (selectedDistrictId) {
+			fetchPods(selectedDistrictId);
+			setSelectedPodId(null);
+			setSelectedSiteId(null);
+		}
+	}, [selectedDistrictId]);
+
+	useEffect(() => {
+		if (selectedPodId) {
+			fetchSites(selectedPodId);
+			setSelectedSiteId(null);
+		}
+	}, [selectedPodId]);
 
 	const fetchDevice = useCallback(async () => {
 		setIsLoading(true);
@@ -106,13 +290,98 @@ function DeviceDetails() {
 		return new Intl.DateTimeFormat("en-US", options).format(parsedDate);
 	};
 
-	if (isLoading) {
-		return <Loader />;
-	}
+	const handlePost = async (event: React.FormEvent) => {
+		event.preventDefault();
+		setIsLoading(true);
 
-	const handleDelete = () => {
-		// Get the selected row IDs
-		console.log("item deleted");
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			// Validate required fields
+			if (
+				!selectedStaffId ||
+				!selectedStateId ||
+				!selectedDistrictId ||
+				!selectedPodId ||
+				!selectedSiteId
+			) {
+				alert("Please fill all required fields.");
+				return;
+			}
+
+			// Construct payload
+			const payload = {
+				user_id: selectedStaffId,
+				device_id: id,
+				state_id: selectedStateId,
+				district_id: selectedDistrictId,
+				pod_id: selectedPodId,
+				sites: [selectedSiteId], // Ensure sites is an array
+			};
+
+			// Send POST request
+			const response = await axios.post(
+				`https://api.wowdev.com.ng/api/v1/posting`,
+				payload,
+				{
+					headers: { Authorization: `Bearer ${accessToken}` },
+				}
+			);
+
+			if (response.status === 200) {
+				console.log("Device posted successfully");
+				toast.success("Device posted successfully");
+				closeModal();
+				fetchDevice(); // Refresh device data
+			}
+		} catch (error) {
+			console.error("Error posting device:", error);
+			alert("An error occurred while posting the device.");
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleUnpost = async (event: React.FormEvent) => {
+		event.preventDefault();
+		setIsLoading(true);
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.post(
+				`https://api.wowdev.com.ng/api/v1/posting/unpost/${id}`,
+				{},
+				{
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				// Handle success
+				console.log("Device unposted successfully");
+				toast.success("Device unposted successfully");
+				closeDeleteModal();
+				fetchDevice();
+			}
+		} catch (error) {
+			console.error("Error unposting device:", error);
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	return (
@@ -294,11 +563,9 @@ function DeviceDetails() {
 						</Button>
 						<Button
 							className="bg-[#F04F4A] text-white font-inter text-xs modal-delete gap-1"
-							onClick={() => {
-								handleDelete();
-								closeDeleteModal();
-							}}>
-							Yes, Unpost
+							onClick={handleUnpost}
+							disabled={isLoading}>
+							{isLoading ? "Unposting..." : "Yes, Unpost"}
 						</Button>
 					</div>
 				</Modal>
@@ -314,28 +581,88 @@ function DeviceDetails() {
 						<p className="text-sm text-dark-1 font-inter">Basic Information</p>
 						<div className="flex flex-col gap-2 mt-4">
 							<p className="text-xs text-primary-6 font-inter">Staff Name</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
+							<Select onValueChange={(value) => setSelectedStaffId(value)}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select Staff" />
+								</SelectTrigger>
+								<SelectContent className="z-200 post bg-white">
+									{staffs.map((staff) => (
+										<SelectItem key={staff.id} value={staff.id}>
+											{staff.first_name} {staff.last_name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+
 							<div className="flex flex-row items-center justify-between gap-5">
 								<div className="w-[50%] lg:w-full">
 									<p className="text-xs text-primary-6 mt-2 font-inter">
 										State
 									</p>
-									<Input type="text" className="focus:border-none mt-2 h-5" />
+									<Select onValueChange={(value) => setSelectedStateId(value)}>
+										<SelectTrigger className="w-full">
+											<SelectValue placeholder="Select State" />
+										</SelectTrigger>
+										<SelectContent className="z-200 post bg-white">
+											{states.map((state) => (
+												<SelectItem key={state.id} value={state.id}>
+													{state.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
 								</div>
 								<div className="w-[50%] lg:w-full">
 									<p className="text-xs text-primary-6 mt-2 font-inter">
 										District Name
 									</p>
-									<Input type="text" className="focus:border-none mt-2 h-5" />
+									<Select
+										onValueChange={(value) => setSelectedDistrictId(value)}>
+										<SelectTrigger className="w-full">
+											<SelectValue placeholder="Select District" />
+										</SelectTrigger>
+										<SelectContent className="z-200 post bg-white">
+											{districts.map((district) => (
+												<SelectItem key={district.id} value={district.id}>
+													{district.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
 								</div>
 							</div>
+
 							<p className="text-xs text-primary-6 mt-2 font-inter">POD</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
+							<Select onValueChange={(value) => setSelectedPodId(value)}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select POD" />
+								</SelectTrigger>
+								<SelectContent className="z-200 post bg-white">
+									{pods.map((pod) => (
+										<SelectItem key={pod.id} value={pod.id}>
+											{pod.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+
 							<p className="text-xs text-primary-6 mt-2 font-inter">
 								Site Name
 							</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
+							<Select onValueChange={(value) => setSelectedSiteId(value)}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select Site" />
+								</SelectTrigger>
+								<SelectContent className="z-200 post bg-white">
+									{sites.map((site) => (
+										<SelectItem key={site.id} value={site.id}>
+											{site.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 						</div>
+
 						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
 						<div className="flex flex-row justify-end items-center gap-3 font-inter">
 							<Button
@@ -343,8 +670,11 @@ function DeviceDetails() {
 								onClick={closeModal}>
 								Cancel
 							</Button>
-							<Button className="bg-primary-1 text-white font-inter text-xs">
-								Submit
+							<Button
+								className="bg-primary-1 text-white font-inter text-xs"
+								onClick={handlePost}
+								disabled={isLoading}>
+								{isLoading ? "Posting..." : "Post"}
 							</Button>
 						</div>
 					</div>

@@ -159,6 +159,9 @@ body {
 	font-size: 12px;
 }
 
+.post {
+	z-index: 150;
+}
 .t-data {
 	text-transform: capitalize;
 }
