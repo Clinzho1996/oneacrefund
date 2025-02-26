@@ -1,5 +1,6 @@
 "use client";
 
+import Loader from "@/components/Loader";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Farmer } from "@/config/farmer-columns";
@@ -108,7 +109,7 @@ function FarmerDetails() {
 	};
 
 	if (isLoading) {
-		return <p>Loading...</p>;
+		return <Loader />;
 	}
 
 	return (

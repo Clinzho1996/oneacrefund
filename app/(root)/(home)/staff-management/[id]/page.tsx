@@ -1,5 +1,6 @@
 "use client";
 
+import Loader from "@/components/Loader";
 import { IconArrowBack, IconSettings, IconTrash } from "@tabler/icons-react";
 import axios from "axios";
 import { getSession, useSession } from "next-auth/react";
@@ -99,7 +100,7 @@ function StaffDetails() {
 	};
 
 	if (isLoading) {
-		return <p>Loading...</p>;
+		return <Loader />;
 	}
 
 	return (

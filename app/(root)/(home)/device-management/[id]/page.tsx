@@ -1,5 +1,6 @@
 "use client";
 
+import Loader from "@/components/Loader";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,7 +107,7 @@ function DeviceDetails() {
 	};
 
 	if (isLoading) {
-		return <p>Loading...</p>;
+		return <Loader />;
 	}
 
 	const handleDelete = () => {
