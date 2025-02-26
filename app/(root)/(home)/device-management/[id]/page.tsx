@@ -47,6 +47,8 @@ interface Staff {
 	name: string;
 	role: string;
 	siteId: string;
+	first_name: string;
+	last_name: string;
 }
 interface ApiResponse {
 	data: Device;
