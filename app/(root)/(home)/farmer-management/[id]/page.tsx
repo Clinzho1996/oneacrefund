@@ -17,8 +17,9 @@ import axios from "axios";
 import { getSession, useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 interface ApiResponse {
 	data: Farmer; // Adjust to match your API structure
@@ -27,12 +28,23 @@ interface ApiResponse {
 function FarmerDetails() {
 	const { id } = useParams();
 	const { data: session } = useSession();
+	const router = useRouter();
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [userData, setUserData] = useState<Farmer | null>(null);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
+	const [isModalOpen, setModalOpen] = useState(false);
+
 	const openDeleteModal = () => {
 		setDeleteModalOpen(true);
+	};
+
+	const openModal = () => {
+		setModalOpen(true);
+	};
+
+	const closeModal = () => {
+		setModalOpen(false);
 	};
 
 	const closeDeleteModal = () => {
@@ -88,12 +100,87 @@ function FarmerDetails() {
 		}
 	}, [id]);
 
+	const resetFarmerBiometrics = useCallback(async () => {
+		setIsLoading(true);
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+
+			console.log("access token", accessToken);
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+
+			const response = await axios.post<Farmer>(
+				`https://api.wowdev.com.ng/api/v1/farmer/reset-biometric/${id}`,
+				{},
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				console.log("biometric reset successfully");
+
+				await fetchFarmer();
+				toast.success("Biometrics data reset successfully");
+				closeModal();
+			}
+			setIsLoading(false);
+		} catch (error: unknown) {
+			if (axios.isAxiosError(error)) {
+				console.log(
+					"Error resetting biometrics",
+					error.response?.data || error.message
+				);
+
+				toast.error(error?.response?.data.message);
+			} else {
+				console.log("Unexpected error:", error);
+			}
+		} finally {
+			setIsLoading(false);
+		}
+	}, [id]);
+
 	useEffect(() => {
 		fetchFarmer();
 	}, [fetchFarmer]);
-	const handleDelete = () => {
-		// Get the selected row IDs
-		console.log("item deleted");
+
+	const handleDelete = async () => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.delete(
+				`https://api.wowdev.com.ng/api/v1/farmer/${id}`,
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				toast.success("Farmer deleted successfully.");
+				router.push("/farmer-management");
+			}
+		} catch (error) {
+			console.error("Error deleting farmer:", error);
+		}
 	};
 
 	const formatDate = (rawDate?: string | Date) => {
@@ -114,6 +201,26 @@ function FarmerDetails() {
 
 	return (
 		<section className="bg-[#F6F8F9] min-h-screen flex flex-col">
+			<Modal onClose={closeModal} isOpen={isModalOpen}>
+				<p className="mt-4">
+					Are you sure you want to reset {""}
+					{userData?.first_name}'s biometric data?
+				</p>
+
+				<p className="text-sm text-primary-6">This can't be undone</p>
+				<div className="flex flex-row justify-end items-center gap-3 font-inter mt-4">
+					<Button
+						className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
+						onClick={closeDeleteModal}>
+						Cancel
+					</Button>
+					<Button
+						className="bg-[#F04F4A] text-white font-inter text-xs modal-delete"
+						onClick={resetFarmerBiometrics}>
+						{isLoading ? "Restting..." : "Yes, Confirm"}
+					</Button>
+				</div>
+			</Modal>
 			<div className="flex flex-row justify-between items-center bg-white p-4 border-b-[1px] border-[#E2E4E9] h-[80px]">
 				<div className="flex flex-row justify-start gap-2 items-center">
 					<div>
@@ -219,7 +326,9 @@ function FarmerDetails() {
 							</p>
 						</div>
 						<div className="py-4">
-							<div className="flex flex-row justify-start gap-1 items-center border p-2 rounded-lg w-fit cursor-pointer">
+							<div
+								className="flex flex-row justify-start gap-1 items-center border p-2 rounded-lg w-fit cursor-pointer"
+								onClick={openModal}>
 								<IconFingerprint color="#6B7280" size={16} />
 								<p className="text-sm text-[#6B7280]">Reset biometric data</p>
 							</div>
@@ -417,10 +526,7 @@ function FarmerDetails() {
 						</Button>
 						<Button
 							className="bg-[#F04F4A] text-white font-inter text-xs modal-delete gap-1"
-							onClick={() => {
-								handleDelete();
-								closeDeleteModal();
-							}}>
+							onClick={handleDelete}>
 							<IconTrash />
 							Yes, Delete
 						</Button>
