@@ -159,6 +159,10 @@ body {
 	font-size: 12px;
 }
 
+.add-farmer {
+	height: 80vh;
+}
+
 .post {
 	z-index: 150;
 }

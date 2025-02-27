@@ -497,7 +497,7 @@ export function GroupDataTable<TData, TValue>({
 							value={name}
 							onChange={(e) => setName(e.target.value)}
 							placeholder="Edit Group Name"
-							className="focus:border-none mt-2 h-5 border border-primary-1"
+							className="focus:border-none mt-2 border border-primary-1"
 						/>
 					</div>
 					<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />

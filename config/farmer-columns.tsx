@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
 import axios from "axios";
-import { format, isValid, parseISO } from "date-fns";
 import { getSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -227,6 +226,16 @@ const FarmerTable = () => {
 		}
 	};
 
+	const formatDate = (rawDate: string | Date) => {
+		const options: Intl.DateTimeFormatOptions = {
+			year: "numeric",
+			month: "long",
+			day: "numeric",
+		};
+		const parsedDate =
+			typeof rawDate === "string" ? new Date(rawDate) : rawDate;
+		return new Intl.DateTimeFormat("en-US", options).format(parsedDate);
+	};
 	const columns: ColumnDef<Farmer>[] = [
 		{
 			id: "select",
@@ -306,11 +315,11 @@ const FarmerTable = () => {
 			accessorKey: "created_at",
 			header: "Date Joined",
 			cell: ({ row }) => {
-				const date = parseISO(row.original.created_at);
+				const rawDate = row.original.created_at;
+				const date = new Date(rawDate); // ✅ Convert it to a Date object
+
 				return (
-					<span className="text-xs text-primary-6">
-						{isValid(date) ? format(date, "do MMM. yyyy") : "Invalid Date"}
-					</span>
+					<span className="text-xs text-primary-6">{formatDate(date)}</span>
 				);
 			},
 		},

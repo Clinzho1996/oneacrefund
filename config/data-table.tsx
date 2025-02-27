@@ -360,21 +360,21 @@ export function DataTable<TData, TValue>({
 							<p className="text-xs text-primary-6">First Name</p>
 							<Input
 								type="text"
-								className="focus:border-none mt-2 h-5"
+								className="focus:border-none mt-2"
 								value={firstName}
 								onChange={(e) => setFirstName(e.target.value)}
 							/>
 							<p className="text-xs text-primary-6 mt-2">Last Name</p>
 							<Input
 								type="text"
-								className="focus:border-none mt-2 h-5"
+								className="focus:border-none mt-2"
 								value={lastName}
 								onChange={(e) => setLastName(e.target.value)}
 							/>
 							<p className="text-xs text-primary-6 mt-2">Email Address</p>
 							<Input
 								type="text"
-								className="focus:border-none mt-2 h-5"
+								className="focus:border-none mt-2"
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
 							/>

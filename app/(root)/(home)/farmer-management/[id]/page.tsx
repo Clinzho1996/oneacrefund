@@ -113,7 +113,7 @@ function FarmerDetails() {
 	}
 
 	return (
-		<section className="bg-[#F6F8F9] h-screen">
+		<section className="bg-[#F6F8F9] min-h-screen flex flex-col">
 			<div className="flex flex-row justify-between items-center bg-white p-4 border-b-[1px] border-[#E2E4E9] h-[80px]">
 				<div className="flex flex-row justify-start gap-2 items-center">
 					<div>
@@ -166,7 +166,23 @@ function FarmerDetails() {
 			<div className="p-5 bg-white border-[1px] border-[#E2E4E9] m-4 rounded-lg">
 				<div className="flex flex-row justify-start items-start gap-20 ">
 					<div>
-						<Image src="/images/avat.png" width={50} height={50} alt="avatar" />
+						{userData?.pic ? (
+							<Image
+								src={userData?.pic}
+								alt="profile"
+								className="rounded-full object-cover w-12 h-12"
+								width={50}
+								height={50}
+							/>
+						) : (
+							<Image
+								src="/images/avat.png"
+								width={50}
+								height={50}
+								alt="avatar"
+								className="rounded-full"
+							/>
+						)}
 						<div className="py-4 border-b-[1px] border-[#E2E4E9]">
 							<p className="text-[16px] text-dark-1 font-medium font-inter mt-2 capitalize">
 								{userData?.first_name} {userData?.last_name}
@@ -242,9 +258,29 @@ function FarmerDetails() {
 							<div className="flex flex-row justify-start gap-20 items-center p-2 border-b-[1px] border-[#E2E4E9]">
 								<div className="w-[50%] lg:w-full">
 									<h2 className="text-sm text-[#6B7280B7] font-inter">
-										Device Name
+										Other Name
 									</h2>
-									<p className="text-sm text-dark-1 font-inter mt-2">---</p>
+									<p className="text-sm text-dark-1 font-inter mt-2 capitalize">
+										{userData?.other_name}
+									</p>
+								</div>
+								<div className="w-[50%] lg:w-full">
+									<h2 className="text-sm text-[#6B7280B7] font-inter">
+										Date of Birth
+									</h2>
+									<p className="text-sm text-dark-1 font-inter mt-2 capitalize">
+										{formatDate(userData?.dob)}
+									</p>
+								</div>
+							</div>
+							<div className="flex flex-row justify-start gap-20 items-center p-2 border-b-[1px] border-[#E2E4E9]">
+								<div className="w-[50%] lg:w-full">
+									<h2 className="text-sm text-[#6B7280B7] font-inter">
+										Email Address
+									</h2>
+									<p className="text-sm text-dark-1 font-inter mt-2">
+										{userData?.email}
+									</p>
 								</div>
 								<div className="w-[50%] lg:w-full">
 									<h2 className="text-sm text-[#6B7280B7] font-inter">

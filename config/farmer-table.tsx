@@ -41,19 +41,47 @@ import {
 	IconPlus,
 	IconTrash,
 } from "@tabler/icons-react";
+import axios from "axios";
 import {
 	ChevronLeft,
 	ChevronRight,
 	ChevronsLeft,
 	ChevronsRight,
 } from "lucide-react";
+import { getSession } from "next-auth/react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
+import { toast } from "react-toastify";
+import { Farmer } from "./farmer-columns";
+import { Group } from "./group-columns";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
+}
+
+interface State {
+	id: string;
+	name: string;
+}
+
+interface District {
+	id: string;
+	name: string;
+	stateId: string;
+}
+
+interface Pod {
+	id: string;
+	name: string;
+	districtId: string;
+}
+
+interface Site {
+	id: string;
+	name: string;
+	podId: string;
 }
 
 export function FarmerDataTable<TData, TValue>({
@@ -74,6 +102,271 @@ export function FarmerDataTable<TData, TValue>({
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [tableData, setTableData] = useState<TData[]>(data);
 	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+	const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
+	const [isAddingFarmer, setIsAddingFarmer] = useState(false);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(
+		null
+	);
+	const [selectedPodId, setSelectedPodId] = useState<string | null>(null);
+	const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+	const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+
+	const [name, setName] = useState<string>("");
+	const [gender, setGender] = useState<string>("");
+	const [email, setEmail] = useState<string>("");
+	const [phoneNumber, setPhoneNumber] = useState<string>("");
+	const [oafId, setOafId] = useState<string>("");
+	const [otherName, setOtherName] = useState<string>("");
+	const [dob, setDob] = useState<string>("");
+	const [states, setStates] = useState<State[]>([]);
+	const [districts, setDistricts] = useState<District[]>([]);
+	const [groups, setGroups] = useState<Group[]>([]);
+	const [pods, setPods] = useState<Pod[]>([]);
+	const [sites, setSites] = useState<Site[]>([]);
+
+	const fetchStates = async () => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				"https://api.wowdev.com.ng/api/v1/state",
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setStates(response.data.data);
+
+			console.log("States fetched:", response.data);
+		} catch (error) {
+			console.error("Error fetching states:", error);
+		}
+	};
+
+	const fetchDistricts = async (stateId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/district/state/${stateId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setDistricts(response.data.data);
+
+			console.log("Districts fetched:", response.data);
+		} catch (error) {
+			console.error("Error fetching districts:", error);
+		}
+	};
+
+	const fetchGroups = async (groupId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/group/site/${groupId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setGroups(response.data.data);
+			console.log("Group data", response.data.data);
+		} catch (error) {
+			console.error("Error fetching Groups:", error);
+		}
+	};
+	const fetchPods = async (districtId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/pod/district/${districtId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setPods(response.data.data);
+		} catch (error) {
+			console.error("Error fetching PODs:", error);
+		}
+	};
+
+	const fetchSites = async (podId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/site/pod/${podId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setSites(response.data.data);
+		} catch (error) {
+			console.error("Error fetching sites:", error);
+		}
+	};
+
+	useEffect(() => {
+		fetchStates();
+	}, []);
+
+	const fetchFarmers = async () => {
+		try {
+			setIsLoading(true);
+			const session = await getSession();
+
+			console.log("session", session);
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+
+			const response = await axios.get<{
+				status: string;
+				message: string;
+				data: Farmer[];
+			}>("https://api.wowdev.com.ng/api/v1/farmer", {
+				headers: {
+					Accept: "application/json",
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			const fetchedData = response.data.data;
+
+			console.log("Farmer Data:", fetchedData);
+
+			// Map the API response to match the `Farmer` type
+			const mappedData = fetchedData.map((item) => ({
+				id: item.id,
+				oaf_id: item.oaf_id,
+				first_name: item.first_name,
+				last_name: item.last_name,
+				other_name: item.other_name,
+				gender: item.gender,
+				email: item.email,
+				phone_number: item.phone_number,
+				dob: item.dob,
+				state_id: item.state_id,
+				district_id: item.district_id,
+				pod_id: item.pod_id,
+				site_id: item.site_id,
+				group_id: item.group_id,
+				pic: item.pic,
+				finger_bio: item.finger_bio,
+				facial_bio: item.facial_bio,
+				created_at: item.created_at,
+				updated_at: item.updated_at,
+				group: item.group || "N/A",
+				site: item.site || "N/A",
+				pod: item.pod || "N/A",
+				district: item.district || "N/A",
+				state: item.state || "N/A",
+				biometricStatus:
+					item.finger_bio && item.facial_bio
+						? "both"
+						: item.facial_bio
+						? "facial"
+						: item.finger_bio
+						? "fingerprint"
+						: "none",
+			}));
+
+			console.log("Mapped Data:", mappedData);
+			setTableData(mappedData as TData[]);
+		} catch (error) {
+			console.error("Error fetching farmer data:", error);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		if (selectedStateId) {
+			fetchDistricts(selectedStateId);
+			setSelectedDistrictId(null);
+			setSelectedPodId(null);
+			setSelectedSiteId(null);
+		}
+	}, [selectedStateId]);
+
+	useEffect(() => {
+		if (selectedDistrictId) {
+			fetchPods(selectedDistrictId);
+			setSelectedPodId(null);
+			setSelectedSiteId(null);
+		}
+	}, [selectedDistrictId]);
+
+	useEffect(() => {
+		if (selectedPodId) {
+			fetchSites(selectedPodId);
+			setSelectedSiteId(null);
+		}
+	}, [selectedPodId]);
+
+	useEffect(() => {
+		if (selectedSiteId) {
+			fetchGroups(selectedSiteId);
+			setSelectedGroupId(null);
+		}
+	}, [selectedSiteId]);
 
 	const openModal = () => setModalOpen(true);
 	const closeModal = () => setModalOpen(false);
@@ -153,6 +446,57 @@ export function FarmerDataTable<TData, TValue>({
 		setRowSelection({});
 	};
 
+	const handleAddFarmer = async () => {
+		setIsAddingFarmer(true);
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const formData = new FormData();
+			formData.append("first_name", name.split(" ")[0]);
+			formData.append("last_name", name.split(" ")[1] || "");
+			formData.append("other_name", otherName);
+			formData.append("gender", gender);
+			formData.append("oaf_id", oafId);
+			formData.append("dob", dob);
+			formData.append("phone_number", phoneNumber);
+			formData.append("email", email);
+			formData.append("group_id", selectedGroupId || "");
+			formData.append("site_id", selectedSiteId || "");
+			formData.append("pod_id", selectedPodId || "");
+			formData.append("district_id", selectedDistrictId || "");
+			formData.append("state_id", selectedStateId || "");
+
+			if (featuredImage) {
+				formData.append("pic", featuredImage);
+			}
+
+			const response = await axios.post(
+				"https://api.wowdev.com.ng/api/v1/farmer",
+				formData,
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			console.log("Farmer added successfully:", response.data);
+			toast.success("Farmer added successfully");
+			await fetchFarmers();
+			closeModal();
+		} catch (error) {
+			console.error("Error adding farmer:", error);
+		} finally {
+			setIsAddingFarmer(false);
+		}
+	};
 	const table = useReactTable({
 		data: tableData,
 		columns,
@@ -177,24 +521,87 @@ export function FarmerDataTable<TData, TValue>({
 	return (
 		<div className="rounded-lg border-[1px] py-0">
 			<Modal isOpen={isModalOpen} onClose={closeModal} title="Add Farmer">
-				<div className="bg-white py-1 rounded-lg w-[600px] transition-transform ease-in-out max-h[70vh] overflow-y-auto">
+				<div className="bg-white py-1 rounded-lg w-[600px] transition-transform ease-in-out max-h[70vh] add-farmer overflow-y-auto">
 					<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
+						{/* Basic Information Section */}
 						<div>
 							<p className="text-sm text-dark-1">Basic Information</p>
-
 							<div className="flex flex-col gap-2 mt-4">
 								<div className="flex flex-row gap-3 justify-between items-center">
 									<div>
 										<p className="text-xs text-primary-6 font-inter">
 											First Name
 										</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
+										<Input
+											type="text"
+											className="focus:border-none mt-2"
+											value={name.split(" ")[0] || ""}
+											onChange={(e) => setName(e.target.value)}
+										/>
 									</div>
 									<div>
 										<p className="text-xs text-primary-6 font-inter">
 											Last Name
 										</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
+										<Input
+											type="text"
+											className="focus:border-none mt-2"
+											value={name.split(" ")[1] || ""}
+											onChange={(e) =>
+												setName(`${name.split(" ")[0]} ${e.target.value}`)
+											}
+										/>
+									</div>
+								</div>
+								<div className="flex flex-row gap-3 justify-between items-center w-full">
+									<div className="w-[50%] lg:w-full">
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											Other Name
+										</p>
+										<Input
+											type="text"
+											className="focus:border-none mt-2"
+											value={otherName}
+											onChange={(e) => setOtherName(e.target.value)}
+										/>
+									</div>
+									<div className="w-[50%] lg:w-full">
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											Gender
+										</p>
+										<Select onValueChange={(value) => setGender(value)}>
+											<SelectTrigger className="w-full mt-2">
+												<SelectValue placeholder="Select Gender" />
+											</SelectTrigger>
+											<SelectContent className="z-200 post bg-white">
+												<SelectItem value="male">Male</SelectItem>
+												<SelectItem value="female">Female</SelectItem>
+											</SelectContent>
+										</Select>
+									</div>
+								</div>
+								<div className="flex flex-row gap-3 justify-between items-center">
+									<div className="w-[50%] lg:w-full">
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											OAF-ID
+										</p>
+										<Input
+											type="text"
+											className="focus:border-none mt-2"
+											value={oafId}
+											onChange={(e) => setOafId(e.target.value)}
+										/>
+									</div>
+									<div className="w-[50%] lg:w-full">
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											Date of Birth
+										</p>
+										<Input
+											type="date"
+											className="focus:border-none mt-2"
+											value={dob}
+											onChange={(e) => setDob(e.target.value)}
+										/>
 									</div>
 								</div>
 								<div className="flex flex-row gap-3 justify-between items-center">
@@ -202,60 +609,134 @@ export function FarmerDataTable<TData, TValue>({
 										<p className="text-xs text-primary-6 mt-2 font-inter">
 											Phone Number
 										</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
+										<Input
+											type="text"
+											className="focus:border-none mt-2"
+											value={phoneNumber}
+											onChange={(e) => setPhoneNumber(e.target.value)}
+										/>
 									</div>
 									<div>
 										<p className="text-xs text-primary-6 mt-2 font-inter">
-											OAF-ID (One acre ID)
+											Email
 										</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
+										<Input
+											type="email"
+											className="focus:border-none mt-2"
+											value={email}
+											onChange={(e) => setEmail(e.target.value)}
+										/>
 									</div>
 								</div>
 							</div>
 						</div>
+
 						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+
+						{/* Location Section */}
 						<div className="mt-4">
 							<p className="text-sm text-dark-1">Location</p>
-
 							<div className="flex flex-col gap-2 mt-2">
-								<div className="flex flex-row gap-3 justify-between items-center">
-									<div>
-										<p className="text-xs text-primary-6 font-inter">State</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
+								<div className="flex flex-row items-center justify-between gap-5">
+									<div className="w-[50%] lg:w-full">
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											State
+										</p>
+										<Select
+											onValueChange={(value) => setSelectedStateId(value)}>
+											<SelectTrigger className="w-full mt-2">
+												<SelectValue placeholder="Select State" />
+											</SelectTrigger>
+											<SelectContent className="z-200 post bg-white">
+												{states.map((state) => (
+													<SelectItem key={state.id} value={state.id}>
+														{state.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
 									</div>
-									<div>
-										<p className="text-xs text-primary-6 font-inter">
+									<div className="w-[50%] lg:w-full">
+										<p className="text-xs text-primary-6 mt-2 font-inter">
 											District
 										</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
+										<Select
+											onValueChange={(value) => setSelectedDistrictId(value)}>
+											<SelectTrigger className="w-full mt-2">
+												<SelectValue placeholder="Select District" />
+											</SelectTrigger>
+											<SelectContent className="z-200 post bg-white">
+												{districts.map((district) => (
+													<SelectItem key={district.id} value={district.id}>
+														{district.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
 									</div>
 								</div>
-								<div className="flex flex-row gap-3 justify-between items-center">
-									<div>
-										<p className="text-xs text-primary-6 font-inter">
+								<div className="flex flex-row items-center justify-between gap-5 mt-1">
+									<div className="w-[50%] lg:w-full">
+										<p className="text-xs text-primary-6 mt-2 font-inter">
 											POD/Sector
 										</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
+										<Select onValueChange={(value) => setSelectedPodId(value)}>
+											<SelectTrigger className="w-full mt-2">
+												<SelectValue placeholder="Select POD" />
+											</SelectTrigger>
+											<SelectContent className="z-200 post bg-white">
+												{pods.map((pod) => (
+													<SelectItem key={pod.id} value={pod.id}>
+														{pod.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
 									</div>
-									<div>
-										<p className="text-xs text-primary-6 font-inter">
-											Site Name
+									<div className="w-[50%] lg:w-full">
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											Site
 										</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
+										<Select onValueChange={(value) => setSelectedSiteId(value)}>
+											<SelectTrigger className="w-full mt-2">
+												<SelectValue placeholder="Select Site" />
+											</SelectTrigger>
+											<SelectContent className="z-200 post bg-white">
+												{sites.map((site) => (
+													<SelectItem key={site.id} value={site.id}>
+														{site.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
 									</div>
 								</div>
 								<div className="flex flex-col gap-2">
 									<div>
 										<p className="text-xs text-primary-6 mt-2 font-inter">
-											Group Name
+											Group
 										</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
+										<Select
+											onValueChange={(value) => setSelectedGroupId(value)}>
+											<SelectTrigger className="w-full mt-2">
+												<SelectValue placeholder="Select Group" />
+											</SelectTrigger>
+											<SelectContent className="z-200 post bg-white">
+												{groups.map((group) => (
+													<SelectItem key={group.id} value={group.id}>
+														{group.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
 									</div>
 								</div>
 							</div>
 						</div>
+
 						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
 
+						{/* Image Upload Section */}
 						<div>
 							<p className="text-xs text-primary-6 font-inter">Upload Image</p>
 							<div className="flex flex-col justify-center items-center gap-3 p-3 border-dashed border rounded-lg mt-3 mb-4">
@@ -291,20 +772,24 @@ export function FarmerDataTable<TData, TValue>({
 											}}
 											className="border text-xs p-2">
 											Remove
-										</Button>{" "}
+										</Button>
 									</div>
 								)}
 							</div>
 						</div>
 
+						{/* Modal Footer */}
 						<div className="flex flex-row justify-end items-center gap-3 font-inter">
 							<Button
 								className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
 								onClick={closeModal}>
 								Cancel
 							</Button>
-							<Button className="bg-primary-1 text-white font-inter text-xs">
-								Add
+							<Button
+								className="bg-primary-1 text-white font-inter text-xs"
+								onClick={handleAddFarmer}
+								disabled={isAddingFarmer}>
+								{isAddingFarmer ? "Adding..." : "Add"}
 							</Button>
 						</div>
 					</div>
