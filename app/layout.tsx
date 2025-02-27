@@ -15,7 +15,7 @@ const ibmPlexSerif = IBM_Plex_Serif({
 export const metadata: Metadata = {
 	title: "One Acre Fund",
 	description:
-		"We envision serving millions of farm families. We build for scale with every idea and solution.",
+		"We envision serving millions of farm families. We build for scale with every idea and solution...",
 	icons: {
 		icon: "/images/favicon.png",
 	},
