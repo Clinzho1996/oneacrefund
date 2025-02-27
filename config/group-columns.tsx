@@ -1,6 +1,5 @@
 "use client";
 
-import Loader from "@/components/Loader";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,6 +11,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
 import { ColumnDef } from "@tanstack/react-table";
 import axios from "axios";
@@ -48,6 +54,30 @@ export type Group = {
 		name: string;
 	};
 };
+
+interface State {
+	id: string;
+	name: string;
+}
+
+interface District {
+	id: string;
+	name: string;
+	stateId: string;
+}
+
+interface Pod {
+	id: string;
+	name: string;
+	districtId: string;
+}
+
+interface Site {
+	id: string;
+	name: string;
+	podId: string;
+}
+
 const GroupTable = () => {
 	const [isEditModalOpen, setEditModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -55,6 +85,160 @@ const GroupTable = () => {
 	const [selectedRow, setSelectedRow] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [tableData, setTableData] = useState<Group[]>([]);
+	const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
+	const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(
+		null
+	);
+	const [selectedPodId, setSelectedPodId] = useState<string | null>(null);
+	const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+
+	const [name, setName] = useState<string>("");
+	const [states, setStates] = useState<State[]>([]);
+	const [districts, setDistricts] = useState<District[]>([]);
+	const [pods, setPods] = useState<Pod[]>([]);
+	const [sites, setSites] = useState<Site[]>([]);
+
+	useEffect(() => {
+		if (selectedRow) {
+			setName(selectedRow.name);
+		}
+	}, [selectedRow]); // Runs when selectedRow changes
+
+	const fetchStates = async () => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				"https://api.wowdev.com.ng/api/v1/state",
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setStates(response.data.data);
+
+			console.log("States fetched:", response.data);
+		} catch (error) {
+			console.error("Error fetching states:", error);
+		}
+	};
+
+	const fetchDistricts = async (stateId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/district/state/${stateId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setDistricts(response.data.data);
+
+			console.log("Districts fetched:", response.data);
+		} catch (error) {
+			console.error("Error fetching districts:", error);
+		}
+	};
+
+	const fetchPods = async (districtId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/pod/district/${districtId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setPods(response.data.data);
+		} catch (error) {
+			console.error("Error fetching PODs:", error);
+		}
+	};
+
+	const fetchSites = async (podId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/site/pod/${podId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setSites(response.data.data);
+		} catch (error) {
+			console.error("Error fetching sites:", error);
+		}
+	};
+
+	useEffect(() => {
+		fetchStates();
+	}, []);
+
+	useEffect(() => {
+		if (selectedStateId) {
+			fetchDistricts(selectedStateId);
+			setSelectedDistrictId(null);
+			setSelectedPodId(null);
+			setSelectedSiteId(null);
+		}
+	}, [selectedStateId]);
+
+	useEffect(() => {
+		if (selectedDistrictId) {
+			fetchPods(selectedDistrictId);
+			setSelectedPodId(null);
+			setSelectedSiteId(null);
+		}
+	}, [selectedDistrictId]);
+
+	useEffect(() => {
+		if (selectedPodId) {
+			fetchSites(selectedPodId);
+			setSelectedSiteId(null);
+		}
+	}, [selectedPodId]);
 
 	const fetchGroups = async () => {
 		try {
@@ -131,15 +315,71 @@ const GroupTable = () => {
 			);
 
 			if (response.status === 200) {
-				// Remove the deleted farmer from the table
-				setTableData((prevData) =>
-					prevData.filter((farmer) => farmer.id !== id)
-				);
+				await fetchGroups();
 
-				toast.success("Farmer deleted successfully.");
+				toast.success("Group deleted successfully.");
 			}
 		} catch (error) {
-			console.error("Error deleting farmer:", error);
+			console.error("Error deleting group:", error);
+			toast.error("Failed to delete group. Please try again.");
+		}
+	};
+
+	const handleEditGroup = async (event: React.FormEvent) => {
+		event.preventDefault();
+		setIsLoading(true);
+
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			// Validate required fields
+			if (
+				!name ||
+				!selectedStateId ||
+				!selectedDistrictId ||
+				!selectedPodId ||
+				!selectedSiteId
+			) {
+				alert("Please fill all required fields.");
+				return;
+			}
+
+			// Construct payload
+			const payload = {
+				name: name,
+				state_id: selectedStateId,
+				district_id: selectedDistrictId,
+				pod_id: selectedPodId,
+				site_id: selectedSiteId,
+			};
+
+			// Send POST request
+			const response = await axios.put(
+				`https://api.wowdev.com.ng/api/v1/group/${selectedRow.id}`,
+				payload,
+				{
+					headers: { Authorization: `Bearer ${accessToken}` },
+				}
+			);
+
+			if (response.status === 200) {
+				console.log("Group posted successfully");
+				toast.success("Group updated successfully");
+				setName("");
+				closeEditModal();
+				fetchGroups(); // Refresh device data
+			}
+		} catch (error) {
+			console.error("Error posting device:", error);
+			toast.error("Failed to add group. Please try again.");
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
@@ -279,103 +519,7 @@ const GroupTable = () => {
 
 	return (
 		<>
-			{isLoading ? (
-				<Loader />
-			) : (
-				<GroupDataTable columns={columns} data={tableData} />
-			)}
-
-			{isModalOpen && (
-				<Modal
-					isOpen={isModalOpen}
-					onClose={closeModal}
-					title="Add Location"
-					className="w-[500px]">
-					<div className="bg-white py-5 rounded-lg transition-transform ease-in-out ">
-						<hr className="mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
-						<div className="mt-3  pt-2">
-							<p className="text-xs text-primary-6 font-inter">
-								Location Preference
-							</p>
-							<RadioGroup defaultValue="super-admin">
-								<div className="flex flex-row justify-between items-center gap-5">
-									<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg w-full mt-2">
-										<RadioGroupItem value="super-admin" id="super-admin" />
-										<p className="text-sm text-primary-6 whitespace-nowrap">
-											Group
-										</p>
-									</div>
-									<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg w-full mt-2">
-										<RadioGroupItem value="super-admin" id="super-admin" />
-										<p className="text-sm text-primary-6 whitespace-nowrap">
-											Site
-										</p>
-									</div>
-									<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg w-full mt-2">
-										<RadioGroupItem value="super-admin" id="super-admin" />
-										<p className="text-sm text-primary-6 whitespace-nowrap">
-											POD / Sector
-										</p>
-									</div>
-									<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg w-full mt-2">
-										<RadioGroupItem value="super-admin" id="super-admin" />
-										<p className="text-sm text-primary-6 whitespace-nowrap">
-											District
-										</p>
-									</div>
-								</div>
-							</RadioGroup>
-							<div className="flex flex-col gap-2 mt-4">
-								<p className="text-xs text-primary-6 font-inter">State</p>
-								<Input
-									type="text"
-									className="focus:border-primary-1 mt-2 h-5 border-[#E8E8E8] border-[1px]"
-								/>
-								<p className="text-xs text-primary-6 mt-2 font-inter">
-									District
-								</p>
-								<Input
-									type="text"
-									className="focus:border-primary-1 mt-2 h-5 border-[#E8E8E8] border-[1px]"
-								/>
-								<p className="text-xs text-primary-6 mt-2 font-inter">
-									POD / Sector
-								</p>
-								<Input
-									type="text"
-									className="focus:border-primary-1 mt-2 h-5 border-[#E8E8E8] border-[1px]"
-								/>
-								<p className="text-xs text-primary-6 mt-2 font-inter">
-									Site Name
-								</p>
-								<Input
-									type="text"
-									className="focus:border-primary-1 mt-2 h-5 border-[#E8E8E8] border-[1px]"
-								/>
-								<p className="text-xs text-primary-6 mt-2 font-inter">
-									Group Name
-								</p>
-								<Input
-									type="text"
-									placeholder="Edit Group Name"
-									className="focus:border-primary-1 mt-2 h-5 border-[#E8E8E8] border-[1px]"
-								/>
-							</div>
-							<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
-							<div className="flex flex-row justify-end items-center gap-3 font-inter">
-								<Button
-									className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
-									onClick={closeEditModal}>
-									Cancel
-								</Button>
-								<Button className="bg-primary-1 text-white font-inter text-xs">
-									Save and Close
-								</Button>
-							</div>
-						</div>
-					</div>
-				</Modal>
-			)}
+			<GroupDataTable columns={columns} data={tableData} />
 
 			{isEditModalOpen && (
 				<Modal
@@ -400,56 +544,99 @@ const GroupTable = () => {
 								</div>
 							</RadioGroup>
 							<div className="flex flex-col gap-2 mt-4">
-								<p className="text-xs text-primary-6 font-inter">State</p>
-								<Input
-									type="text"
-									className="focus:border-none mt-2 h-5 border-[#E8E8E8] border-[1px]"
-									disabled
-								/>
-								<p className="text-xs text-primary-6 mt-2 font-inter">
-									District
-								</p>
-								<Input
-									type="text"
-									className="focus:border-none mt-2 h-5"
-									disabled
-								/>
-								<p className="text-xs text-primary-6 mt-2 font-inter">
-									POD / Sector
-								</p>
-								<Input
-									type="text"
-									className="focus:border-none mt-2 h-5"
-									disabled
-								/>
+								<div className="flex flex-row items-center justify-between gap-5">
+									<div className="w-[50%] lg:w-full">
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											State
+										</p>
+										<Select
+											onValueChange={(value) => setSelectedStateId(value)}>
+											<SelectTrigger className="w-full">
+												<SelectValue placeholder="Select State" />
+											</SelectTrigger>
+											<SelectContent className="z-200 post bg-white">
+												{states.map((state) => (
+													<SelectItem key={state.id} value={state.id}>
+														{state.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									</div>
+									<div className="w-[50%] lg:w-full">
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											District Name
+										</p>
+										<Select
+											onValueChange={(value) => setSelectedDistrictId(value)}>
+											<SelectTrigger className="w-full">
+												<SelectValue placeholder="Select District" />
+											</SelectTrigger>
+											<SelectContent className="z-200 post bg-white">
+												{districts.map((district) => (
+													<SelectItem key={district.id} value={district.id}>
+														{district.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									</div>
+								</div>
+
+								<p className="text-xs text-primary-6 mt-2 font-inter">POD</p>
+								<Select onValueChange={(value) => setSelectedPodId(value)}>
+									<SelectTrigger className="w-full">
+										<SelectValue placeholder="Select POD" />
+									</SelectTrigger>
+									<SelectContent className="z-200 post bg-white">
+										{pods.map((pod) => (
+											<SelectItem key={pod.id} value={pod.id}>
+												{pod.name}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+
 								<p className="text-xs text-primary-6 mt-2 font-inter">
 									Site Name
 								</p>
-								<Input
-									type="text"
-									className="focus:border-none mt-2 h-5"
-									disabled
-								/>
-								<p className="text-xs text-primary-6 mt-2 font-inter">
-									Group Name
-								</p>
-								<Input
-									type="text"
-									placeholder="Edit Group Name"
-									className="focus:border-none mt-2 h-5 border border-primary-1"
-								/>
+								<Select onValueChange={(value) => setSelectedSiteId(value)}>
+									<SelectTrigger className="w-full">
+										<SelectValue placeholder="Select Site" />
+									</SelectTrigger>
+									<SelectContent className="z-200 post bg-white">
+										{sites.map((site) => (
+											<SelectItem key={site.id} value={site.id}>
+												{site.name}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
 							</div>
-							<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
-							<div className="flex flex-row justify-end items-center gap-3 font-inter">
-								<Button
-									className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
-									onClick={closeEditModal}>
-									Cancel
-								</Button>
-								<Button className="bg-primary-1 text-white font-inter text-xs">
-									Save and Close
-								</Button>
-							</div>
+							<p className="text-xs text-primary-6 mt-2 font-inter">
+								Group Name
+							</p>
+							<Input
+								type="text"
+								value={name}
+								onChange={(e) => setName(e.target.value)}
+								placeholder="Edit Group Name"
+								className="focus:border-none mt-2 h-5 border border-primary-1"
+							/>
+						</div>
+						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+						<div className="flex flex-row justify-end items-center gap-3 font-inter">
+							<Button
+								className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
+								onClick={closeEditModal}>
+								Cancel
+							</Button>
+							<Button
+								className="bg-primary-1 text-white font-inter text-xs"
+								onClick={handleEditGroup}
+								disabled={isLoading}>
+								{isLoading ? "Loading..." : "Update Group"}
+							</Button>
 						</div>
 					</div>
 				</Modal>
@@ -475,7 +662,7 @@ const GroupTable = () => {
 								await deleteGroup(selectedRow.id);
 								closeDeleteModal();
 							}}>
-							Yes, Delete
+							{isLoading ? "Deleting..." : "Yes, Confirm"}
 						</Button>
 					</div>
 				</Modal>

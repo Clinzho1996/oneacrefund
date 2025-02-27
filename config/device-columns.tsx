@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 
+import Loader from "@/components/Loader";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,7 +16,6 @@ import {
 } from "@/components/ui/select";
 import { IconTrash } from "@tabler/icons-react";
 import axios from "axios";
-import { format, isValid, parseISO } from "date-fns";
 import { getSession } from "next-auth/react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -413,6 +413,7 @@ const DeviceTable = () => {
 				setTableData((prevData) =>
 					prevData.filter((device) => device.id !== id)
 				);
+				await fetchDevices();
 				closeDeleteModal();
 				toast.success("Device deleted successfully.");
 			}
@@ -516,6 +517,26 @@ const DeviceTable = () => {
 		}
 	};
 
+	const formatDate = (rawDate: string | Date) => {
+		const options: Intl.DateTimeFormatOptions = {
+			year: "numeric",
+			month: "long",
+			day: "numeric",
+		};
+
+		// Ensure rawDate is valid
+		const parsedDate =
+			typeof rawDate === "string" ? new Date(rawDate) : rawDate;
+
+		// Check if parsedDate is valid
+		if (isNaN(parsedDate.getTime())) {
+			console.error("Invalid date:", rawDate);
+			return "Invalid Date"; // Or return an empty string
+		}
+
+		return new Intl.DateTimeFormat("en-US", options).format(parsedDate);
+	};
+
 	const columns: ColumnDef<Device>[] = [
 		{
 			id: "select",
@@ -561,11 +582,11 @@ const DeviceTable = () => {
 			accessorKey: "dateJoined",
 			header: "Date Joined",
 			cell: ({ row }) => {
-				const date = parseISO(row.original.dateJoined);
+				const rawDate = row.original.dateJoined;
+				const date = new Date(rawDate); //
+
 				return (
-					<span className="text-xs text-primary-6">
-						{isValid(date) ? format(date, "do MMM. yyyy") : "Invalid Date"}
-					</span>
+					<span className="text-xs text-primary-6">{formatDate(date)}</span>
 				);
 			},
 		},
@@ -635,7 +656,11 @@ const DeviceTable = () => {
 
 	return (
 		<>
-			<DeviceDataTable columns={columns} data={tableData} />
+			{isLoading ? (
+				<Loader />
+			) : (
+				<DeviceDataTable columns={columns} data={tableData} />
+			)}
 
 			{isEditModalOpen && (
 				<Modal onClose={closeEditModal} isOpen={isEditModalOpen}>
@@ -652,8 +677,7 @@ const DeviceTable = () => {
 						</Button>
 						<Button
 							className="bg-[#F04F4A] text-white font-inter text-xs modal-delete gap-1"
-							onClick={handleUnpost}
-							disabled={isLoading}>
+							onClick={handleUnpost}>
 							{isLoading ? "Unposting..." : "Yes, Unpost"}
 						</Button>
 					</div>
@@ -675,8 +699,7 @@ const DeviceTable = () => {
 						</Button>
 						<Button
 							className="bg-[#F04F4A] text-white font-inter text-xs modal-delete gap-1"
-							onClick={() => deleteDevice(selectedRow.id)}
-							disabled={isLoading}>
+							onClick={() => deleteDevice(selectedRow.id)}>
 							{isLoading ? "Deleting..." : "Yes, Delete"}
 						</Button>
 					</div>

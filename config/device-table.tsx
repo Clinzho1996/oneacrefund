@@ -46,6 +46,7 @@ import { getSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { toast } from "react-toastify";
+import { Device } from "./device-columns";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -67,6 +68,8 @@ export function DeviceDataTable<TData, TValue>({
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [tableData, setTableData] = useState<TData[]>(data);
 	const [isLoading, setIsLoading] = useState(false);
+	const [alias, setAlias] = useState("");
+	const [serial, setSerial] = useState("");
 	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
 	const openModal = () => setModalOpen(true);
@@ -96,6 +99,110 @@ export function DeviceDataTable<TData, TValue>({
 		setTableData(data);
 	}, [data]);
 
+	const fetchDevices = async () => {
+		try {
+			setIsLoading(true);
+			const session = await getSession();
+
+			console.log("session", session);
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+
+			const response = await axios.get<{
+				status: string;
+				message: string;
+				data: Device[];
+			}>("https://api.wowdev.com.ng/api/v1/device", {
+				headers: {
+					Accept: "application/json",
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			const fetchedData = response.data.data;
+
+			console.log("Device Data:", fetchedData);
+
+			const mappedData = fetchedData.map((item) => ({
+				id: item.id,
+				serialNumber: item.serial_number || "N/A",
+				dateJoined: item.created_at,
+				deviceAlias: item.alias,
+				alias: item.alias,
+				created_at: item.created_at,
+				state: item.state,
+				serial_number: item.serial_number,
+				status: item.status || "not posted",
+			}));
+
+			console.log("Mapped Data:", mappedData);
+			setTableData(mappedData as TData[]);
+		} catch (error) {
+			console.error("Error fetching device data:", error);
+			toast.error("Failed to fetch devices. Please try again.");
+		} finally {
+			setIsLoading(false);
+		}
+	};
+	const handleAddDevice = async () => {
+		setIsLoading(true);
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const payload = {
+				serial_number: serial,
+				alias: alias,
+			};
+
+			const response = await axios.post(
+				"https://api.wowdev.com.ng/api/v1/device",
+				payload,
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200 || response.status === 201) {
+				await fetchDevices();
+				toast.success("Device added successfully!");
+
+				// Close the modal and reset form fields
+				closeModal();
+				setAlias("");
+				setSerial("");
+			}
+		} catch (error: unknown) {
+			if (axios.isAxiosError(error)) {
+				console.log(
+					"Error Adding Staff:",
+					error.response?.data || error.message
+				);
+				toast.error(
+					error.response?.data?.message ||
+						"An error occurred. Please try again."
+				);
+			} else {
+				console.log("Unexpected error:", error);
+				toast.error("Unexpected error occurred.");
+			}
+		} finally {
+			setIsLoading(false);
+		}
+	};
 	const bulkDeleteDevice = async () => {
 		try {
 			const session = await getSession();
@@ -186,11 +293,21 @@ export function DeviceDataTable<TData, TValue>({
 						<p className="text-sm text-dark-1 font-inter">Basic Information</p>
 						<div className="flex flex-col gap-2 mt-4">
 							<p className="text-xs text-primary-6 font-inter">Serial Number</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
+							<Input
+								type="text"
+								className="focus:border-none mt-2 h-5"
+								value={serial}
+								onChange={(e) => setSerial(e.target.value)}
+							/>
 							<p className="text-xs text-primary-6 mt-2 font-inter">
 								Alias / Device Name
 							</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
+							<Input
+								type="text"
+								className="focus:border-none mt-2 h-5"
+								value={alias}
+								onChange={(e) => setAlias(e.target.value)}
+							/>
 						</div>
 						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
 						<div className="flex flex-row justify-end items-center gap-3 font-inter">
@@ -199,8 +316,11 @@ export function DeviceDataTable<TData, TValue>({
 								onClick={closeModal}>
 								Cancel
 							</Button>
-							<Button className="bg-primary-1 text-white font-inter text-xs">
-								Add
+							<Button
+								className="bg-primary-1 text-white font-inter text-xs"
+								onClick={handleAddDevice}
+								disabled={isLoading}>
+								{isLoading ? "Adding Device..." : "Add Device"}
 							</Button>
 						</div>
 					</div>

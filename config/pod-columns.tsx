@@ -1,8 +1,7 @@
 "use client";
 
-import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
+import { ColumnDef } from "@tanstack/react-table";
 
-import Loader from "@/components/Loader";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,6 +12,14 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
 import axios from "axios";
 import { MoreHorizontal } from "lucide-react";
@@ -43,14 +50,173 @@ export type Pods = {
 	};
 };
 
+interface State {
+	id: string;
+	name: string;
+}
+
+interface District {
+	id: string;
+	name: string;
+	stateId: string;
+}
+
 const PodTable = () => {
 	const [isEditModalOpen, setEditModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [isModalOpen, setModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
-	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [tableData, setTableData] = useState<Pods[]>([]);
+	const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
+	const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(
+		null
+	);
+	const [selectedPodId, setSelectedPodId] = useState<string | null>(null);
+	const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+
+	const [name, setName] = useState<string>("");
+	const [states, setStates] = useState<State[]>([]);
+	const [districts, setDistricts] = useState<District[]>([]);
+
+	useEffect(() => {
+		if (selectedRow) {
+			setName(selectedRow.name);
+		}
+	}, [selectedRow]); // Runs when selectedRow changes
+
+	const fetchStates = async () => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				"https://api.wowdev.com.ng/api/v1/state",
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setStates(response.data.data);
+
+			console.log("States fetched:", response.data);
+		} catch (error) {
+			console.error("Error fetching states:", error);
+		}
+	};
+
+	const fetchDistricts = async (stateId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/district/state/${stateId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setDistricts(response.data.data);
+
+			console.log("Districts fetched:", response.data);
+		} catch (error) {
+			console.error("Error fetching districts:", error);
+		}
+	};
+
+	useEffect(() => {
+		fetchStates();
+	}, []);
+
+	useEffect(() => {
+		if (selectedStateId) {
+			fetchDistricts(selectedStateId);
+			setSelectedDistrictId(null);
+			setSelectedPodId(null);
+			setSelectedSiteId(null);
+		}
+	}, [selectedStateId]);
+
+	useEffect(() => {
+		if (selectedDistrictId) {
+			setSelectedPodId(null);
+			setSelectedSiteId(null);
+		}
+	}, [selectedDistrictId]);
+
+	useEffect(() => {
+		if (selectedPodId) {
+			setSelectedSiteId(null);
+		}
+	}, [selectedPodId]);
+
+	const handleEditPod = async (event: React.FormEvent) => {
+		event.preventDefault();
+		setIsLoading(true);
+
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			// Validate required fields
+			if (!name || !selectedStateId || !selectedDistrictId) {
+				alert("Please fill all required fields.");
+				return;
+			}
+
+			// Construct payload
+			const payload = {
+				name: name,
+				state_id: selectedStateId,
+				district_id: selectedDistrictId,
+			};
+
+			// Send POST request
+			const response = await axios.put(
+				`https://api.wowdev.com.ng/api/v1/pod/${selectedRow.id}`,
+				payload,
+				{
+					headers: { Authorization: `Bearer ${accessToken}` },
+				}
+			);
+
+			if (response.status === 200) {
+				console.log("Pod posted successfully");
+				toast.success("Pod updated successfully");
+
+				await fetchPods();
+				setName("");
+				closeEditModal();
+			}
+		} catch (error) {
+			console.error("Error adding pod:", error);
+			toast.error("Failed to edit pod. Please try again.");
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
 	const fetchPods = async () => {
 		try {
@@ -228,7 +394,7 @@ const PodTable = () => {
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="bg-white">
-							<Link href={`/group-management/${actions.id}`}>
+							<Link href={`/pod-management/${actions.id}`}>
 								<DropdownMenuItem className="action cursor-pointer hover:bg-secondary-3">
 									<IconEye />
 									<p className="text-xs font-inter">View</p>
@@ -257,109 +423,92 @@ const PodTable = () => {
 
 	return (
 		<>
-			{isLoading ? (
-				<Loader />
-			) : (
-				<PodDataTable columns={columns} data={tableData} />
-			)}
-
-			{isModalOpen && (
-				<Modal
-					isOpen={isModalOpen}
-					onClose={closeModal}
-					title="Post Device"
-					className="w-[500px]">
-					<div className="bg-white py-5 rounded-lg transition-transform ease-in-out ">
-						<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
-							<p className="text-sm text-dark-1 font-inter">
-								Basic Information
-							</p>
-							<div className="flex flex-col gap-2 mt-4">
-								<p className="text-xs text-primary-6 font-inter">Staff Name</p>
-								<Input type="text" className="focus:border-none mt-2 h-5" />
-								<div className="flex flex-row items-center justify-between gap-5">
-									<div className="w-[50%] lg:w-full">
-										<p className="text-xs text-primary-6 mt-2 font-inter">
-											State
-										</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
-									</div>
-									<div className="w-[50%] lg:w-full">
-										<p className="text-xs text-primary-6 mt-2 font-inter">
-											District Name
-										</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
-									</div>
-								</div>
-								<p className="text-xs text-primary-6 mt-2 font-inter">POD</p>
-								<Input type="text" className="focus:border-none mt-2 h-5" />
-								<p className="text-xs text-primary-6 mt-2 font-inter">
-									Site Name
-								</p>
-								<Input type="text" className="focus:border-none mt-2 h-5" />
-							</div>
-							<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
-							<div className="flex flex-row justify-end items-center gap-3 font-inter">
-								<Button
-									className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
-									onClick={closeModal}>
-									Cancel
-								</Button>
-								<Button className="bg-primary-1 text-white font-inter text-xs">
-									Submit
-								</Button>
-							</div>
-						</div>
-					</div>
-				</Modal>
-			)}
+			<PodDataTable columns={columns} data={tableData} />
 
 			{isEditModalOpen && (
 				<Modal
 					isOpen={isEditModalOpen}
 					onClose={closeEditModal}
-					title="Edit Posted Device"
+					title="Edit Pod"
 					className="w-[500px]">
 					<div className="bg-white py-5 rounded-lg transition-transform ease-in-out ">
-						<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
-							<p className="text-sm text-dark-1 font-inter">
-								Basic Information
+						<hr className="mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+						<div className="mt-3  pt-2">
+							<p className="text-xs text-primary-6 font-inter">
+								Location Preference
 							</p>
+							<RadioGroup defaultValue="super-admin">
+								<div className="flex flex-row justify-between items-center gap-5">
+									<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg w-full mt-2">
+										<RadioGroupItem value="super-admin" id="super-admin" />
+										<p className="text-sm text-primary-6 whitespace-nowrap">
+											Pod
+										</p>
+									</div>
+								</div>
+							</RadioGroup>
 							<div className="flex flex-col gap-2 mt-4">
-								<p className="text-xs text-primary-6 font-inter">Staff Name</p>
-								<Input type="text" className="focus:border-none mt-2 h-5" />
 								<div className="flex flex-row items-center justify-between gap-5">
 									<div className="w-[50%] lg:w-full">
 										<p className="text-xs text-primary-6 mt-2 font-inter">
 											State
 										</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
+										<Select
+											onValueChange={(value) => setSelectedStateId(value)}>
+											<SelectTrigger className="w-full">
+												<SelectValue placeholder="Select State" />
+											</SelectTrigger>
+											<SelectContent className="z-200 post bg-white">
+												{states.map((state) => (
+													<SelectItem key={state.id} value={state.id}>
+														{state.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
 									</div>
 									<div className="w-[50%] lg:w-full">
 										<p className="text-xs text-primary-6 mt-2 font-inter">
 											District Name
 										</p>
-										<Input type="text" className="focus:border-none mt-2 h-5" />
+										<Select
+											onValueChange={(value) => setSelectedDistrictId(value)}>
+											<SelectTrigger className="w-full">
+												<SelectValue placeholder="Select District" />
+											</SelectTrigger>
+											<SelectContent className="z-200 post bg-white">
+												{districts.map((district) => (
+													<SelectItem key={district.id} value={district.id}>
+														{district.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
 									</div>
 								</div>
-								<p className="text-xs text-primary-6 mt-2 font-inter">POD</p>
-								<Input type="text" className="focus:border-none mt-2 h-5" />
-								<p className="text-xs text-primary-6 mt-2 font-inter">
-									Site Name
-								</p>
-								<Input type="text" className="focus:border-none mt-2 h-5" />
 							</div>
-							<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
-							<div className="flex flex-row justify-end items-center gap-3 font-inter">
-								<Button
-									className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
-									onClick={closeEditModal}>
-									Cancel
-								</Button>
-								<Button className="bg-primary-1 text-white font-inter text-xs">
-									Submit
-								</Button>
-							</div>
+							<p className="text-xs text-primary-6 mt-2 font-inter">Pod Name</p>
+							<Input
+								type="text"
+								value={name}
+								onChange={(e) => setName(e.target.value)}
+								placeholder="Edit Group Name"
+								className="focus:border-none mt-2 h-5 border border-primary-1"
+							/>
+						</div>
+						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+						<div className="flex flex-row justify-end items-center gap-3 font-inter">
+							<Button
+								className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
+								onClick={closeEditModal}>
+								Cancel
+							</Button>
+							<Button
+								className="bg-primary-1 text-white font-inter text-xs"
+								onClick={handleEditPod}
+								disabled={isLoading}>
+								{isLoading ? "Loading..." : "Update Pod"}
+							</Button>
 						</div>
 					</div>
 				</Modal>
@@ -385,7 +534,7 @@ const PodTable = () => {
 								await deletePod(selectedRow.id);
 								closeDeleteModal();
 							}}>
-							Yes, Confirm
+							{isLoading ? "Deleting..." : "Yes, Confirm"}
 						</Button>
 					</div>
 				</Modal>

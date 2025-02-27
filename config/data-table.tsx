@@ -54,6 +54,21 @@ interface DataTableProps<TData, TValue> {
 	data: TData[];
 }
 
+interface ApiResponse {
+	id: string;
+	first_name: string;
+	last_name: string;
+	email: string;
+	picture: string | null;
+	staff_code: string;
+	role: string;
+	is_active: boolean;
+	last_logged_in: string | null;
+	created_at: string;
+	updated_at: string;
+	status?: string;
+}
+
 export function DataTable<TData, TValue>({
 	columns,
 	data,
@@ -121,6 +136,55 @@ export function DataTable<TData, TValue>({
 		}
 	};
 
+	const fetchStaffs = async () => {
+		try {
+			setIsLoading(true);
+			const session = await getSession();
+
+			console.log("session", session);
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+
+			const response = await axios.get<{
+				status: string;
+				message: string;
+				data: ApiResponse[];
+			}>("https://api.wowdev.com.ng/api/v1/user", {
+				headers: {
+					Accept: "application/json",
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			const fetchedData = response.data.data;
+
+			console.log("Staff Data:", fetchedData);
+
+			// Map the API response to match the `Staff` type
+			const mappedData = fetchedData.map((item) => ({
+				id: item.id,
+				name: `${item.first_name} ${item.last_name}` || "N/A",
+				date: item.created_at,
+				role: item.role,
+				staff: item.staff_code,
+				status: item.is_active ? "active" : "inactive",
+				email: item.email,
+			}));
+
+			console.log("Mapped Data:", mappedData);
+			setTableData(mappedData as TData[]);
+		} catch (error) {
+			console.error("Error fetching user data:", error);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
 	const handleAddStaff = async () => {
 		setIsLoading(true);
 		try {
@@ -151,12 +215,7 @@ export function DataTable<TData, TValue>({
 			);
 
 			if (response.status === 200 || response.status === 201) {
-				// Option 1: Update the table data with the new staff member
-				const newStaff = response.data.data;
-				setTableData((prevData) => [...prevData, newStaff] as TData[]);
-
-				// Option 2: Refetch the staff list to ensure the table is up-to-date
-				// await fetchStaffs();
+				await fetchStaffs();
 
 				toast.success("Staff member added successfully!");
 

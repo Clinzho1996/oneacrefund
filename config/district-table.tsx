@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 
 import Modal from "@/components/Modal";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
 	Select,
 	SelectContent,
@@ -34,17 +35,26 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
+import axios from "axios";
 import {
 	ChevronLeft,
 	ChevronRight,
 	ChevronsLeft,
 	ChevronsRight,
 } from "lucide-react";
+import { getSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { District } from "./district-columns";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
+}
+
+interface State {
+	id: string;
+	name: string;
 }
 
 export function DistrictDataTable<TData, TValue>({
@@ -57,11 +67,175 @@ export function DistrictDataTable<TData, TValue>({
 	);
 	const [columnVisibility, setColumnVisibility] =
 		React.useState<VisibilityState>({});
-	const [selectedType, setSelectedType] = useState<string>("");
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [isModalOpen, setModalOpen] = useState(false);
-	const [tableData, setTableData] = useState(data);
+	const [tableData, setTableData] = useState<TData[]>(data);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
+	const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(
+		null
+	);
+	const [selectedPodId, setSelectedPodId] = useState<string | null>(null);
+	const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+
+	const [name, setName] = useState<string>("");
+	const [states, setStates] = useState<State[]>([]);
+
+	const fetchStates = async () => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				"https://api.wowdev.com.ng/api/v1/state",
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setStates(response.data.data);
+
+			console.log("States fetched:", response.data);
+		} catch (error) {
+			console.error("Error fetching states:", error);
+		}
+	};
+
+	useEffect(() => {
+		fetchStates();
+	}, []);
+
+	useEffect(() => {
+		if (selectedStateId) {
+			setSelectedDistrictId(null);
+			setSelectedPodId(null);
+			setSelectedSiteId(null);
+		}
+	}, [selectedStateId]);
+
+	useEffect(() => {
+		if (selectedDistrictId) {
+			setSelectedPodId(null);
+			setSelectedSiteId(null);
+		}
+	}, [selectedDistrictId]);
+
+	useEffect(() => {
+		if (selectedPodId) {
+			setSelectedSiteId(null);
+		}
+	}, [selectedPodId]);
+
+	const handleAddDistrict = async (event: React.FormEvent) => {
+		event.preventDefault();
+		setIsLoading(true);
+
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			// Validate required fields
+			if (!name || !selectedStateId) {
+				alert("Please fill all required fields.");
+				return;
+			}
+
+			// Construct payload
+			const payload = {
+				name: name,
+				state_id: selectedStateId,
+			};
+
+			// Send POST request
+			const response = await axios.post(
+				`https://api.wowdev.com.ng/api/v1/district`,
+				payload,
+				{
+					headers: { Authorization: `Bearer ${accessToken}` },
+				}
+			);
+
+			if (response.status === 200) {
+				console.log("District added successfully");
+				toast.success("District added successfully");
+
+				await fetchDistricts();
+				setName("");
+				closeModal();
+			}
+		} catch (error) {
+			console.error("Error adding district:", error);
+			toast.error("Failed to add district. Please try again.");
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const fetchDistricts = async () => {
+		try {
+			setIsLoading(true);
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.get<{
+				status: string;
+				message: string;
+				data: District[];
+			}>("https://api.wowdev.com.ng/api/v1/district", {
+				headers: {
+					Accept: "application/json",
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			const fetchedData = response.data.data;
+
+			console.log("Site Data:", fetchedData);
+
+			const mappedData = fetchedData.map((item) => ({
+				id: item.id,
+				state_id: item.state_id,
+				district_id: item.district_id,
+				pod_id: item.pod_id,
+				site_id: item.site_id,
+				name: item.name,
+				created_at: item.created_at,
+				updated_at: item.updated_at,
+				state: item.state,
+			}));
+
+			console.log("Mapped Data:", mappedData);
+			setTableData(mappedData as TData[]);
+
+			setIsLoading(false);
+		} catch (error) {
+			console.error("Error fetching district data:", error);
+			toast.error("Failed to fetch district data. Please try again.");
+		}
+	};
+
+	useEffect(() => {
+		fetchDistricts();
+	}, []);
 
 	const openModal = () => setModalOpen(true);
 	const closeModal = () => setModalOpen(false);
@@ -107,30 +281,69 @@ export function DistrictDataTable<TData, TValue>({
 			<Modal
 				isOpen={isModalOpen}
 				onClose={closeModal}
-				title="Add Device"
+				title="Add District"
 				className="w-[500px]">
 				<div className="bg-white py-5 rounded-lg transition-transform ease-in-out ">
-					<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
-						<p className="text-sm text-dark-1 font-inter">Basic Information</p>
+					<hr className="mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+					<div className="mt-3  pt-2">
+						<p className="text-xs text-primary-6 font-inter">
+							Location Preference
+						</p>
+						<RadioGroup defaultValue="super-admin">
+							<div className="flex flex-row justify-between items-center gap-5">
+								<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg w-full mt-2">
+									<RadioGroupItem value="super-admin" id="super-admin" />
+									<p className="text-sm text-primary-6 whitespace-nowrap">
+										District
+									</p>
+								</div>
+							</div>
+						</RadioGroup>
 						<div className="flex flex-col gap-2 mt-4">
-							<p className="text-xs text-primary-6 font-inter">Serial Number</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
-							<p className="text-xs text-primary-6 mt-2 font-inter">
-								Alias / Device Name
-							</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
+							<div className="flex flex-row items-center justify-between gap-5">
+								<div className="w-[50%] lg:w-full">
+									<p className="text-xs text-primary-6 mt-2 font-inter">
+										State
+									</p>
+									<Select onValueChange={(value) => setSelectedStateId(value)}>
+										<SelectTrigger className="w-full">
+											<SelectValue placeholder="Select State" />
+										</SelectTrigger>
+										<SelectContent className="z-200 post bg-white">
+											{states.map((state) => (
+												<SelectItem key={state.id} value={state.id}>
+													{state.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+							</div>
 						</div>
-						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
-						<div className="flex flex-row justify-end items-center gap-3 font-inter">
-							<Button
-								className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
-								onClick={closeModal}>
-								Cancel
-							</Button>
-							<Button className="bg-primary-1 text-white font-inter text-xs">
-								Add
-							</Button>
-						</div>
+						<p className="text-xs text-primary-6 mt-2 font-inter">
+							District Name
+						</p>
+						<Input
+							type="text"
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+							placeholder="Enter District Name"
+							className="focus:border-none mt-2 h-5 border border-primary-1"
+						/>
+					</div>
+					<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+					<div className="flex flex-row justify-end items-center gap-3 font-inter">
+						<Button
+							className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
+							onClick={closeModal}>
+							Cancel
+						</Button>
+						<Button
+							className="bg-primary-1 text-white font-inter text-xs"
+							onClick={handleAddDistrict}
+							disabled={isLoading}>
+							{isLoading ? "Adding..." : "Add District"}
+						</Button>
 					</div>
 				</div>
 			</Modal>
@@ -144,7 +357,7 @@ export function DistrictDataTable<TData, TValue>({
 						className="focus:border-none bg-[#F9FAFB] w-[50%]"
 					/>
 					<div className="flex flex-row justify-start items-center gap-3">
-						<Button className="bg-primary-1 text-white">
+						<Button className="bg-primary-1 text-white" onClick={openModal}>
 							<IconPlus /> Create District
 						</Button>
 						<Button

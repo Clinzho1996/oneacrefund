@@ -1,5 +1,6 @@
 "use client";
 
+import Loader from "@/components/Loader";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
@@ -231,7 +232,11 @@ const PostingTable = () => {
 
 	return (
 		<>
-			<PostingDataTable columns={columns} data={tableData} />
+			{isLoading ? (
+				<Loader />
+			) : (
+				<PostingDataTable columns={columns} data={tableData} />
+			)}
 		</>
 	);
 };
