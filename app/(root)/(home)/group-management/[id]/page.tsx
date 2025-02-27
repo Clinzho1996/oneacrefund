@@ -110,8 +110,11 @@ function GroupDetails() {
 		fetchGroup();
 	}, [fetchGroup]);
 
+	const handleSite = () => {
+		console.log("selected site", selectedSiteId);
+	};
 	useEffect(() => {
-		selectedSiteId(null);
+		handleSite();
 	}, []);
 
 	const fetchSites = async () => {
