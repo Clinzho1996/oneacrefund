@@ -40,13 +40,18 @@ interface ApiResponse {
 	status: string;
 	message: string;
 	data: {
-		[key: string]: number;
+		farmers: {
+			[key: string]: number;
+		};
+		staff: {
+			[key: string]: number;
+		};
 	};
 }
 
 function CustomerEnrollment() {
 	const [chartData, setChartData] = useState<
-		{ month: string; totalFarmers: number }[]
+		{ month: string; totalFarmers: number; totalStaff: number }[]
 	>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [selectedYear, setSelectedYear] = useState<string>(
@@ -60,7 +65,7 @@ function CustomerEnrollment() {
 
 			console.log("session", session);
 
-			const accessToken = session?.backendData?.token; // ✅ TypeScript now recognizes this
+			const accessToken = session?.backendData?.token;
 			if (!accessToken) {
 				console.error("No access token found.");
 				setIsLoading(false);
@@ -68,7 +73,7 @@ function CustomerEnrollment() {
 			}
 
 			const response = await axios.post<ApiResponse>(
-				`https://api.wowdev.com.ng/api/v1/analytics/monthly-farmers`,
+				`https://api.wowdev.com.ng/api/v1/analytics/monthly-graph`,
 				{ year: selectedYear },
 				{
 					headers: {
@@ -80,7 +85,8 @@ function CustomerEnrollment() {
 
 			const formattedData = months.map((month) => ({
 				month,
-				totalFarmers: response.data.data[month] || 0,
+				totalFarmers: response.data.data.farmers[month] || 0,
+				totalStaff: response.data.data.staff[month] || 0,
 			}));
 
 			console.log("Transaction Data:", formattedData);
@@ -100,6 +106,10 @@ function CustomerEnrollment() {
 		Farmers: {
 			label: "Total Farmers",
 			color: "hsl(var(--chart-1))",
+		},
+		Staff: {
+			label: "Total Staff",
+			color: "hsl(var(--chart-2))",
 		},
 	} satisfies ChartConfig;
 
@@ -179,11 +189,14 @@ function CustomerEnrollment() {
 									tickFormatter={(value) => value.slice(0, 3)}
 								/>
 								<ChartTooltip
-									cursor={{ stroke: "#ccc", strokeWidth: 1 }} // Customize cursor for better visual control
+									cursor={{ stroke: "#ccc", strokeWidth: 1 }}
 									content={({ payload, label }) => {
 										if (!payload || payload.length === 0) return null;
 										const farmers = payload.find(
 											(p) => p.dataKey === "totalFarmers"
+										)?.value;
+										const staff = payload.find(
+											(p) => p.dataKey === "totalStaff"
 										)?.value;
 										return (
 											<div className="custom-tooltip p-3 bg-white border-[1px] shadow-lg border-[#E4E4E7] rounded-lg w-[280px]">
@@ -200,6 +213,15 @@ function CustomerEnrollment() {
 															<p className="text-primary-6">Total Farmers</p>
 														</div>
 													</div>
+													<div>
+														<p className="text-bold font-inter text-xs text-center">
+															{staff}
+														</p>
+														<div className="flex flex-row justify-start items-center gap-1">
+															<IconRectangleFilled size={10} color="#6E3FF3" />
+															<p className="text-primary-6">Total Staff</p>
+														</div>
+													</div>
 												</div>
 											</div>
 										);
@@ -209,6 +231,13 @@ function CustomerEnrollment() {
 									dataKey="totalFarmers"
 									type="monotone"
 									stroke="#09A609"
+									strokeWidth={2}
+									dot={true}
+								/>
+								<Line
+									dataKey="totalStaff"
+									type="monotone"
+									stroke="#6E3FF3"
 									strokeWidth={2}
 									dot={true}
 								/>

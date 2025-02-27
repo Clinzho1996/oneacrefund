@@ -96,7 +96,7 @@ const SiteTable = () => {
 		if (selectedRow) {
 			setName(selectedRow.name);
 		}
-	}, [selectedRow]); // Runs when selectedRow changes
+	}, [selectedRow]); 
 
 	const fetchStates = async () => {
 		try {

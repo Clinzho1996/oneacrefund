@@ -1,6 +1,6 @@
 "use client";
 
-import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
+import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
 import Loader from "@/components/Loader";
@@ -13,13 +13,28 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IconEye, IconPencil, IconTrash } from "@tabler/icons-react";
+import { Input } from "@/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import {
+	IconCloudDownload,
+	IconEye,
+	IconPencil,
+	IconTrash,
+} from "@tabler/icons-react";
 import axios from "axios";
 import { getSession } from "next-auth/react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { FarmerDataTable } from "./farmer-table";
+import { Group } from "./group-columns";
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -89,26 +104,268 @@ declare module "next-auth" {
 	}
 }
 
+interface State {
+	id: string;
+	name: string;
+}
+
+interface District {
+	id: string;
+	name: string;
+	stateId: string;
+}
+
+interface Pod {
+	id: string;
+	name: string;
+	districtId: string;
+}
+
+interface Site {
+	id: string;
+	name: string;
+	podId: string;
+}
+
 const FarmerTable = () => {
-	const [isRestoreModalOpen, setRestoreModalOpen] = useState(false);
+	const [isEditModalOpen, setEditModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
-	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [tableData, setTableData] = useState<Farmer[]>([]);
+	const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
+	const [featuredImage, setFeaturedImage] = useState<File | null>(null);
+	const [isAddingFarmer, setIsAddingFarmer] = useState(false);
+	const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(
+		null
+	);
+	const [selectedPodId, setSelectedPodId] = useState<string | null>(null);
+	const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+	const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
 
-	const openRestoreModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
-		setRestoreModalOpen(true);
+	const [firstName, setFirstName] = useState<string>("");
+	const [lastName, setLastName] = useState<string>("");
+	const [gender, setGender] = useState<string>("");
+	const [email, setEmail] = useState<string>("");
+	const [phoneNumber, setPhoneNumber] = useState<string>("");
+	const [oafId, setOafId] = useState<string>("");
+	const [otherName, setOtherName] = useState<string>("");
+	const [dob, setDob] = useState<string>("");
+	const [states, setStates] = useState<State[]>([]);
+	const [districts, setDistricts] = useState<District[]>([]);
+	const [groups, setGroups] = useState<Group[]>([]);
+	const [pods, setPods] = useState<Pod[]>([]);
+	const [sites, setSites] = useState<Site[]>([]);
+	const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+	const openEditModal = (row: any) => {
+		const farmer = row.original;
+		setSelectedRow(farmer);
+
+		setFirstName(farmer.first_name || "");
+		setLastName(farmer.last_name || "");
+		setOtherName(farmer.other_name || "");
+		setGender(farmer.gender || "");
+		setOafId(farmer.oaf_id || "");
+		setDob(farmer.dob || "");
+		setPhoneNumber(farmer.phone_number || "");
+		setEmail(farmer.email || "");
+		setSelectedStateId(farmer.state_id || null);
+		setSelectedDistrictId(farmer.district_id || null);
+		setSelectedPodId(farmer.pod_id || null);
+		setSelectedSiteId(farmer.site_id || null);
+		setSelectedGroupId(farmer.group_id || null);
+
+		if (farmer.pic) {
+			setPreviewImage(farmer.pic);
+		}
+
+		// Fetch dependent data here
+		if (farmer.state_id) {
+			fetchDistricts(farmer.state_id);
+		}
+		if (farmer.district_id) {
+			fetchPods(farmer.district_id);
+		}
+		if (farmer.pod_id) {
+			fetchSites(farmer.pod_id);
+		}
+		if (farmer.site_id) {
+			fetchGroups(farmer.site_id);
+		}
+
+		setEditModalOpen(true);
 	};
+
+	useEffect(() => {
+		if (selectedStateId) {
+			fetchDistricts(selectedStateId);
+		}
+	}, [selectedStateId]);
+
+	useEffect(() => {
+		if (selectedDistrictId) {
+			fetchPods(selectedDistrictId);
+		}
+	}, [selectedDistrictId]);
+
+	useEffect(() => {
+		if (selectedPodId) {
+			fetchSites(selectedPodId);
+		}
+	}, [selectedPodId]);
+
+	useEffect(() => {
+		if (selectedSiteId) {
+			fetchGroups(selectedSiteId);
+		}
+	}, [selectedSiteId]);
+
+	const fetchStates = async () => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				"https://api.wowdev.com.ng/api/v1/state",
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setStates(response.data.data);
+
+			console.log("States fetched:", response.data);
+		} catch (error) {
+			console.error("Error fetching states:", error);
+		}
+	};
+
+	const fetchDistricts = async (stateId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/district/state/${stateId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setDistricts(response.data.data);
+
+			console.log("Districts fetched:", response.data);
+		} catch (error) {
+			console.error("Error fetching districts:", error);
+		}
+	};
+
+	const fetchGroups = async (groupId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/group/site/${groupId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setGroups(response.data.data);
+			console.log("Group data", response.data.data);
+		} catch (error) {
+			console.error("Error fetching Groups:", error);
+		}
+	};
+	const fetchPods = async (districtId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/pod/district/${districtId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setPods(response.data.data);
+		} catch (error) {
+			console.error("Error fetching PODs:", error);
+		}
+	};
+
+	const fetchSites = async (podId: string) => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/site/pod/${podId}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setSites(response.data.data);
+		} catch (error) {
+			console.error("Error fetching sites:", error);
+		}
+	};
+
+	useEffect(() => {
+		fetchStates();
+	}, []);
 
 	const openDeleteModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
 		setDeleteModalOpen(true);
 	};
 
-	const closeRestoreModal = () => {
-		setRestoreModalOpen(false);
+	const closeEditModal = () => {
+		setEditModalOpen(false);
 	};
 
 	const closeDeleteModal = () => {
@@ -226,6 +483,74 @@ const FarmerTable = () => {
 		}
 	};
 
+	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0] || null;
+		setFeaturedImage(file);
+
+		if (file) {
+			const reader = new FileReader();
+			reader.onloadend = () => {
+				setPreviewImage(reader.result as string);
+			};
+			reader.readAsDataURL(file);
+		} else {
+			setPreviewImage(null);
+		}
+	};
+
+	const handleEditFarmer = async () => {
+		setIsAddingFarmer(true);
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const formData = new FormData();
+			formData.append("first_name", firstName);
+			formData.append("last_name", lastName);
+			formData.append("other_name", otherName);
+			formData.append("gender", gender);
+			formData.append("oaf_id", oafId);
+			formData.append("dob", dob);
+			formData.append("phone_number", phoneNumber);
+			formData.append("email", email);
+			formData.append("group_id", selectedGroupId || "");
+			formData.append("site_id", selectedSiteId || "");
+			formData.append("pod_id", selectedPodId || "");
+			formData.append("district_id", selectedDistrictId || "");
+			formData.append("state_id", selectedStateId || "");
+
+			if (featuredImage) {
+				formData.append("pic", featuredImage);
+			}
+
+			const response = await axios.post(
+				`https://api.wowdev.com.ng/api/v1/farmer/${selectedRow.id}`, // Use the selected farmer's ID
+				formData,
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			console.log("Farmer updated successfully:", response.data);
+			await fetchFarmers(); // Refresh the table data
+			toast.success("Farmer updated successfully");
+
+			closeEditModal(); // Close the modal
+		} catch (error) {
+			console.error("Error updating farmer:", error);
+			toast.error("Failed to update farmer");
+		} finally {
+			setIsAddingFarmer(false);
+		}
+	};
 	const formatDate = (rawDate: string | Date) => {
 		const options: Intl.DateTimeFormatOptions = {
 			year: "numeric",
@@ -391,7 +716,7 @@ const FarmerTable = () => {
 							</Link>
 							<DropdownMenuItem
 								className="action cursor-pointer hover:bg-yellow-300"
-								onClick={() => openRestoreModal(row)}>
+								onClick={() => openEditModal(row)}>
 								<IconPencil />
 								<p className="text-xs font-inter">Edit</p>
 							</DropdownMenuItem>
@@ -418,22 +743,290 @@ const FarmerTable = () => {
 				<FarmerDataTable columns={columns} data={tableData} />
 			)}
 
-			{isRestoreModalOpen && (
-				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>
-					<p className="mt-4">
-						Are you sure you want to suspend {selectedRow?.first_name}&apos;s
-						account?
-					</p>
-					<p className="text-sm text-primary-6">This can&apos;t be undone</p>
-					<div className="flex flex-row justify-end items-center gap-3 font-inter mt-4">
-						<Button
-							className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
-							onClick={closeRestoreModal}>
-							Cancel
-						</Button>
-						<Button className="bg-[#F04F4A] text-white font-inter text-xs modal-delete">
-							Yes, Confirm
-						</Button>
+			{isEditModalOpen && (
+				<Modal
+					isOpen={isEditModalOpen}
+					onClose={closeEditModal}
+					title="Edit Farmer">
+					<div className="bg-white py-1 rounded-lg w-[600px] transition-transform ease-in-out max-h[70vh] add-farmer overflow-y-auto">
+						<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
+							{/* Basic Information Section */}
+							<div>
+								<p className="text-sm text-dark-1">Basic Information</p>
+								<div className="flex flex-col gap-2 mt-4">
+									<div className="flex flex-row gap-3 justify-between items-center">
+										<div>
+											<p className="text-xs text-primary-6 font-inter">
+												First Name
+											</p>
+											<Input
+												type="text"
+												className="focus:border-none mt-2"
+												value={firstName}
+												onChange={(e) => setFirstName(e.target.value)}
+											/>
+										</div>
+										<div>
+											<p className="text-xs text-primary-6 font-inter">
+												Last Name
+											</p>
+											<Input
+												type="text"
+												className="focus:border-none mt-2"
+												value={lastName}
+												onChange={(e) => setLastName(e.target.value)}
+											/>
+										</div>
+									</div>
+									<div className="flex flex-row gap-3 justify-between items-center w-full">
+										<div className="w-[50%] lg:w-full">
+											<p className="text-xs text-primary-6 mt-2 font-inter">
+												Other Name
+											</p>
+											<Input
+												type="text"
+												className="focus:border-none mt-2"
+												value={otherName}
+												onChange={(e) => setOtherName(e.target.value)}
+											/>
+										</div>
+										<div className="w-[50%] lg:w-full">
+											<p className="text-xs text-primary-6 mt-2 font-inter">
+												Gender
+											</p>
+											<Select
+												value={gender}
+												onValueChange={(value) => setGender(value)}>
+												<SelectTrigger className="w-full mt-2">
+													<SelectValue placeholder="Select Gender" />
+												</SelectTrigger>
+												<SelectContent className="z-200 post bg-white">
+													<SelectItem value="male">Male</SelectItem>
+													<SelectItem value="female">Female</SelectItem>
+												</SelectContent>
+											</Select>
+										</div>
+									</div>
+									<div className="flex flex-row gap-3 justify-between items-center">
+										<div className="w-[50%] lg:w-full">
+											<p className="text-xs text-primary-6 mt-2 font-inter">
+												OAF-ID
+											</p>
+											<Input
+												type="text"
+												className="focus:border-none mt-2"
+												value={oafId}
+												onChange={(e) => setOafId(e.target.value)}
+											/>
+										</div>
+										<div className="w-[50%] lg:w-full">
+											<p className="text-xs text-primary-6 mt-2 font-inter">
+												Date of Birth
+											</p>
+											<Input
+												type="date"
+												className="focus:border-none mt-2"
+												value={dob}
+												onChange={(e) => setDob(e.target.value)}
+											/>
+										</div>
+									</div>
+									<div className="flex flex-row gap-3 justify-between items-center">
+										<div>
+											<p className="text-xs text-primary-6 mt-2 font-inter">
+												Phone Number
+											</p>
+											<Input
+												type="text"
+												className="focus:border-none mt-2"
+												value={phoneNumber}
+												onChange={(e) => setPhoneNumber(e.target.value)}
+											/>
+										</div>
+										<div>
+											<p className="text-xs text-primary-6 mt-2 font-inter">
+												Email
+											</p>
+											<Input
+												type="email"
+												className="focus:border-none mt-2"
+												value={email}
+												onChange={(e) => setEmail(e.target.value)}
+											/>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							{/* Location Section */}
+							<div className="mt-4">
+								<p className="text-sm text-dark-1">Location</p>
+								<div className="flex flex-col gap-2 mt-2">
+									<div className="flex flex-row items-center justify-between gap-5">
+										<div className="w-[50%] lg:w-full">
+											<p className="text-xs text-primary-6 mt-2 font-inter">
+												State
+											</p>
+											<Select
+												value={selectedStateId || ""}
+												onValueChange={(value) => setSelectedStateId(value)}>
+												<SelectTrigger className="w-full mt-2">
+													<SelectValue placeholder="Select State" />
+												</SelectTrigger>
+												<SelectContent className="z-200 post bg-white">
+													{states.map((state) => (
+														<SelectItem key={state.id} value={state.id}>
+															{state.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="w-[50%] lg:w-full">
+											<p className="text-xs text-primary-6 mt-2 font-inter">
+												District
+											</p>
+											<Select
+												value={selectedDistrictId || ""}
+												onValueChange={(value) => setSelectedDistrictId(value)}>
+												<SelectTrigger className="w-full mt-2">
+													<SelectValue placeholder="Select District" />
+												</SelectTrigger>
+												<SelectContent className="z-200 post bg-white">
+													{districts.map((district) => (
+														<SelectItem key={district.id} value={district.id}>
+															{district.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+									</div>
+									<div className="flex flex-row items-center justify-between gap-5 mt-1">
+										<div className="w-[50%] lg:w-full">
+											<p className="text-xs text-primary-6 mt-2 font-inter">
+												POD/Sector
+											</p>
+											<Select
+												value={selectedPodId || ""}
+												onValueChange={(value) => setSelectedPodId(value)}>
+												<SelectTrigger className="w-full mt-2">
+													<SelectValue placeholder="Select POD" />
+												</SelectTrigger>
+												<SelectContent className="z-200 post bg-white">
+													{pods.map((pod) => (
+														<SelectItem key={pod.id} value={pod.id}>
+															{pod.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="w-[50%] lg:w-full">
+											<p className="text-xs text-primary-6 mt-2 font-inter">
+												Site
+											</p>
+											<Select
+												value={selectedSiteId || ""}
+												onValueChange={(value) => setSelectedSiteId(value)}>
+												<SelectTrigger className="w-full mt-2">
+													<SelectValue placeholder="Select Site" />
+												</SelectTrigger>
+												<SelectContent className="z-200 post bg-white">
+													{sites.map((site) => (
+														<SelectItem key={site.id} value={site.id}>
+															{site.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+									</div>
+									<div className="flex flex-col gap-2">
+										<div>
+											<p className="text-xs text-primary-6 mt-2 font-inter">
+												Group
+											</p>
+											<Select
+												value={selectedGroupId || ""}
+												onValueChange={(value) => setSelectedGroupId(value)}>
+												<SelectTrigger className="w-full mt-2">
+													<SelectValue placeholder="Select Group" />
+												</SelectTrigger>
+												<SelectContent className="z-200 post bg-white">
+													{groups.map((group) => (
+														<SelectItem key={group.id} value={group.id}>
+															{group.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							{/* Image Upload Section */}
+							<div className="mt-4">
+								<p className="text-xs text-primary-6 font-inter">
+									Upload Image
+								</p>
+								<div className="flex flex-col justify-center items-center gap-3 p-3 border-dashed border rounded-lg mt-3 mb-4">
+									<IconCloudDownload size={14} />
+									<p className="text-xs font-inter text-[#4B5563]">
+										Choose a file
+									</p>
+									<input
+										type="file"
+										accept="image/*"
+										className="hidden"
+										id="fileInput"
+										onChange={handleFileChange}
+									/>
+									<Button
+										className="border text-xs p-2"
+										onClick={() =>
+											document.getElementById("fileInput")?.click()
+										}>
+										Browse File
+									</Button>
+									{previewImage && (
+										<div className="mt-2 flex flex-row justify-start items-center gap-3">
+											<Image
+												src={previewImage}
+												width={100}
+												height={100}
+												alt="Preview"
+												className="w-[200px] h-[200px] object-cover rounded-md"
+											/>
+											<Button
+												onClick={() => {
+													setFeaturedImage(null);
+													setPreviewImage(null);
+												}}
+												className="border text-xs p-2">
+												Remove
+											</Button>
+										</div>
+									)}
+								</div>
+							</div>
+
+							{/* Modal Footer */}
+							<div className="flex flex-row justify-end items-center gap-3 font-inter">
+								<Button
+									className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
+									onClick={closeEditModal}>
+									Cancel
+								</Button>
+								<Button
+									className="bg-primary-1 text-white font-inter text-xs"
+									onClick={handleEditFarmer}
+									disabled={isAddingFarmer}>
+									{isAddingFarmer ? "Updating..." : "Update"}
+								</Button>
+							</div>
+						</div>
 					</div>
 				</Modal>
 			)}
