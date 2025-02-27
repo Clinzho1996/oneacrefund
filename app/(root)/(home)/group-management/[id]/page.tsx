@@ -111,7 +111,7 @@ function GroupDetails() {
 	}, [fetchGroup]);
 
 	useEffect(() => {
-		setSelectedSiteId(null);
+		selectedSiteId(null);
 	}, []);
 
 	const fetchSites = async () => {
