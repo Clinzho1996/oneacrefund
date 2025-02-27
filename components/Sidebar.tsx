@@ -41,7 +41,7 @@ const Sidebar = () => {
 			<div className="flex flex-1 flex-col gap-2">
 				<Link
 					href="/"
-					className="max-lg:hidden items-center gap-1 border-b-[1px] border-b-[#E2E4E9] p-3 lg:flex h-[80px]">
+					className="max-lg:hidden items-center gap-1 border-b-[1px] border-b-[#E2E4E9] p-3 lg:flex h-[77px]">
 					<Image
 						src="/images/logo.png"
 						alt="One Acre Fund Logo"

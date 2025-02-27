@@ -488,8 +488,9 @@ export function FarmerDataTable<TData, TValue>({
 			);
 
 			console.log("Farmer added successfully:", response.data);
-			toast.success("Farmer added successfully");
 			await fetchFarmers();
+			toast.success("Farmer added successfully");
+
 			closeModal();
 		} catch (error) {
 			console.error("Error adding farmer:", error);
