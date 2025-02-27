@@ -313,7 +313,7 @@ const DeviceTable = () => {
 				}
 			);
 
-			console.log("data", response?.data?.data);
+			console.log("device data", response?.data?.data);
 			setUserData(response?.data?.data);
 			setIsLoading(false);
 		} catch (error: unknown) {

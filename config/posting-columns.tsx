@@ -197,11 +197,11 @@ const PostingTable = () => {
 			id: "actions",
 			header: "Action",
 			cell: ({ row }) => {
-				const deviceId = row.original.device.id;
+				const actions = row.original;
 
 				return (
 					<div className="flex flex-row justify-start items-center gap-5">
-						<Link href={`/posting-management/${deviceId}`}>
+						<Link href={`/posting-management/${actions.device_id}`}>
 							<Button className="border-[#E8E8E8] border-[1px] text-xs font-medium text-[#6B7280] font-inter">
 								View
 							</Button>

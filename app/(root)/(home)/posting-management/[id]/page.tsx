@@ -1,5 +1,6 @@
 "use client";
 
+import Loader from "@/components/Loader";
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,7 +52,7 @@ interface Staff {
 	last_name: string;
 }
 interface ApiResponse {
-	data: Posting;
+	data: Posting[];
 }
 
 function PostingDetails() {
@@ -282,14 +283,13 @@ function PostingDetails() {
 				{
 					headers: {
 						Accept: "application/json",
-						redirect: "follow",
 						Authorization: `Bearer ${accessToken}`,
 					},
 				}
 			);
 
 			console.log("posting data", response?.data?.data);
-			setUserData(response?.data?.data);
+			setUserData(response?.data?.data[0]);
 			setIsLoading(false);
 		} catch (error: unknown) {
 			if (axios.isAxiosError(error)) {
@@ -415,6 +415,10 @@ function PostingDetails() {
 		}
 	};
 
+	if (isLoading) {
+		return <Loader />;
+	}
+
 	return (
 		<section className="bg-[#F6F8F9] h-screen">
 			<div className="flex flex-row justify-between items-center bg-white p-4 border-b-[1px] border-[#E2E4E9] h-[80px]">
@@ -428,7 +432,7 @@ function PostingDetails() {
 					</div>
 					<div>
 						<h2 className="text-sm text-dark-1 font-normal font-inter">
-							Device Information
+							Posting Information
 						</h2>
 						<p className="text-xs font-light text-dark-2 font-inter">
 							View and manage device data, including contact information, roles,
@@ -475,8 +479,11 @@ function PostingDetails() {
 								{userData?.device?.alias}
 							</p>
 							<p className="text-sm text-[#6B7280B7] font-inter">
-								Posted by:{" "}
-								<span className="text-dark-1">OneAcreFund Staff</span>
+								Posted to:{" "}
+								<span className="text-dark-1">
+									{" "}
+									{userData?.user.first_name} {userData?.user.last_name}
+								</span>
 							</p>
 						</div>
 						<div className="py-4 w-full  border-b-[1px] border-[#E2E4E9]">
@@ -540,7 +547,9 @@ function PostingDetails() {
 									<h2 className="text-sm text-[#6B7280B7] font-inter">
 										Staff Name
 									</h2>
-									<p className="text-sm text-dark-1 font-inter mt-2">---</p>
+									<p className="text-sm text-dark-1 font-inter mt-2">
+										{userData?.user.first_name} {userData?.user.last_name}
+									</p>
 								</div>
 							</div>
 						</div>
@@ -552,26 +561,36 @@ function PostingDetails() {
 							<div className="flex flex-row justify-start gap-20 items-center p-2 border-b-[1px] border-[#E2E4E9]">
 								<div className="w-[50%] lg:w-full">
 									<h2 className="text-sm text-[#6B7280B7] font-inter">State</h2>
-									<p className="text-sm text-dark-1 font-inter mt-2">Niger</p>
+									<p className="text-sm text-dark-1 font-inter mt-2">
+										{userData?.state.name}
+									</p>
 								</div>
 								<div className="w-[50%] lg:w-full">
 									<h2 className="text-sm text-[#6B7280B7] font-inter">
 										District Name
 									</h2>
-									<p className="text-sm text-dark-1 font-inter mt-2">---</p>
+									<p className="text-sm text-dark-1 font-inter mt-2">
+										{userData?.district.name}
+									</p>
 								</div>
 							</div>
 							<div className="flex flex-row justify-start gap-20 items-center p-2 border-b-[1px] border-[#E2E4E9]">
 								<div className="w-[50%] lg:w-full">
 									<h2 className="text-sm text-[#6B7280B7] font-inter">POD</h2>
-									<p className="text-sm text-dark-1 font-inter mt-2">---</p>
+									<p className="text-sm text-dark-1 font-inter mt-2">
+										{userData?.pod.name}
+									</p>
 								</div>
 								<div className="w-[50%] lg:w-full">
 									<h2 className="text-sm text-[#6B7280B7] font-inter">
-										Site Name
+										Site Posted
 									</h2>
 									<p className="text-sm text-dark-1 font-inter mt-2">
-										{userData?.device?.serial_number}
+										{userData?.sites.map((site) => (
+											<div>
+												<p>{site.name}</p>
+											</div>
+										))}
 									</p>
 								</div>
 							</div>
