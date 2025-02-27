@@ -219,7 +219,7 @@ function CustomerEnrollment() {
 														</p>
 														<div className="flex flex-row justify-start items-center gap-1">
 															<IconRectangleFilled size={10} color="#6E3FF3" />
-															<p className="text-primary-6">Total Staff</p>
+															<p className="text-primary-6">Total Staffs</p>
 														</div>
 													</div>
 												</div>
