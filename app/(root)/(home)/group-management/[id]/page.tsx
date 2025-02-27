@@ -1,5 +1,6 @@
 "use client";
 
+import Loader from "@/components/Loader";
 import {
 	Select,
 	SelectContent,
@@ -48,28 +49,10 @@ interface ApiResponse {
 function GroupDetails() {
 	const { id } = useParams();
 	const { data: session } = useSession();
-	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-	const [isModalOpen, setModalOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [userData, setUserData] = useState<Group | null>(null);
 	const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
 	const [sites, setSites] = useState<Group[]>([]);
-
-	const openModal = () => {
-		setModalOpen(true);
-	};
-
-	const openDeleteModal = () => {
-		setDeleteModalOpen(true);
-	};
-
-	const closeModal = () => {
-		setModalOpen(false);
-	};
-
-	const closeDeleteModal = () => {
-		setDeleteModalOpen(false);
-	};
 
 	const getNameInitials = ({ name }: { name: string }) => {
 		if (!name) return "OA";
@@ -159,6 +142,9 @@ function GroupDetails() {
 		fetchSites();
 	}, []);
 
+	if (isLoading) {
+		return <Loader />;
+	}
 	const formatDate = (rawDate?: string | Date) => {
 		if (!rawDate) return "Unknown";
 		const options: Intl.DateTimeFormatOptions = {
