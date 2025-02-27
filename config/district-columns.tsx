@@ -342,7 +342,7 @@ const DistrictTable = () => {
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="bg-white">
-							<Link href={`/group-management/${actions.id}`}>
+							<Link href={`/district-management/${actions.id}`}>
 								<DropdownMenuItem className="action cursor-pointer hover:bg-secondary-3">
 									<IconEye />
 									<p className="text-xs font-inter">View</p>

@@ -1,6 +1,13 @@
 "use client";
 
 import Loader from "@/components/Loader";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { IconArrowBack, IconSettings } from "@tabler/icons-react";
 import axios from "axios";
 import { getSession, useSession } from "next-auth/react";
@@ -39,11 +46,13 @@ interface ApiResponse {
 	data: Group;
 }
 
-function GroupDetails() {
+function PodDetails() {
 	const { id } = useParams();
 	const { data: session } = useSession();
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [userData, setUserData] = useState<Group | null>(null);
+	const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+	const [sites, setSites] = useState<Group[]>([]);
 
 	const getNameInitials = ({ name }: { name: string }) => {
 		if (!name) return "OA";
@@ -54,7 +63,7 @@ function GroupDetails() {
 		return initials.toUpperCase();
 	};
 
-	const fetchGroup = useCallback(async () => {
+	const fetchPod = useCallback(async () => {
 		setIsLoading(true);
 		try {
 			const session = await getSession();
@@ -67,7 +76,7 @@ function GroupDetails() {
 			}
 
 			const response = await axios.get<ApiResponse>(
-				`https://api.wowdev.com.ng/api/v1/group/${id}`,
+				`https://api.wowdev.com.ng/api/v1/pod/${id}`,
 				{
 					headers: {
 						Accept: "application/json",
@@ -79,9 +88,6 @@ function GroupDetails() {
 
 			console.log("data", response?.data?.data);
 			setUserData(response?.data?.data);
-
-			const siteId = response?.data?.data?.site.id;
-			localStorage.setItem("siteId", siteId);
 			setIsLoading(false);
 		} catch (error: unknown) {
 			if (axios.isAxiosError(error)) {
@@ -98,8 +104,46 @@ function GroupDetails() {
 	}, [id]);
 
 	useEffect(() => {
-		fetchGroup();
-	}, [fetchGroup]);
+		fetchPod();
+	}, [fetchPod]);
+
+	const handleSite = () => {
+		console.log("selected site", selectedSiteId);
+	};
+	useEffect(() => {
+		handleSite();
+	}, []);
+
+	const fetchPods = async () => {
+		try {
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/site/pod/${id}`,
+				{
+					headers: {
+						Accept: "application/json",
+						redirect: "follow",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setSites(response.data.data); // Ensure this is an array
+			console.log("Groups fetched:", response.data);
+		} catch (error) {
+			console.error("Error fetching sites:", error);
+		}
+	};
+
+	useEffect(() => {
+		fetchPods();
+	}, []);
 
 	if (isLoading) {
 		return <Loader />;
@@ -129,10 +173,10 @@ function GroupDetails() {
 					</div>
 					<div>
 						<h2 className="text-sm text-dark-1 font-normal font-inter">
-							Group Information
+							POD/Sector Information
 						</h2>
 						<p className="text-xs font-light text-dark-2 font-inter">
-							View and manage group data, including contact information, roles,
+							View and manage pod data, including contact information, roles,
 							and performance records.
 						</p>
 					</div>
@@ -191,7 +235,7 @@ function GroupDetails() {
 						<div className="flex flex-row justify-between items-center">
 							<div className="p-3 w-full">
 								<h2 className="text-sm text-[#6B7280B7] font-inter">
-									Group Information
+									POD Information
 								</h2>
 								<p className="text-sm text-dark-1 font-inter mt-2">
 									Manage group information
@@ -204,7 +248,7 @@ function GroupDetails() {
 							<div className="flex flex-col justify-start items-center p-3 mx-3 border-b-[1px] border-[#E2E4E9]">
 								<div className="w-[50%] lg:w-full">
 									<h2 className="text-sm text-[#6B7280B7] font-inter">
-										Group Name
+										POD Name
 									</h2>
 									<p className="text-sm text-dark-1 font-inter mt-2">
 										{userData?.name}
@@ -215,14 +259,6 @@ function GroupDetails() {
 								<div className="flex flex-row justify-start gap-20 items-center p-2 border-b-[1px] border-[#E2E4E9]">
 									<div className="w-[50%] lg:w-full">
 										<h2 className="text-sm text-[#6B7280B7] font-inter">
-											State
-										</h2>
-										<p className="text-sm text-dark-1 font-inter mt-2">
-											{userData?.state?.name}
-										</p>
-									</div>
-									<div className="w-[50%] lg:w-full">
-										<h2 className="text-sm text-[#6B7280B7] font-inter">
 											District Name
 										</h2>
 										<p className="text-sm text-dark-1 font-inter mt-2">
@@ -230,23 +266,25 @@ function GroupDetails() {
 										</p>
 									</div>
 								</div>
-								<div className="flex flex-row justify-start gap-20 items-center p-2 border-b-[1px] border-[#E2E4E9]">
-									<div className="w-[50%] lg:w-full">
-										<h2 className="text-sm text-[#6B7280B7] font-inter">POD</h2>
-										<p className="text-sm text-dark-1 font-inter mt-2">
-											{userData?.pod?.name}
-										</p>
-									</div>
-									<div className="w-[50%] lg:w-full">
-										<h2 className="text-sm text-[#6B7280B7] font-inter">
-											Site Name
-										</h2>
-										<p className="text-sm text-dark-1 font-inter mt-2">
-											{userData?.site?.name}
-										</p>
-									</div>
-								</div>
 							</div>
+						</div>
+
+						<div className="bg-white p-3 rounded-lg mt-2 mx-1 mb-1 shadow-md flex flex-col gap-2">
+							<p className="text-sm text-dark-1 font-inter mt-2 p-2 font-medium">
+								Sites Under {userData?.name} POD
+							</p>
+							<Select onValueChange={(value) => setSelectedSiteId(value)}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="See all Sites" />
+								</SelectTrigger>
+								<SelectContent className="z-200 post bg-white">
+									{sites.map((site) => (
+										<SelectItem key={site.id} value={site.id}>
+											{site.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 						</div>
 					</div>
 				</div>
@@ -255,4 +293,4 @@ function GroupDetails() {
 	);
 }
 
-export default GroupDetails;
+export default PodDetails;
