@@ -110,6 +110,10 @@ function GroupDetails() {
 		fetchGroup();
 	}, [fetchGroup]);
 
+	useEffect(() => {
+		setSelectedSiteId(null);
+	}, []);
+
 	const fetchSites = async () => {
 		const siteId = localStorage.getItem("siteId");
 		try {
