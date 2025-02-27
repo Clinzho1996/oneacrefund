@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 	description:
 		"We envision serving millions of farm families. We build for scale with every idea and solution...",
 	icons: {
-		icon: "/images/favicon.png",
+		icon: "/favicon.ico",
 	},
 };
 
