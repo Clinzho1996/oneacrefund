@@ -587,7 +587,7 @@ function PostingDetails() {
 									</h2>
 									<p className="text-sm text-dark-1 font-inter mt-2">
 										{userData?.sites.map((site) => (
-											<div>
+											<div key={site.id}>
 												<p>{site.name}</p>
 											</div>
 										))}
