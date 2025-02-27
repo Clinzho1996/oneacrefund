@@ -81,7 +81,6 @@ interface Site {
 const GroupTable = () => {
 	const [isEditModalOpen, setEditModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-	const [isModalOpen, setModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [tableData, setTableData] = useState<Group[]>([]);
@@ -99,10 +98,28 @@ const GroupTable = () => {
 	const [sites, setSites] = useState<Site[]>([]);
 
 	useEffect(() => {
-		if (selectedRow) {
+		if (selectedRow && isEditModalOpen) {
+			// Pre-fill the dropdowns with existing data
 			setName(selectedRow.name);
+			setSelectedStateId(selectedRow.state_id || null);
+			setSelectedDistrictId(selectedRow.district_id || null);
+			setSelectedPodId(selectedRow.pod_id || null);
+			setSelectedSiteId(selectedRow.site_id || null);
+
+			// Fetch districts, pods, and sites based on the selected row's data
+			if (selectedRow.state_id) {
+				fetchDistricts(selectedRow.state_id).then(() => {
+					if (selectedRow.district_id) {
+						fetchPods(selectedRow.district_id).then(() => {
+							if (selectedRow.pod_id) {
+								fetchSites(selectedRow.pod_id);
+							}
+						});
+					}
+				});
+			}
 		}
-	}, [selectedRow]); // Runs when selectedRow changes
+	}, [selectedRow, isEditModalOpen]);
 
 	const fetchStates = async () => {
 		try {
@@ -215,30 +232,6 @@ const GroupTable = () => {
 	useEffect(() => {
 		fetchStates();
 	}, []);
-
-	useEffect(() => {
-		if (selectedStateId) {
-			fetchDistricts(selectedStateId);
-			setSelectedDistrictId(null);
-			setSelectedPodId(null);
-			setSelectedSiteId(null);
-		}
-	}, [selectedStateId]);
-
-	useEffect(() => {
-		if (selectedDistrictId) {
-			fetchPods(selectedDistrictId);
-			setSelectedPodId(null);
-			setSelectedSiteId(null);
-		}
-	}, [selectedDistrictId]);
-
-	useEffect(() => {
-		if (selectedPodId) {
-			fetchSites(selectedPodId);
-			setSelectedSiteId(null);
-		}
-	}, [selectedPodId]);
 
 	const fetchGroups = async () => {
 		try {
@@ -370,10 +363,10 @@ const GroupTable = () => {
 
 			if (response.status === 200) {
 				console.log("Group posted successfully");
+				await fetchGroups();
 				toast.success("Group updated successfully");
 				setName("");
 				closeEditModal();
-				fetchGroups(); // Refresh device data
 			}
 		} catch (error) {
 			console.error("Error posting device:", error);
@@ -383,23 +376,21 @@ const GroupTable = () => {
 		}
 	};
 
-	const openModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
-		setModalOpen(true);
-	};
-
 	const openEditModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
+		const group = row.original;
+
+		setSelectedRow(group);
+		setName(group.name);
+		setSelectedStateId(group.state_id || null);
+		setSelectedDistrictId(group.district_id || null);
+		setSelectedPodId(group.pod_id || null);
+		setSelectedSiteId(group.site_id || null);
 		setEditModalOpen(true);
 	};
 
 	const openDeleteModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
 		setDeleteModalOpen(true);
-	};
-
-	const closeModal = () => {
-		setModalOpen(false);
 	};
 
 	const closeEditModal = () => {
@@ -550,6 +541,7 @@ const GroupTable = () => {
 											State
 										</p>
 										<Select
+											value={selectedStateId || ""}
 											onValueChange={(value) => setSelectedStateId(value)}>
 											<SelectTrigger className="w-full">
 												<SelectValue placeholder="Select State" />
@@ -568,6 +560,7 @@ const GroupTable = () => {
 											District Name
 										</p>
 										<Select
+											value={selectedDistrictId || ""}
 											onValueChange={(value) => setSelectedDistrictId(value)}>
 											<SelectTrigger className="w-full">
 												<SelectValue placeholder="Select District" />
@@ -584,7 +577,9 @@ const GroupTable = () => {
 								</div>
 
 								<p className="text-xs text-primary-6 mt-2 font-inter">POD</p>
-								<Select onValueChange={(value) => setSelectedPodId(value)}>
+								<Select
+									value={selectedPodId || ""}
+									onValueChange={(value) => setSelectedPodId(value)}>
 									<SelectTrigger className="w-full">
 										<SelectValue placeholder="Select POD" />
 									</SelectTrigger>
@@ -600,7 +595,9 @@ const GroupTable = () => {
 								<p className="text-xs text-primary-6 mt-2 font-inter">
 									Site Name
 								</p>
-								<Select onValueChange={(value) => setSelectedSiteId(value)}>
+								<Select
+									value={selectedSiteId || ""}
+									onValueChange={(value) => setSelectedSiteId(value)}>
 									<SelectTrigger className="w-full">
 										<SelectValue placeholder="Select Site" />
 									</SelectTrigger>

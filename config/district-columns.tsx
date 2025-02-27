@@ -71,10 +71,12 @@ const DistrictTable = () => {
 	const [states, setStates] = useState<State[]>([]);
 
 	useEffect(() => {
-		if (selectedRow) {
+		if (selectedRow && isEditModalOpen) {
+			// Pre-fill the dropdowns with existing data
 			setName(selectedRow.name);
+			setSelectedStateId(selectedRow.state_id || null);
 		}
-	}, [selectedRow]); // Runs when selectedRow changes
+	}, [selectedRow, isEditModalOpen]);
 
 	const fetchStates = async () => {
 		try {
@@ -165,9 +167,9 @@ const DistrictTable = () => {
 
 			if (response.status === 200) {
 				console.log("District posted successfully");
+				await fetchDistricts();
 				toast.success("District updated successfully");
 
-				await fetchDistricts();
 				setName("");
 				closeEditModal();
 			}
@@ -402,6 +404,7 @@ const DistrictTable = () => {
 											State
 										</p>
 										<Select
+											value={selectedStateId || ""}
 											onValueChange={(value) => setSelectedStateId(value)}>
 											<SelectTrigger className="w-full">
 												<SelectValue placeholder="Select State" />

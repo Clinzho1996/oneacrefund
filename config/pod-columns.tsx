@@ -80,10 +80,19 @@ const PodTable = () => {
 	const [districts, setDistricts] = useState<District[]>([]);
 
 	useEffect(() => {
-		if (selectedRow) {
+		if (selectedRow && isEditModalOpen) {
+			// Pre-fill the dropdowns with existing data
 			setName(selectedRow.name);
+			setSelectedStateId(selectedRow.state_id || null);
+			setSelectedDistrictId(selectedRow.district_id || null);
+			setSelectedPodId(selectedRow.pod_id || null);
+
+			// Fetch districts and pods based on the selected row's data
+			if (selectedRow.state_id) {
+				fetchDistricts(selectedRow.state_id);
+			}
 		}
-	}, [selectedRow]); // Runs when selectedRow changes
+	}, [selectedRow, isEditModalOpen]);
 
 	const fetchStates = async () => {
 		try {
@@ -145,28 +154,6 @@ const PodTable = () => {
 		fetchStates();
 	}, []);
 
-	useEffect(() => {
-		if (selectedStateId) {
-			fetchDistricts(selectedStateId);
-			setSelectedDistrictId(null);
-			setSelectedPodId(null);
-			setSelectedSiteId(null);
-		}
-	}, [selectedStateId]);
-
-	useEffect(() => {
-		if (selectedDistrictId) {
-			setSelectedPodId(null);
-			setSelectedSiteId(null);
-		}
-	}, [selectedDistrictId]);
-
-	useEffect(() => {
-		if (selectedPodId) {
-			setSelectedSiteId(null);
-		}
-	}, [selectedPodId]);
-
 	const handleEditPod = async (event: React.FormEvent) => {
 		event.preventDefault();
 		setIsLoading(true);
@@ -204,9 +191,9 @@ const PodTable = () => {
 
 			if (response.status === 200) {
 				console.log("Pod posted successfully");
+				await fetchPods();
 				toast.success("Pod updated successfully");
 
-				await fetchPods();
 				setName("");
 				closeEditModal();
 			}
@@ -447,44 +434,44 @@ const PodTable = () => {
 									</div>
 								</div>
 							</RadioGroup>
-							<div className="flex flex-col gap-2 mt-4">
-								<div className="flex flex-row items-center justify-between gap-5">
-									<div className="w-[50%] lg:w-full">
-										<p className="text-xs text-primary-6 mt-2 font-inter">
-											State
-										</p>
-										<Select
-											onValueChange={(value) => setSelectedStateId(value)}>
-											<SelectTrigger className="w-full">
-												<SelectValue placeholder="Select State" />
-											</SelectTrigger>
-											<SelectContent className="z-200 post bg-white">
-												{states.map((state) => (
-													<SelectItem key={state.id} value={state.id}>
-														{state.name}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									</div>
-									<div className="w-[50%] lg:w-full">
-										<p className="text-xs text-primary-6 mt-2 font-inter">
-											District Name
-										</p>
-										<Select
-											onValueChange={(value) => setSelectedDistrictId(value)}>
-											<SelectTrigger className="w-full">
-												<SelectValue placeholder="Select District" />
-											</SelectTrigger>
-											<SelectContent className="z-200 post bg-white">
-												{districts.map((district) => (
-													<SelectItem key={district.id} value={district.id}>
-														{district.name}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									</div>
+							<div className="flex flex-row items-center justify-between gap-5">
+								<div className="w-[50%] lg:w-full">
+									<p className="text-xs text-primary-6 mt-2 font-inter">
+										State
+									</p>
+									<Select
+										value={selectedStateId || ""}
+										onValueChange={(value) => setSelectedStateId(value)}>
+										<SelectTrigger className="w-full mt-3">
+											<SelectValue placeholder="Select State" />
+										</SelectTrigger>
+										<SelectContent className="z-200 post bg-white">
+											{states.map((state) => (
+												<SelectItem key={state.id} value={state.id}>
+													{state.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+								<div className="w-[50%] lg:w-full">
+									<p className="text-xs text-primary-6 mt-2 font-inter">
+										District Name
+									</p>
+									<Select
+										value={selectedDistrictId || ""}
+										onValueChange={(value) => setSelectedDistrictId(value)}>
+										<SelectTrigger className="w-full mt-3">
+											<SelectValue placeholder="Select District" />
+										</SelectTrigger>
+										<SelectContent className="z-200 post bg-white">
+											{districts.map((district) => (
+												<SelectItem key={district.id} value={district.id}>
+													{district.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
 								</div>
 							</div>
 							<p className="text-xs text-primary-6 mt-2 font-inter">Pod Name</p>

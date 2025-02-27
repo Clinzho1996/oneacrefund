@@ -75,15 +75,6 @@ interface Site {
 	podId: string;
 }
 
-interface Staff {
-	id: string;
-	name: string;
-	role: string;
-	siteId: string;
-	first_name: string;
-	last_name: string;
-}
-
 export function GroupDataTable<TData, TValue>({
 	columns,
 	data,
@@ -94,7 +85,6 @@ export function GroupDataTable<TData, TValue>({
 	);
 	const [columnVisibility, setColumnVisibility] =
 		React.useState<VisibilityState>({});
-	const [selectedType, setSelectedType] = useState<string>("");
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [isModalOpen, setModalOpen] = useState(false);

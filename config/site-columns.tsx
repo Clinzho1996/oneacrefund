@@ -93,10 +93,23 @@ const SiteTable = () => {
 	const [pods, setPods] = useState<Pod[]>([]);
 
 	useEffect(() => {
-		if (selectedRow) {
+		if (selectedRow && isEditModalOpen) {
+			// Pre-fill the dropdowns with existing data
 			setName(selectedRow.name);
+			setSelectedStateId(selectedRow.state_id || null);
+			setSelectedDistrictId(selectedRow.district_id || null);
+			setSelectedPodId(selectedRow.pod_id || null);
+
+			// Fetch districts and pods based on the selected row's data
+			if (selectedRow.state_id) {
+				fetchDistricts(selectedRow.state_id).then(() => {
+					if (selectedRow.district_id) {
+						fetchPods(selectedRow.district_id);
+					}
+				});
+			}
 		}
-	}, [selectedRow]); 
+	}, [selectedRow, isEditModalOpen]);
 
 	const fetchStates = async () => {
 		try {
@@ -184,29 +197,6 @@ const SiteTable = () => {
 		fetchStates();
 	}, []);
 
-	useEffect(() => {
-		if (selectedStateId) {
-			fetchDistricts(selectedStateId);
-			setSelectedDistrictId(null);
-			setSelectedPodId(null);
-			setSelectedSiteId(null);
-		}
-	}, [selectedStateId]);
-
-	useEffect(() => {
-		if (selectedDistrictId) {
-			fetchPods(selectedDistrictId);
-			setSelectedPodId(null);
-			setSelectedSiteId(null);
-		}
-	}, [selectedDistrictId]);
-
-	useEffect(() => {
-		if (selectedPodId) {
-			setSelectedSiteId(null);
-		}
-	}, [selectedPodId]);
-
 	const handleEditSite = async (event: React.FormEvent) => {
 		event.preventDefault();
 		setIsLoading(true);
@@ -245,10 +235,10 @@ const SiteTable = () => {
 
 			if (response.status === 200) {
 				console.log("Site posted successfully");
+				await fetchSites();
 				toast.success("Site updated successfully");
 				setName("");
 				closeEditModal();
-				await fetchSites();
 			}
 		} catch (error) {
 			console.error("Error posting device:", error);
@@ -344,23 +334,20 @@ const SiteTable = () => {
 		}
 	};
 
-	const openModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
-		setModalOpen(true);
-	};
-
 	const openEditModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
+		const site = row.original;
+
+		setSelectedRow(site);
+		setSelectedStateId(site.state_id || null);
+		setSelectedDistrictId(site.district_id || null);
+		setSelectedPodId(site.pod_id || null);
+		setSelectedSiteId(site.site_id || null);
 		setEditModalOpen(true);
 	};
 
 	const openDeleteModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
 		setDeleteModalOpen(true);
-	};
-
-	const closeModal = () => {
-		setModalOpen(false);
 	};
 
 	const closeEditModal = () => {
@@ -503,6 +490,7 @@ const SiteTable = () => {
 											State
 										</p>
 										<Select
+											value={selectedStateId || ""}
 											onValueChange={(value) => setSelectedStateId(value)}>
 											<SelectTrigger className="w-full">
 												<SelectValue placeholder="Select State" />
@@ -521,6 +509,7 @@ const SiteTable = () => {
 											District Name
 										</p>
 										<Select
+											value={selectedDistrictId || ""}
 											onValueChange={(value) => setSelectedDistrictId(value)}>
 											<SelectTrigger className="w-full">
 												<SelectValue placeholder="Select District" />
@@ -537,7 +526,9 @@ const SiteTable = () => {
 								</div>
 
 								<p className="text-xs text-primary-6 mt-2 font-inter">POD</p>
-								<Select onValueChange={(value) => setSelectedPodId(value)}>
+								<Select
+									value={selectedPodId || ""}
+									onValueChange={(value) => setSelectedPodId(value)}>
 									<SelectTrigger className="w-full">
 										<SelectValue placeholder="Select POD" />
 									</SelectTrigger>
