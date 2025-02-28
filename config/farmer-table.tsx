@@ -53,6 +53,7 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { toast } from "react-toastify";
+import * as XLSX from "xlsx";
 import { Farmer } from "./farmer-columns";
 import { Group } from "./group-columns";
 
@@ -262,6 +263,44 @@ export function FarmerDataTable<TData, TValue>({
 	useEffect(() => {
 		fetchStates();
 	}, []);
+
+	const handleExport = () => {
+		// Convert the table data to a worksheet
+		const worksheet = XLSX.utils.json_to_sheet(tableData);
+
+		// Create a new workbook and add the worksheet
+		const workbook = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(workbook, worksheet, "Farmers");
+
+		// Generate a binary string from the workbook
+		const binaryString = XLSX.write(workbook, {
+			bookType: "xlsx",
+			type: "binary",
+		});
+
+		// Convert the binary string to a Blob
+		const blob = new Blob([s2ab(binaryString)], {
+			type: "application/octet-stream",
+		});
+
+		// Create a link element and trigger the download
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = "farmers.xlsx";
+		link.click();
+
+		// Clean up
+		URL.revokeObjectURL(url);
+	};
+
+	// Utility function to convert string to ArrayBuffer
+	const s2ab = (s: string) => {
+		const buf = new ArrayBuffer(s.length);
+		const view = new Uint8Array(buf);
+		for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
+		return buf;
+	};
 
 	const fetchFarmers = async () => {
 		try {
@@ -821,7 +860,9 @@ export function FarmerDataTable<TData, TValue>({
 					</p>
 				</div>
 				<div className="flex flex-row justify-start items-center gap-3 font-inter">
-					<Button className="border-[#E8E8E8] border-[1px]">
+					<Button
+						className="border-[#E8E8E8] border-[1px]"
+						onClick={handleExport}>
 						<IconFileExport /> Export
 					</Button>
 					<Button className="border-[#E8E8E8] border-[1px]">
