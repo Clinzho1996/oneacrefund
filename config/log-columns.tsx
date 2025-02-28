@@ -29,6 +29,7 @@ export type Logs = {
 	user: {
 		first_name: string;
 		last_name: string;
+		staff_code: string;
 	};
 	model: string;
 	desc: {
@@ -100,7 +101,20 @@ const LogTable = () => {
 			cell: ({ row }) => {
 				const fullName = row.getValue<string>("fullName");
 
-				return <span className="text-xs text-black">{fullName}</span>;
+				return (
+					<span className="text-xs text-black capitalize">{fullName}</span>
+				);
+			},
+		},
+		{
+			accessorKey: "staffCode",
+			header: "Staff Code",
+			cell: ({ row }) => {
+				const staffCode = row.getValue<string>("staffCode");
+
+				return (
+					<span className="text-xs text-black capitalize">{staffCode}</span>
+				);
 			},
 		},
 		{
@@ -206,6 +220,7 @@ const LogTable = () => {
 				date: item.created_at,
 				module: item.model,
 				action: item.action,
+				staffCode: item.user.staff_code,
 				actions: item.action,
 				description: item.desc.name || "N/A",
 				user: item.user, // Include the full user object
