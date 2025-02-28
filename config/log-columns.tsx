@@ -155,7 +155,12 @@ const LogTable = () => {
 			accessorKey: "desc",
 			header: "Description",
 			cell: ({ row }) => {
-				const description = row.original.description;
+				const fullName = row.original.fullName;
+				const actions = row.original.action;
+				const descName = row.original.description; // Get the name of the user whose account was updated
+
+				// Construct the description string
+				const description = `${fullName} ${actions} ${descName} account`;
 
 				return (
 					<span className="role text-xs text-primary-6 capitalize">
