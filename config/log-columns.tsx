@@ -152,10 +152,10 @@ const LogTable = () => {
 			},
 		},
 		{
-			accessorKey: "description",
+			accessorKey: "desc",
 			header: "Description",
 			cell: ({ row }) => {
-				const description = row.getValue<string>("description");
+				const description = row.original.description;
 
 				return (
 					<span className="role text-xs text-primary-6 capitalize">
