@@ -27,9 +27,9 @@ export type Logs = {
 	actions: string;
 	description: string;
 	user: {
-		first_name: string;
-		last_name: string;
-		staff_code: string;
+		first_name?: string;
+		last_name?: string;
+		staff_code?: string;
 	};
 	model: string;
 	desc: {
@@ -221,11 +221,11 @@ const LogTable = () => {
 			// Map the API response to match the `Logs` type
 			const mappedData = fetchedData.map((item) => ({
 				id: item.id,
-				fullName: `${item.user.first_name} ${item.user.last_name}` || "N/A",
+				fullName: `${item.user?.first_name} ${item.user?.last_name}` || "N/A",
 				date: item.created_at,
 				module: item.model,
 				action: item.action,
-				staffCode: item.user.staff_code,
+				staffCode: item.user?.staff_code,
 				actions: item.action,
 				description: item.desc.name || "N/A",
 				user: item.user, // Include the full user object
