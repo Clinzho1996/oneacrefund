@@ -11,26 +11,37 @@ import {
 import Modal from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { logData } from "@/constants";
+import axios from "axios";
 import { format, isValid, parseISO } from "date-fns";
-import React, { useState } from "react";
+import { getSession } from "next-auth/react";
+import React, { useEffect, useState } from "react";
 import { LogDataTable } from "./log-table";
 
 // This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
 export type Logs = {
 	id: string;
 	fullName: string;
 	date: string;
 	module: string;
+	action: string;
 	actions: string;
 	description: string;
+	user: {
+		first_name: string;
+		last_name: string;
+	};
+	model: string;
+	desc: {
+		name: string;
+	};
+	created_at: string;
 };
 
 const LogTable = () => {
 	const [isRestoreModalOpen, setRestoreModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
+	const [isLoading, setIsLoading] = useState(false);
 
 	const [sorting, setSorting] = React.useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -40,7 +51,7 @@ const LogTable = () => {
 		React.useState<VisibilityState>({});
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [globalFilter, setGlobalFilter] = useState("");
-	const [tableData, setTableData] = useState(logData);
+	const [tableData, setTableData] = useState<Logs[]>([]);
 
 	const openRestoreModal = (row: any) => {
 		setSelectedRow(row.original); // Use row.original to store the full row data
@@ -159,9 +170,66 @@ const LogTable = () => {
 		setRowSelection({});
 	};
 
+	const fetchLogs = async () => {
+		try {
+			setIsLoading(true);
+			const session = await getSession();
+
+			console.log("session", session);
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+
+			const response = await axios.get<{
+				status: string;
+				message: string;
+				data: Logs[];
+			}>("https://api.wowdev.com.ng/api/v1/log", {
+				headers: {
+					Accept: "application/json",
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			const fetchedData = response.data.data;
+
+			console.log("Log Data:", response.data);
+
+			// Map the API response to match the `Logs` type
+			const mappedData = fetchedData.map((item) => ({
+				id: item.id,
+				fullName: `${item.user.first_name} ${item.user.last_name}` || "N/A",
+				date: item.created_at,
+				module: item.model,
+				action: item.action,
+				actions: item.action,
+				description: item.desc.name || "N/A",
+				user: item.user, // Include the full user object
+				model: item.model,
+				desc: item.desc, // Include the full desc object
+				created_at: item.created_at,
+			}));
+
+			console.log("Mapped Data:", mappedData);
+			setTableData(mappedData);
+		} catch (error) {
+			console.error("Error fetching log data:", error);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchLogs();
+	}, []);
+
 	return (
 		<>
-			<LogDataTable columns={columns} data={logData} />
+			<LogDataTable columns={columns} data={tableData} />
 
 			{isRestoreModalOpen && (
 				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>

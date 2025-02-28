@@ -42,7 +42,7 @@ import {
 	ChevronsRight,
 } from "lucide-react";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 
 interface DataTableProps<TData, TValue> {
@@ -64,11 +64,15 @@ export function LogDataTable<TData, TValue>({
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [isModalOpen, setModalOpen] = useState(false);
-	const [tableData, setTableData] = useState(data);
+	const [tableData, setTableData] = useState<TData[]>(data);
 	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
 	const openModal = () => setModalOpen(true);
 	const closeModal = () => setModalOpen(false);
+
+	useEffect(() => {
+		setTableData(data); // Sync `tableData` with `data` prop
+	}, [data]);
 
 	// Function to filter data based on date range
 	const filterDataByDateRange = () => {
