@@ -57,15 +57,6 @@ function Settings() {
 				</div>
 				<div className="bg-white px-4 border-[1px] border-[#E2E4E9] rounded-b-lg py-10">
 					<div className="flex flex-row justify-start items-start gap-20 w-full">
-						<div className="w-full lg:w-[35%]">
-							<h2 className="text-sm text-dark-1 font-medium font-inter">
-								Name
-							</h2>
-							<p className="text-xs text-dark-2 mt-2">
-								This helps to focus on the current and ongoing schedules without
-								the cl
-							</p>
-						</div>
 						<div className="w-full lg:w-[65%] pr-20">
 							{session?.user && (
 								<div className="md:flex flex-col p-2 rounded-md justify-start gap-2 items-start mx-2 px-2 w-full">
@@ -100,15 +91,6 @@ function Settings() {
 					</div>
 					<hr className="my-10" />
 					<div className="flex flex-row justify-start items-start gap-20 w-full">
-						<div className="w-full lg:w-[35%]">
-							<h2 className="text-sm text-dark-1 font-medium font-inter">
-								Email Address
-							</h2>
-							<p className="text-xs text-dark-2 mt-2">
-								This helps to focus on the current and ongoing schedules without
-								the cl
-							</p>
-						</div>
 						<div className="w-full lg:w-[65%] pr-20">
 							{session?.user && (
 								<div className="md:flex flex-col p-2 rounded-md justify-start gap-2 items-start mx-2 px-2 w-full">
@@ -126,15 +108,6 @@ function Settings() {
 					</div>
 					<hr className="my-10" />
 					<div className="flex flex-row justify-start items-start gap-20 w-full">
-						<div className="w-full lg:w-[35%]">
-							<h2 className="text-sm text-dark-1 font-medium font-inter">
-								Phone Number
-							</h2>
-							<p className="text-xs text-dark-2 mt-2">
-								This helps to focus on the current and ongoing schedules without
-								the cl
-							</p>
-						</div>
 						<div className="w-full lg:w-[65%] pr-20">
 							{session?.user && (
 								<div className="md:flex flex-col p-2 rounded-md justify-start gap-2 items-start mx-2 px-2 w-full">
