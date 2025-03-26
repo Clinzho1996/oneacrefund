@@ -47,7 +47,7 @@ function DeviceManagement() {
 							<TabsTrigger
 								value="posting"
 								className="p-2 rounded-md data-[state=active]:bg-[#ECFAF6] data-[state=active]:text-primary-6 text-sm">
-								Posting Devices
+								Posted Devices
 							</TabsTrigger>
 						</TabsList>
 
