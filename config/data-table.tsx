@@ -227,6 +227,7 @@ export function DataTable<TData, TValue>({
 				setFirstName("");
 				setLastName("");
 				setEmail(" ");
+				setStaffId("");
 				setRole("super_admin");
 			}
 		} catch (error: unknown) {
