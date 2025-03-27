@@ -106,7 +106,7 @@ const Table = () => {
 				return;
 			}
 
-			const response = await axios.put(
+			const response = await axios.post(
 				`https://api.wowdev.com.ng/api/v1/user/${editData.id}`,
 				{
 					first_name: editData.firstName,

@@ -20,22 +20,19 @@ import { LogDataTable } from "./log-table";
 // This type is used to define the shape of our data.
 export type Logs = {
 	id: string;
-	fullName: string;
-	date: string;
-	module: string;
-	action: string;
-	actions: string;
-	description: string;
-	user: {
-		first_name?: string;
-		last_name?: string;
-		staff_code?: string;
-	};
+	user_id: string;
 	model: string;
-	desc: {
-		name: string;
-	};
+	desc: string;
+	action: string;
 	created_at: string;
+	updated_at: string;
+	user: {
+		id: string;
+		first_name: string;
+		last_name: string;
+		staff_code: string;
+		role: string;
+	};
 };
 
 const LogTable = () => {
@@ -55,12 +52,12 @@ const LogTable = () => {
 	const [tableData, setTableData] = useState<Logs[]>([]);
 
 	const openRestoreModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
+		setSelectedRow(row.original);
 		setRestoreModalOpen(true);
 	};
 
 	const openDeleteModal = (row: any) => {
-		setSelectedRow(row.original); // Use row.original to store the full row data
+		setSelectedRow(row.original);
 		setDeleteModalOpen(true);
 	};
 
@@ -96,96 +93,135 @@ const LogTable = () => {
 			),
 		},
 		{
-			accessorKey: "fullName",
-			header: "Full Name",
+			accessorKey: "user",
+			header: "Staff",
 			cell: ({ row }) => {
-				const fullName = row.getValue<string>("fullName");
+				const user = row.original.user;
+				const fullName = `${user?.first_name} ${user?.last_name}`;
+				const staffCode = user?.staff_code;
 
 				return (
-					<span className="text-xs text-black capitalize">{fullName}</span>
+					<div className="flex flex-col">
+						<span className="text-xs font-medium text-black capitalize">
+							{fullName}
+						</span>
+						<span className="text-xs text-gray-500">{staffCode}</span>
+					</div>
 				);
 			},
 		},
 		{
-			accessorKey: "staffCode",
-			header: "Staff Code",
+			accessorKey: "created_at",
+			header: "Date & Time",
 			cell: ({ row }) => {
-				const staffCode = row.getValue<string>("staffCode");
-
+				const date = parseISO(row.original.created_at);
 				return (
-					<span className="text-xs text-black capitalize">{staffCode}</span>
+					<div className="flex flex-col">
+						<span className="text-xs text-primary-6">
+							{isValid(date) ? format(date, "do MMM. yyyy") : "Invalid Date"}
+						</span>
+						<span className="text-xs text-gray-500">
+							{isValid(date) ? format(date, "h:mm a") : ""}
+						</span>
+					</div>
 				);
 			},
 		},
 		{
-			accessorKey: "date",
-			header: "Date of action",
-			cell: ({ row }) => {
-				const date = parseISO(row.original.date); // Convert to Date object
-				return (
-					<span className="text-xs text-primary-6">
-						{isValid(date) ? format(date, "do MMM. yyyy") : "Invalid Date"}
-					</span>
-				); // Format if valid
-			},
-		},
-		{
-			accessorKey: "module",
+			accessorKey: "model",
 			header: "Module",
 			cell: ({ row }) => {
-				const module = row.getValue<string>("module");
-
-				return <span className="text-xs text-primary-6">{module}</span>;
+				return (
+					<span className="text-xs text-primary-6 capitalize">
+						{row.original.model}
+					</span>
+				);
 			},
 		},
 		{
-			accessorKey: "actions",
+			accessorKey: "action",
 			header: "Action",
 			cell: ({ row }) => {
-				const actions = row.getValue<string>("actions");
+				const action = row.original.action;
+				const actionColor =
+					action === "created"
+						? "text-green-600"
+						: action === "updated"
+						? "text-blue-600"
+						: action === "deleted"
+						? "text-red-600"
+						: "text-primary-6";
 
 				return (
-					<span className="role text-xs text-primary-6 capitalize">
-						{actions}
-					</span>
+					<span className={`text-xs capitalize ${actionColor}`}>{action}</span>
 				);
 			},
 		},
 		{
 			accessorKey: "desc",
 			header: "Description",
+			size: 300,
 			cell: ({ row }) => {
-				const fullName = row.original.fullName;
-				const actions = row.original.action;
-				const descName = row.original.description; // Get the name of the user whose account was updated
+				const description = row.original.desc;
+				const maxLength = 100;
+				const [isExpanded, setIsExpanded] = useState(false);
 
-				// Construct the description string
-				const description = `${fullName} ${actions} ${descName} account`;
+				// Function to truncate text
+				const truncateText = (text: string, length: number) => {
+					return text.length > length
+						? text.substring(0, length) + "..."
+						: text;
+				};
+
+				// Parse changes if it's an update action
+				let changes = null;
+				if (
+					row.original.action === "updated" &&
+					description.includes("Changes:")
+				) {
+					const changesPart = description.split("Changes:")[1];
+					changes = changesPart.split(",").map((change) => change.trim());
+				}
 
 				return (
-					<span className="role text-xs text-primary-6 capitalize">
-						{description}
-					</span>
+					<div className="flex flex-col">
+						<span className="text-xs text-primary-6">
+							{isExpanded
+								? description.split("Changes:")[0]
+								: truncateText(description.split("Changes:")[0], maxLength)}
+						</span>
+						{changes && (
+							<div className="mt-1">
+								{changes.map((change, index) => (
+									<div key={index} className="text-xs text-gray-500">
+										• {isExpanded ? change : truncateText(change, maxLength)}
+									</div>
+								))}
+							</div>
+						)}
+						{description.length > maxLength && (
+							<button
+								onClick={() => setIsExpanded(!isExpanded)}
+								className="text-xs text-blue-500 mt-1 text-left">
+								{isExpanded ? "Show less" : "Read more"}
+							</button>
+						)}
+					</div>
 				);
 			},
 		},
 	];
 
 	const handleDelete = () => {
-		// Get the selected row IDs
 		const selectedRowIds = Object.keys(rowSelection).filter(
 			(key) => rowSelection[key]
 		);
 
-		// Filter the data to remove the selected rows
 		const filteredData = tableData.filter(
 			(row: { id: string }) => !selectedRowIds.includes(row.id)
 		);
 
-		// Update the table data
 		setTableData(filteredData);
-
-		// Clear the row selection after deletion
 		setRowSelection({});
 	};
 
@@ -193,10 +229,8 @@ const LogTable = () => {
 		try {
 			setIsLoading(true);
 			const session = await getSession();
-
-			console.log("session", session);
-
 			const accessToken = session?.backendData?.token;
+
 			if (!accessToken) {
 				console.error("No access token found.");
 				setIsLoading(false);
@@ -214,28 +248,7 @@ const LogTable = () => {
 				},
 			});
 
-			const fetchedData = response.data.data;
-
-			console.log("Log Data:", response.data);
-
-			// Map the API response to match the `Logs` type
-			const mappedData = fetchedData.map((item) => ({
-				id: item.id,
-				fullName: `${item.user?.first_name} ${item.user?.last_name}` || "N/A",
-				date: item.created_at,
-				module: item.model,
-				action: item.action,
-				staffCode: item.user?.staff_code,
-				actions: item.action,
-				description: item.desc.name || "N/A",
-				user: item.user, // Include the full user object
-				model: item.model,
-				desc: item.desc, // Include the full desc object
-				created_at: item.created_at,
-			}));
-
-			console.log("Mapped Data:", mappedData);
-			setTableData(mappedData);
+			setTableData(response.data.data);
 		} catch (error) {
 			console.error("Error fetching log data:", error);
 		} finally {
@@ -254,7 +267,8 @@ const LogTable = () => {
 			{isRestoreModalOpen && (
 				<Modal onClose={closeRestoreModal} isOpen={isRestoreModalOpen}>
 					<p className="mt-4">
-						Are you sure you want to suspend {selectedRow?.name}'s account?
+						Are you sure you want to suspend {selectedRow?.user?.first_name}'s
+						account?
 					</p>
 					<p className="text-sm text-primary-6">This can't be undone</p>
 					<div className="flex flex-row justify-end items-center gap-3 font-inter mt-4">
@@ -272,8 +286,7 @@ const LogTable = () => {
 
 			{isDeleteModalOpen && (
 				<Modal onClose={closeDeleteModal} isOpen={isDeleteModalOpen}>
-					<p>Are you sure you want to delete {selectedRow?.name}'s account?</p>
-
+					<p>Are you sure you want to delete this log entry?</p>
 					<p className="text-sm text-primary-6">This can't be undone</p>
 					<div className="flex flex-row justify-end items-center gap-3 font-inter mt-4">
 						<Button
