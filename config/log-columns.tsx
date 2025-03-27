@@ -160,10 +160,9 @@ const LogTable = () => {
 		{
 			accessorKey: "desc",
 			header: "Description",
-			size: 300,
 			cell: ({ row }) => {
 				const description = row.original.desc;
-				const maxLength = 100;
+				const maxLength = 60;
 				const [isExpanded, setIsExpanded] = useState(false);
 
 				// Function to truncate text
