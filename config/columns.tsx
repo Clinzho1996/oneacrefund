@@ -13,7 +13,10 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
+	IconEdit,
 	IconEye,
 	IconRestore,
 	IconTrash,
@@ -65,6 +68,73 @@ const Table = () => {
 	const [selectedRow, setSelectedRow] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [tableData, setTableData] = useState<Staff[]>([]);
+	const [isEditModalOpen, setEditModalOpen] = useState(false);
+	const [editData, setEditData] = useState({
+		id: "",
+		firstName: "",
+		lastName: "",
+		email: "",
+		staffId: "",
+		role: "super_admin",
+	});
+
+	const openEditModal = (row: any) => {
+		const staff = row.original;
+		setEditData({
+			id: staff.id,
+			firstName: staff.name?.split(" ")[0] || "",
+			lastName: staff.name?.split(" ")[1] || "",
+			email: staff.email,
+			staffId: staff.staff,
+			role: staff.role,
+		});
+		setEditModalOpen(true);
+	};
+
+	const closeEditModal = () => {
+		setEditModalOpen(false);
+	};
+
+	const handleEditStaff = async () => {
+		try {
+			setIsLoading(true);
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.put(
+				`https://api.wowdev.com.ng/api/v1/user/${editData.id}`,
+				{
+					first_name: editData.firstName,
+					last_name: editData.lastName,
+					email: editData.email,
+					staff_code: editData.staffId,
+					role: editData.role,
+				},
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				toast.success("Staff updated successfully.");
+				fetchStaffs(); // Refresh the table data
+				closeEditModal();
+			}
+		} catch (error) {
+			console.error("Error updating staff:", error);
+			toast.error("Failed to update staff. Please try again.");
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
 	const openRestoreModal = (row: any) => {
 		setSelectedRow(row.original);
@@ -396,6 +466,12 @@ const Table = () => {
 									<p className="text-xs font-inter">View</p>
 								</DropdownMenuItem>
 							</Link>
+							<DropdownMenuItem
+								className="action cursor-pointer hover:bg-blue-100"
+								onClick={() => openEditModal(row)}>
+								<IconEdit />
+								<p className="text-xs font-inter">Edit</p>
+							</DropdownMenuItem>
 							{actions.status === "active" ? (
 								<DropdownMenuItem
 									className="action cursor-pointer hover:bg-yellow-300"
@@ -432,6 +508,99 @@ const Table = () => {
 				<Loader />
 			) : (
 				<DataTable columns={columns} data={tableData} />
+			)}
+			{isEditModalOpen && (
+				<Modal
+					isOpen={isEditModalOpen}
+					onClose={closeEditModal}
+					title="Edit Staff">
+					<div className="bg-white p-0 rounded-lg w-[600px] transition-transform ease-in-out ">
+						<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
+							<p className="text-xs text-primary-6">Role</p>
+
+							<RadioGroup
+								defaultValue={editData.role}
+								onValueChange={(value) =>
+									setEditData({ ...editData, role: value })
+								}>
+								<div className="flex flex-row justify-between items-center gap-5">
+									<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
+										<RadioGroupItem value="admin" id="admin" />
+										<p className="text-sm text-primary-6 whitespace-nowrap">
+											Admin
+										</p>
+									</div>
+									<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
+										<RadioGroupItem value="super_admin" id="super_admin" />
+										<p className="text-sm text-primary-6 whitespace-nowrap">
+											Super Admin
+										</p>
+									</div>
+									<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
+										<RadioGroupItem value="field_officer" id="field_officer" />
+										<p className="text-sm text-primary-6 whitespace-nowrap">
+											Field
+										</p>
+									</div>
+								</div>
+							</RadioGroup>
+
+							<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+							<div className="flex flex-col gap-2">
+								<p className="text-xs text-primary-6">Staff ID</p>
+								<Input
+									type="text"
+									className="focus:border-none mt-2"
+									value={editData.staffId}
+									onChange={(e) =>
+										setEditData({ ...editData, staffId: e.target.value })
+									}
+								/>
+								<p className="text-xs text-primary-6">First Name</p>
+								<Input
+									type="text"
+									className="focus:border-none mt-2"
+									value={editData.firstName}
+									onChange={(e) =>
+										setEditData({ ...editData, firstName: e.target.value })
+									}
+								/>
+								<p className="text-xs text-primary-6 mt-2">Last Name</p>
+								<Input
+									type="text"
+									className="focus:border-none mt-2"
+									value={editData.lastName}
+									onChange={(e) =>
+										setEditData({ ...editData, lastName: e.target.value })
+									}
+								/>
+								<p className="text-xs text-primary-6 mt-2">Email Address</p>
+								<Input
+									type="text"
+									className="focus:border-none mt-2"
+									value={editData.email}
+									onChange={(e) =>
+										setEditData({ ...editData, email: e.target.value })
+									}
+								/>
+							</div>
+							<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
+							<div className="flex flex-row justify-end items-center gap-3 font-inter">
+								<Button
+									className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
+									onClick={closeEditModal}>
+									Cancel
+								</Button>
+								<Button
+									className="bg-primary-1 text-white font-inter text-xs"
+									onClick={handleEditStaff}
+									disabled={isLoading}>
+									{isLoading ? "Updating..." : "Update Staff"}
+								</Button>
+							</div>
+						</div>
+					</div>
+				</Modal>
 			)}
 
 			{isRestoreModalOpen && (
