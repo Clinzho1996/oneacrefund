@@ -538,37 +538,7 @@ function DeviceDetails() {
 							<div className="flex flex-col justify-start items-center p-2">
 								<div className="w-[50%] lg:w-full">
 									<h2 className="text-sm text-[#6B7280B7] font-inter">
-										Staff Name
-									</h2>
-									<p className="text-sm text-dark-1 font-inter mt-2">---</p>
-								</div>
-							</div>
-						</div>
-
-						<p className="text-sm text-dark-1 font-inter mt-2 p-2 font-medium">
-							Location
-						</p>
-						<div className="bg-white p-3 rounded-lg mt-2 mx-1 mb-1 shadow-md flex flex-col gap-2">
-							<div className="flex flex-row justify-start gap-20 items-center p-2 border-b-[1px] border-[#E2E4E9]">
-								<div className="w-[50%] lg:w-full">
-									<h2 className="text-sm text-[#6B7280B7] font-inter">State</h2>
-									<p className="text-sm text-dark-1 font-inter mt-2">Niger</p>
-								</div>
-								<div className="w-[50%] lg:w-full">
-									<h2 className="text-sm text-[#6B7280B7] font-inter">
-										District Name
-									</h2>
-									<p className="text-sm text-dark-1 font-inter mt-2">---</p>
-								</div>
-							</div>
-							<div className="flex flex-row justify-start gap-20 items-center p-2 border-b-[1px] border-[#E2E4E9]">
-								<div className="w-[50%] lg:w-full">
-									<h2 className="text-sm text-[#6B7280B7] font-inter">POD</h2>
-									<p className="text-sm text-dark-1 font-inter mt-2">---</p>
-								</div>
-								<div className="w-[50%] lg:w-full">
-									<h2 className="text-sm text-[#6B7280B7] font-inter">
-										Site Name
+										Serial Number
 									</h2>
 									<p className="text-sm text-dark-1 font-inter mt-2">
 										{userData?.serial_number}
