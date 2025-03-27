@@ -93,6 +93,7 @@ export function DataTable<TData, TValue>({
 	const [firstName, setFirstName] = useState("");
 	const [lastName, setLastName] = useState("");
 	const [email, setEmail] = useState("");
+	const [staffId, setStaffId] = useState("");
 	const [role, setRole] = useState("super_admin");
 
 	const openModal = () => setModalOpen(true);
@@ -198,6 +199,7 @@ export function DataTable<TData, TValue>({
 			}
 
 			const payload = {
+				staff_code: staffId,
 				first_name: firstName,
 				last_name: lastName,
 				email: email,
@@ -396,6 +398,13 @@ export function DataTable<TData, TValue>({
 
 						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
 						<div className="flex flex-col gap-2">
+							<p className="text-xs text-primary-6">Staff ID</p>
+							<Input
+								type="text"
+								className="focus:border-none mt-2"
+								value={staffId}
+								onChange={(e) => setStaffId(e.target.value)}
+							/>
 							<p className="text-xs text-primary-6">First Name</p>
 							<Input
 								type="text"
