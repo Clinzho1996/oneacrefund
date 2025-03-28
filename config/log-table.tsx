@@ -82,7 +82,7 @@ export function LogDataTable<TData, TValue>({
 		}
 
 		const filteredData = data.filter((farmer: any) => {
-			const dateJoined = new Date(farmer.date);
+			const dateJoined = new Date(farmer.created_at);
 			return dateJoined >= dateRange.from! && dateJoined <= dateRange.to!;
 		});
 
