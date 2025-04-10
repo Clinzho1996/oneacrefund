@@ -163,6 +163,23 @@ body {
 	height: 80vh;
 }
 
+.import-farmer {
+	width: 400px;
+}
+
+/* Radial progress bar styles */
+svg circle {
+	transform: rotate(-90deg);
+	transform-origin: 50% 50%;
+}
+
+/* Animation for progress */
+@keyframes progress {
+	0% {
+		stroke-dasharray: 0 216;
+	}
+}
+
 .post {
 	z-index: 150;
 }

@@ -101,6 +101,7 @@ export function FarmerDataTable<TData, TValue>({
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [previewImage, setPreviewImage] = useState<string | null>(null);
 	const [isModalOpen, setModalOpen] = useState(false);
+	const [isImportModalOpen, setImportModalOpen] = useState(false);
 	const [tableData, setTableData] = useState<TData[]>(data);
 	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 	const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
@@ -112,6 +113,9 @@ export function FarmerDataTable<TData, TValue>({
 	const [selectedPodId, setSelectedPodId] = useState<string | null>(null);
 	const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 	const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+	const [selectedFile, setSelectedFile] = useState<File | null>(null);
+	const [uploadProgress, setUploadProgress] = useState<number>(0);
+	const [isImporting, setIsImporting] = useState<boolean>(false);
 
 	const [name, setName] = useState<string>("");
 	const [gender, setGender] = useState<string>("");
@@ -410,6 +414,9 @@ export function FarmerDataTable<TData, TValue>({
 	const openModal = () => setModalOpen(true);
 	const closeModal = () => setModalOpen(false);
 
+	const openImportModal = () => setImportModalOpen(true);
+	const closeImportModal = () => setImportModalOpen(false);
+
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0] || null;
 		setFeaturedImage(file);
@@ -557,6 +564,87 @@ export function FarmerDataTable<TData, TValue>({
 			globalFilter,
 		},
 	});
+
+	const handleImportFileChange = (
+		event: React.ChangeEvent<HTMLInputElement>
+	) => {
+		const file = event.target.files?.[0];
+		if (!file) return;
+
+		// Validate file type
+		if (!file.name.endsWith(".csv")) {
+			toast.error("Please upload a CSV file");
+			return;
+		}
+
+		// Validate file size (5MB max)
+		if (file.size > 5 * 1024 * 1024) {
+			toast.error("File size should not exceed 5MB");
+			return;
+		}
+
+		setSelectedFile(file);
+		setUploadProgress(0);
+	};
+
+	const handleImportSubmit = async () => {
+		if (!selectedFile) return;
+
+		setIsImporting(true);
+		setUploadProgress(0);
+
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				throw new Error("No access token found");
+			}
+
+			const formData = new FormData();
+			formData.append("file", selectedFile);
+
+			const response = await axios.post(
+				"https://api.wowdev.com.ng/api/v1/farmer/import/data/extended",
+				formData,
+				{
+					headers: {
+						"Content-Type": "multipart/form-data",
+						Authorization: `Bearer ${accessToken}`,
+					},
+					onUploadProgress: (progressEvent) => {
+						if (progressEvent.total) {
+							const progress = Math.round(
+								(progressEvent.loaded * 100) / progressEvent.total
+							);
+							setUploadProgress(progress);
+						}
+					},
+				}
+			);
+
+			toast.success("Farmers imported successfully!");
+			closeImportModal();
+			fetchFarmers(); // Refresh the farmer list
+		} catch (error) {
+			if (axios.isAxiosError(error)) {
+				// Corrected error message access
+				if (error.response && error.response.data) {
+					toast.error(error?.response?.data?.message);
+					console.log("Error response:", error.response.data);
+				} else {
+					toast.error("An error occurred.");
+					console.log("Error response: An error occurred.");
+				}
+			} else {
+				toast.error("Something went wrong. Please try again.");
+				console.log("Unexpected error:", error);
+			}
+		} finally {
+			setIsImporting(false);
+			setUploadProgress(0);
+		}
+	};
 
 	return (
 		<div className="rounded-lg border-[1px] py-0">
@@ -835,6 +923,138 @@ export function FarmerDataTable<TData, TValue>({
 					</div>
 				</div>
 			</Modal>
+			<Modal
+				isOpen={isImportModalOpen}
+				onClose={closeImportModal}
+				title="Import Farmer">
+				<div className="bg-white py-1 rounded-lg import-farmer transition-transform ease-in-out max-h-[70vh] overflow-y-auto">
+					<div className="mt-3 border-[1px] border-dashed border-[#E2E4E9] pt-4 px-4">
+						{/* File Upload Section */}
+						<div className="flex flex-col justify-center items-center gap-3 p-6 border-dashed border-2 border-gray-300 rounded-lg mb-4">
+							{!selectedFile ? (
+								<>
+									<IconCloudDownload size={40} className="text-primary-1" />
+									<p className="text-sm font-medium text-gray-700">
+										Select a CSV file to upload
+									</p>
+									<p className="text-xs text-gray-500 mb-2">
+										or drag and drop it here
+									</p>
+									<input
+										type="file"
+										accept=".csv"
+										className="hidden"
+										id="csvFileInput"
+										onChange={handleImportFileChange}
+									/>
+									<Button
+										className="bg-primary-1 text-white text-xs"
+										onClick={() =>
+											document.getElementById("csvFileInput")?.click()
+										}>
+										Browse File
+									</Button>
+								</>
+							) : (
+								<div className="w-full">
+									{uploadProgress > 0 && uploadProgress < 100 ? (
+										<div className="flex flex-col items-center">
+											<div className="relative w-20 h-20">
+												<svg className="w-full h-full" viewBox="0 0 100 100">
+													<circle
+														className="text-gray-200"
+														strokeWidth="8"
+														stroke="currentColor"
+														fill="transparent"
+														r="36"
+														cx="50"
+														cy="50"
+													/>
+													<circle
+														className="text-primary-1"
+														strokeWidth="8"
+														strokeDasharray={`${uploadProgress * 2.16} 216`}
+														strokeLinecap="round"
+														stroke="currentColor"
+														fill="transparent"
+														r="36"
+														cx="50"
+														cy="50"
+													/>
+												</svg>
+												<div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
+													<span className="text-xs font-medium">
+														{Math.round(uploadProgress)}%
+													</span>
+												</div>
+											</div>
+											<p className="text-xs mt-2 text-gray-600">
+												Uploading {selectedFile.name}...
+											</p>
+										</div>
+									) : (
+										<div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+											<div className="flex items-center gap-3">
+												<div className="bg-primary-1/10 p-2 rounded-full">
+													<IconFileImport
+														className="text-primary-1"
+														size={20}
+													/>
+												</div>
+												<div>
+													<p className="text-sm font-medium text-gray-800">
+														{selectedFile.name}
+													</p>
+													<p className="text-xs text-gray-500">
+														{(selectedFile.size / 1024).toFixed(1)} KB
+													</p>
+												</div>
+											</div>
+											<Button
+												variant="ghost"
+												size="sm"
+												onClick={() => {
+													setSelectedFile(null);
+													setUploadProgress(0);
+												}}>
+												<IconTrash size={16} color="red" />
+											</Button>
+										</div>
+									)}
+								</div>
+							)}
+						</div>
+
+						{/* Instructions Section */}
+						<div className="mb-6">
+							<h3 className="text-sm font-medium text-gray-800 mb-2">
+								Import Instructions
+							</h3>
+							<ul className="text-xs text-gray-600 list-disc pl-5 space-y-1">
+								<li>CSV file must include required columns</li>
+								<li>First row should contain headers</li>
+								<li>Maximum file size: 5MB</li>
+								<li>Only CSV files are accepted</li>
+							</ul>
+						</div>
+
+						{/* Modal Footer */}
+						<div className="flex flex-row justify-end items-center gap-3 font-inter pt-4 mb-4 mt-4">
+							<Button
+								className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
+								onClick={closeImportModal}>
+								Cancel
+							</Button>
+							<Button
+								className="bg-primary-1 text-white font-inter text-xs"
+								onClick={handleImportSubmit}
+								disabled={!selectedFile || isImporting}>
+								{isImporting ? "Importing..." : "Import"}
+							</Button>
+						</div>
+					</div>
+				</div>
+			</Modal>
 			<div
 				className="bg-white flex flex-row border-b-[1px] border-[#E2E4E9] justify-between items-center p-3"
 				style={{
@@ -865,7 +1085,9 @@ export function FarmerDataTable<TData, TValue>({
 						onClick={handleExport}>
 						<IconFileExport /> Export
 					</Button>
-					<Button className="border-[#E8E8E8] border-[1px]">
+					<Button
+						className="border-[#E8E8E8] border-[1px]"
+						onClick={openImportModal}>
 						<IconFileImport /> Import
 					</Button>
 					<Button
