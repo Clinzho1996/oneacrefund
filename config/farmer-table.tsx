@@ -602,7 +602,7 @@ export function FarmerDataTable<TData, TValue>({
 			}
 
 			const formData = new FormData();
-			formData.append("file", selectedFile);
+			formData.append("csv_file", selectedFile);
 
 			const response = await axios.post(
 				"https://api.wowdev.com.ng/api/v1/farmer/import/data/extended",
