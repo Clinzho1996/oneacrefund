@@ -44,6 +44,7 @@ import { getSession } from "next-auth/react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { Project } from "./project-columns";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
@@ -261,6 +262,42 @@ export function ProjectDataTable<TData, TValue>({
 		setSelectedGroups(selectedGroups.filter((g) => g.id !== groupId));
 	};
 
+	const fetchProjects = async () => {
+		try {
+			setIsLoading(true);
+			const session = await getSession();
+
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) {
+				console.error("No access token found.");
+				setIsLoading(false);
+				return;
+			}
+
+			const response = await axios.get<{
+				status: string;
+				data: Project[];
+				pagination: any;
+			}>("https://api.wowdev.com.ng/api/v1/project", {
+				headers: {
+					Accept: "application/json",
+					Authorization: `Bearer ${accessToken}`,
+				},
+			});
+
+			if (response.data.status === "success") {
+				setTableData(response.data.data as TData[]);
+			} else {
+				throw new Error("Failed to fetch projects");
+			}
+		} catch (error) {
+			console.error("Error fetching project data:", error);
+			toast.error("Failed to fetch projects. Please try again.");
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
 	const handleCreateProject = async () => {
 		try {
 			setIsLoading(true);
@@ -296,7 +333,7 @@ export function ProjectDataTable<TData, TValue>({
 			if (response.status === 200) {
 				toast.success("Project created successfully");
 				closeCreateModal();
-				// You might want to refresh the table data here
+				fetchProjects();
 			}
 		} catch (error) {
 			console.error("Error creating project:", error);
