@@ -14,11 +14,9 @@ import {
 	VisibilityState,
 } from "@tanstack/react-table";
 
-import { Button } from "@/components/ui/button";
-
 import Modal from "@/components/Modal";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
 	Select,
 	SelectContent,
@@ -34,20 +32,54 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { projectData } from "@/constants";
-import { IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconCircleX, IconPlus, IconTrash } from "@tabler/icons-react";
+import axios from "axios";
 import {
 	ChevronLeft,
 	ChevronRight,
 	ChevronsLeft,
 	ChevronsRight,
 } from "lucide-react";
+import { getSession } from "next-auth/react";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
+}
+
+interface State {
+	id: string;
+	name: string;
+}
+
+interface District {
+	id: string;
+	name: string;
+	state_id: string;
+}
+
+interface Pod {
+	id: string;
+	name: string;
+	district_id: string;
+}
+
+interface Site {
+	id: string;
+	name: string;
+	pod_id: string;
+}
+
+interface Group {
+	state_id: string;
+	district_id: string;
+	pod_id: string;
+	id: string;
+	name: string;
+	site_id: string;
 }
 
 export function ProjectDataTable<TData, TValue>({
@@ -60,28 +92,245 @@ export function ProjectDataTable<TData, TValue>({
 	);
 	const [columnVisibility, setColumnVisibility] =
 		React.useState<VisibilityState>({});
-	const [selectedType, setSelectedType] = useState<string>("");
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [selectedStatus, setSelectedStatus] = useState<string>("View All");
 	const [globalFilter, setGlobalFilter] = useState("");
-	const [isModalOpen, setModalOpen] = useState(false);
+	const [isCreateModalOpen, setCreateModalOpen] = useState(false);
 	const [tableData, setTableData] = useState(data);
+	const [isLoading, setIsLoading] = useState(false);
 
-	const openModal = () => setModalOpen(true);
-	const closeModal = () => setModalOpen(false);
+	// Form states for creating project
+	const [projectName, setProjectName] = useState("");
+	const [startDate, setStartDate] = useState("");
+	const [endDate, setEndDate] = useState("");
+	const [selectedGroups, setSelectedGroups] = useState<Group[]>([]);
+
+	// Location states
+	const [states, setStates] = useState<State[]>([]);
+	const [districts, setDistricts] = useState<District[]>([]);
+	const [pods, setPods] = useState<Pod[]>([]);
+	const [sites, setSites] = useState<Site[]>([]);
+	const [groups, setGroups] = useState<Group[]>([]);
+
+	const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
+	const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(
+		null
+	);
+	const [selectedPodId, setSelectedPodId] = useState<string | null>(null);
+	const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
+	const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+
+	const openCreateModal = () => setCreateModalOpen(true);
+	const closeCreateModal = () => {
+		setCreateModalOpen(false);
+		resetForm();
+	};
+
+	const resetForm = () => {
+		setProjectName("");
+		setStartDate("");
+		setEndDate("");
+		setSelectedGroups([]);
+		setSelectedStateId(null);
+		setSelectedDistrictId(null);
+		setSelectedPodId(null);
+		setSelectedSiteId(null);
+		setSelectedGroupId(null);
+	};
+
+	const fetchStates = async () => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			const response = await axios.get(
+				"https://api.wowdev.com.ng/api/v1/state",
+				{
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setStates(response.data.data);
+		} catch (error) {
+			console.error("Error fetching states:", error);
+		}
+	};
+
+	const fetchDistricts = async (stateId: string) => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/district/state/${stateId}`,
+				{
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setDistricts(response.data.data);
+		} catch (error) {
+			console.error("Error fetching districts:", error);
+		}
+	};
+
+	const fetchPods = async (districtId: string) => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/pod/district/${districtId}`,
+				{
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setPods(response.data.data);
+		} catch (error) {
+			console.error("Error fetching pods:", error);
+		}
+	};
+
+	const fetchSites = async (podId: string) => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/site/pod/${podId}`,
+				{
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setSites(response.data.data);
+		} catch (error) {
+			console.error("Error fetching sites:", error);
+		}
+	};
+
+	const fetchGroups = async (siteId: string) => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			const response = await axios.get(
+				`https://api.wowdev.com.ng/api/v1/group/site/${siteId}`,
+				{
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+			setGroups(response.data.data);
+		} catch (error) {
+			console.error("Error fetching groups:", error);
+		}
+	};
+
+	const handleAddGroup = () => {
+		if (
+			selectedGroupId &&
+			selectedStateId &&
+			selectedDistrictId &&
+			selectedPodId &&
+			selectedSiteId
+		) {
+			const groupToAdd = groups.find((g) => g.id === selectedGroupId);
+			if (groupToAdd && !selectedGroups.some((g) => g.id === groupToAdd.id)) {
+				setSelectedGroups([
+					...selectedGroups,
+					{
+						...groupToAdd,
+						state_id: selectedStateId,
+						district_id: selectedDistrictId,
+						pod_id: selectedPodId,
+						site_id: selectedSiteId,
+					},
+				]);
+			}
+		}
+	};
+
+	const handleRemoveGroup = (groupId: string) => {
+		setSelectedGroups(selectedGroups.filter((g) => g.id !== groupId));
+	};
+
+	const handleCreateProject = async () => {
+		try {
+			setIsLoading(true);
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (
+				!projectName ||
+				!startDate ||
+				!endDate ||
+				selectedGroups.length === 0
+			) {
+				toast.error("Please fill all required fields");
+				return;
+			}
+
+			const response = await axios.post(
+				"https://api.wowdev.com.ng/api/v1/project",
+				{
+					user_id: session?.backendData?.user?.id,
+					name: projectName,
+					start_date: startDate,
+					end_date: endDate,
+					groups: selectedGroups.map((g) => g.id),
+				},
+				{
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 201) {
+				toast.success("Project created successfully");
+				closeCreateModal();
+				// You might want to refresh the table data here
+			}
+		} catch (error) {
+			console.error("Error creating project:", error);
+			toast.error("Failed to create project");
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchStates();
+	}, []);
 
 	const handleStatusFilter = (status: string) => {
 		setSelectedStatus(status);
 
 		if (status === "View All") {
 			setTableData(data); // Reset to all data
-		} else {
-			const filteredData = projectData?.filter(
-				(farmer) => farmer.status?.toLocaleLowerCase() === status.toLowerCase()
-			);
-			setTableData(filteredData as TData[]);
+			return;
 		}
+
+		const filteredData = data.filter((farmer: any) => {
+			// Ensure biometricStatus exists before calling toLowerCase()
+			const farmerStatus = farmer?.status ? farmer.status.toLowerCase() : "";
+
+			return farmerStatus === status.toLowerCase();
+		});
+
+		setTableData(filteredData);
 	};
+
+	useEffect(() => {
+		handleStatusFilter(selectedStatus);
+	}, [data]);
 
 	const handleDelete = () => {
 		const selectedRowIds = Object.keys(rowSelection).filter(
@@ -93,6 +342,10 @@ export function ProjectDataTable<TData, TValue>({
 		setTableData(filteredData);
 		setRowSelection({});
 	};
+
+	useEffect(() => {
+		setTableData(data);
+	}, [data]);
 
 	const table = useReactTable({
 		data: tableData,
@@ -117,58 +370,270 @@ export function ProjectDataTable<TData, TValue>({
 
 	return (
 		<div className="rounded-lg border-[1px] py-0">
-			<Modal isOpen={isModalOpen} onClose={closeModal} title="Add Staff">
-				<div className="bg-white p-5 rounded-lg w-[600px] transition-transform ease-in-out ">
-					<hr className="mt-4 text-[#9F9E9E40]" color="#9F9E9E40" />
-					<div className="mt-3 border-t-[1px] border-[#E2E4E9] pt-2">
-						<p className="text-sm text-primary-6">Role</p>
-
-						<RadioGroup defaultValue="super-admin">
-							<div className="flex flex-row justify-between items-center gap-5">
-								<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
-									<RadioGroupItem value="admin" id="admin" />
-									<p className="text-sm text-primary-6 whitespace-nowrap">
-										Admin
-									</p>
+			{/* Create Project Modal */}
+			<Modal
+				isOpen={isCreateModalOpen}
+				onClose={closeCreateModal}
+				title="Create New Project">
+				<div className="bg-white py-5 rounded-lg w-[600px] transition-transform ease-in-out">
+					{/* Basic Information Section */}
+					<div className="mb-6">
+						<h3 className="text-sm font-semibold text-gray-800 mb-4">
+							Basic Information
+						</h3>
+						<div className="space-y-4">
+							<div>
+								<label className="block text-xs text-gray-600 mb-1">
+									Project Name *
+								</label>
+								<Input
+									type="text"
+									value={projectName}
+									onChange={(e) => setProjectName(e.target.value)}
+									className="w-full"
+									placeholder="Enter project name"
+								/>
+							</div>
+							<div className="flex gap-4">
+								<div className="flex-1">
+									<label className="block text-xs text-gray-600 mb-1">
+										Start Date *
+									</label>
+									<Input
+										type="date"
+										value={startDate}
+										onChange={(e) => setStartDate(e.target.value)}
+										className="w-full"
+									/>
 								</div>
-								<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
-									<RadioGroupItem value="super-admin" id="super-admin" />
-									<p className="text-sm text-primary-6 whitespace-nowrap">
-										Super Admin
-									</p>
-								</div>
-								<div className="flex flex-row justify-start items-center gap-2 shadow-md p-2 rounded-lg">
-									<RadioGroupItem value="field" id="field" />
-									<p className="text-sm text-primary-6 whitespace-nowrap">
-										Field
-									</p>
+								<div className="flex-1">
+									<label className="block text-xs text-gray-600 mb-1">
+										End Date *
+									</label>
+									<Input
+										type="date"
+										value={endDate}
+										onChange={(e) => setEndDate(e.target.value)}
+										className="w-full"
+									/>
 								</div>
 							</div>
-						</RadioGroup>
+						</div>
+					</div>
 
-						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
-						<div className="flex flex-col gap-2">
-							<p className="text-xs text-primary-6">First Name</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
-							<p className="text-xs text-primary-6 mt-2">Last Name</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
-							<p className="text-xs text-primary-6 mt-2">Email Address</p>
-							<Input type="text" className="focus:border-none mt-2 h-5" />
+					{/* Assign to Farmers Section */}
+					<div className="mb-6 mt-4">
+						<h3 className="text-sm font-semibold text-gray-800 mb-4">
+							Assign Project to farmers *
+						</h3>
+
+						{/* Location Selectors */}
+						<div className="space-y-4">
+							<div className="flex gap-4">
+								<div className="flex-1">
+									<label className="block text-xs text-gray-600 mb-1">
+										State
+									</label>
+									<Select
+										value={selectedStateId || ""}
+										onValueChange={(value) => {
+											setSelectedStateId(value);
+											setSelectedDistrictId(null);
+											setSelectedPodId(null);
+											setSelectedSiteId(null);
+											setSelectedGroupId(null);
+											fetchDistricts(value);
+										}}>
+										<SelectTrigger className="w-full">
+											<SelectValue placeholder="Select State" />
+										</SelectTrigger>
+										<SelectContent className="z-200 post bg-white">
+											{states.map((state) => (
+												<SelectItem key={state.id} value={state.id}>
+													{state.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+								<div className="flex-1">
+									<label className="block text-xs text-gray-600 mb-1">
+										District Name
+									</label>
+									<Select
+										value={selectedDistrictId || ""}
+										onValueChange={(value) => {
+											setSelectedDistrictId(value);
+											setSelectedPodId(null);
+											setSelectedSiteId(null);
+											setSelectedGroupId(null);
+											fetchPods(value);
+										}}
+										disabled={!selectedStateId}>
+										<SelectTrigger className="w-full">
+											<SelectValue placeholder="Select District" />
+										</SelectTrigger>
+										<SelectContent className="z-200 post bg-white">
+											{districts.map((district) => (
+												<SelectItem key={district.id} value={district.id}>
+													{district.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+							</div>
+
+							<div className="flex gap-4">
+								<div className="flex-1">
+									<label className="block text-xs text-gray-600 mb-1">
+										POD/Sector
+									</label>
+									<Select
+										value={selectedPodId || ""}
+										onValueChange={(value) => {
+											setSelectedPodId(value);
+											setSelectedSiteId(null);
+											setSelectedGroupId(null);
+											fetchSites(value);
+										}}
+										disabled={!selectedDistrictId}>
+										<SelectTrigger className="w-full">
+											<SelectValue placeholder="Select POD" />
+										</SelectTrigger>
+										<SelectContent className="z-200 post bg-white">
+											{pods.map((pod) => (
+												<SelectItem key={pod.id} value={pod.id}>
+													{pod.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+								<div className="flex-1">
+									<label className="block text-xs text-gray-600 mb-1">
+										Site Name
+									</label>
+									<Select
+										value={selectedSiteId || ""}
+										onValueChange={(value) => {
+											setSelectedSiteId(value);
+											setSelectedGroupId(null);
+											fetchGroups(value);
+										}}
+										disabled={!selectedPodId}>
+										<SelectTrigger className="w-full">
+											<SelectValue placeholder="Select Site" />
+										</SelectTrigger>
+										<SelectContent className="z-200 post bg-white">
+											{sites.map((site) => (
+												<SelectItem key={site.id} value={site.id}>
+													{site.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+							</div>
+
+							<div>
+								<label className="block text-xs text-gray-600 mb-1">
+									Group Name
+								</label>
+								<div className="flex gap-2">
+									<Select
+										value={selectedGroupId || ""}
+										onValueChange={(value) => setSelectedGroupId(value)}
+										disabled={!selectedSiteId}>
+										<SelectTrigger className="w-full">
+											<SelectValue placeholder="Select Group" />
+										</SelectTrigger>
+										<SelectContent className="z-200 post bg-white">
+											{groups.map((group) => (
+												<SelectItem key={group.id} value={group.id}>
+													{group.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+									<Button
+										onClick={handleAddGroup}
+										disabled={!selectedGroupId}
+										className="bg-primary-1 text-white">
+										+ Add
+									</Button>
+								</div>
+							</div>
 						</div>
-						<hr className="mt-4 mb-4 text-[#9F9E9E40]" color="#9F9E9E40" />
-						<div className="flex flex-row justify-end items-center gap-3 font-inter">
-							<Button
-								className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
-								onClick={closeModal}>
-								Cancel
-							</Button>
-							<Button className="bg-primary-1 text-white font-inter text-xs">
-								Add
-							</Button>
+
+						{/* Selected Groups List */}
+						<div className="mt-4 space-y-2">
+							{selectedGroups.map((group) => (
+								<div
+									key={group.id}
+									className="flex justify-between items-center p-2 bg-gray-50 rounded">
+									<div className="text-xs">
+										<span className="text-[#6B7280]">
+											State:{" "}
+											{states.find((s) => s.id === group.state_id)?.name ||
+												group.state_id}
+										</span>{" "}
+										<span>
+											District:{" "}
+											{districts.find((d) => d.id === group.district_id)
+												?.name || group.district_id}
+										</span>{" "}
+										<span className="text-[#6B7280]">
+											POD/Sector:{" "}
+											{pods.find((p) => p.id === group.pod_id)?.name ||
+												group.pod_id}
+										</span>{" "}
+										<span>
+											Site:{" "}
+											{sites.find((s) => s.id === group.site_id)?.name ||
+												group.site_id}
+										</span>{" "}
+										<span className="text-[#6B7280]">
+											Group name: {group.name}
+										</span>
+									</div>
+									<Button
+										variant="ghost"
+										size="sm"
+										onClick={() => handleRemoveGroup(group.id)}
+										className="text-red-500 hover:text-red-700">
+										<IconCircleX color="red" />
+									</Button>
+								</div>
+							))}
 						</div>
+					</div>
+
+					{/* Modal Footer */}
+					<div className="flex justify-end gap-3 pt-4  border-gray-200">
+						<Button
+							variant="outline"
+							onClick={closeCreateModal}
+							className="text-gray-600 border-gray-300">
+							Cancel
+						</Button>
+						<Button
+							onClick={handleCreateProject}
+							disabled={
+								isLoading ||
+								!projectName ||
+								!startDate ||
+								!endDate ||
+								selectedGroups.length === 0
+							}
+							className="bg-primary-1 text-white">
+							{isLoading ? "Creating..." : "Create Project"}
+						</Button>
 					</div>
 				</div>
 			</Modal>
+
+			{/* Rest of your table component */}
 			<div
 				className="bg-white flex flex-row border-b-[1px] border-[#E2E4E9] justify-between items-center p-3"
 				style={{
@@ -195,7 +660,7 @@ export function ProjectDataTable<TData, TValue>({
 				<div className="flex flex-row justify-start items-center gap-3 font-inter">
 					<Button
 						className="bg-primary-1 text-white font-inter"
-						onClick={openModal}>
+						onClick={openCreateModal}>
 						<IconPlus /> Create Project
 					</Button>
 				</div>
@@ -203,7 +668,7 @@ export function ProjectDataTable<TData, TValue>({
 
 			<div className="p-3 flex flex-row justify-between border-b-[1px] border-[#E2E4E9] bg-white items-center gap-20 max-w-full">
 				<div className="flex flex-row justify-center bg-white items-center rounded-lg mx-auto special-btn-farmer pr-2">
-					{["View All", "Ongoing", "Yet to Start", "Close"].map(
+					{["View All", "Open", "Yet to Start", "Close"].map(
 						(status, index, arr) => (
 							<p
 								key={status}

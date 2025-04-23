@@ -61,7 +61,6 @@ export function PostingDataTable<TData, TValue>({
 	);
 	const [columnVisibility, setColumnVisibility] =
 		React.useState<VisibilityState>({});
-	const [selectedType, setSelectedType] = useState<string>("");
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [isModalOpen, setModalOpen] = useState(false);
@@ -151,6 +150,7 @@ export function PostingDataTable<TData, TValue>({
 			}
 		}
 	};
+	
 
 	const table = useReactTable({
 		data: tableData,
