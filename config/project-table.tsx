@@ -32,7 +32,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { IconCircleX, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconCircleX, IconPlus } from "@tabler/icons-react";
 import axios from "axios";
 import {
 	ChevronLeft,
@@ -293,7 +293,7 @@ export function ProjectDataTable<TData, TValue>({
 				}
 			);
 
-			if (response.status === 201) {
+			if (response.status === 200) {
 				toast.success("Project created successfully");
 				closeCreateModal();
 				// You might want to refresh the table data here
@@ -331,17 +331,6 @@ export function ProjectDataTable<TData, TValue>({
 	useEffect(() => {
 		handleStatusFilter(selectedStatus);
 	}, [data]);
-
-	const handleDelete = () => {
-		const selectedRowIds = Object.keys(rowSelection).filter(
-			(key) => rowSelection[key]
-		);
-		const filteredData = tableData.filter(
-			(_, index) => !selectedRowIds.includes(index.toString())
-		);
-		setTableData(filteredData);
-		setRowSelection({});
-	};
 
 	useEffect(() => {
 		setTableData(data);
@@ -668,7 +657,7 @@ export function ProjectDataTable<TData, TValue>({
 
 			<div className="p-3 flex flex-row justify-between border-b-[1px] border-[#E2E4E9] bg-white items-center gap-20 max-w-full">
 				<div className="flex flex-row justify-center bg-white items-center rounded-lg mx-auto special-btn-farmer pr-2">
-					{["View All", "Open", "Yet to Start", "Close"].map(
+					{["View All", "Open", "Yet to Open", "Close"].map(
 						(status, index, arr) => (
 							<p
 								key={status}
@@ -693,11 +682,6 @@ export function ProjectDataTable<TData, TValue>({
 						onChange={(e) => setGlobalFilter(e.target.value)}
 						className="focus:border-none bg-[#F9FAFB]"
 					/>
-					<Button
-						className="border-[#E8E8E8] border-[1px] bg-white"
-						onClick={handleDelete}>
-						<IconTrash /> Delete
-					</Button>
 				</div>
 			</div>
 

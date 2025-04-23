@@ -14,7 +14,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { IconEdit } from "@tabler/icons-react";
+import { IconCircleX, IconEdit } from "@tabler/icons-react";
 import axios from "axios";
 import { getSession } from "next-auth/react";
 import Link from "next/link";
@@ -27,7 +27,7 @@ export type Project = {
 	name: string;
 	start_date: string;
 	end_date: string;
-	status: "open" | "ongoing" | "closed";
+	status: "open" | "yet_to_open" | "closed";
 	user_id: string;
 	groups: {
 		id: string;
@@ -269,7 +269,7 @@ const ProjectTable = () => {
 			const session = await getSession();
 			const accessToken = session?.backendData?.token;
 
-			const response = await axios.put(
+			const response = await axios.post(
 				`https://api.wowdev.com.ng/api/v1/project/${selectedRow.id}`,
 				{
 					name: projectName,
@@ -727,7 +727,7 @@ const ProjectTable = () => {
 										key={group.id}
 										className="flex justify-between items-center p-2 bg-gray-50 rounded">
 										<div className="text-xs">
-											<span>
+											<span className="text-[#6B7280]">
 												State:{" "}
 												{states.find((s) => s.id === group.state_id)?.name ||
 													group.state_id}
@@ -737,7 +737,7 @@ const ProjectTable = () => {
 												{districts.find((d) => d.id === group.district_id)
 													?.name || group.district_id}
 											</span>{" "}
-											<span>
+											<span className="text-[#6B7280]">
 												POD/Sector:{" "}
 												{pods.find((p) => p.id === group.pod_id)?.name ||
 													group.pod_id}
@@ -747,14 +747,16 @@ const ProjectTable = () => {
 												{sites.find((s) => s.id === group.site_id)?.name ||
 													group.site_id}
 											</span>{" "}
-											<span>Group name: {group.name}</span>
+											<span className="text-[#6B7280]">
+												Group name: {group.name}
+											</span>
 										</div>
 										<Button
 											variant="ghost"
 											size="sm"
 											onClick={() => handleRemoveGroup(group.id)}
 											className="text-red-500 hover:text-red-700">
-											Remove
+											<IconCircleX color="red" />
 										</Button>
 									</div>
 								))}
