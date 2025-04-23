@@ -126,7 +126,7 @@ const ProjectTable = () => {
 
 	const openOpenModal = (row: any) => {
 		setSelectedRow(row.original);
-		setCloseModalOpen(true);
+		setOpenModalOpen(true); // Fixed this line
 	};
 
 	const closeOpenModal = () => {
@@ -335,8 +335,8 @@ const ProjectTable = () => {
 	const openProject = async (id: string) => {
 		try {
 			const session = await getSession();
-
 			const accessToken = session?.backendData?.token;
+
 			if (!accessToken) {
 				console.error("No access token found.");
 				setIsLoading(false);
@@ -345,7 +345,9 @@ const ProjectTable = () => {
 
 			const response = await axios.patch(
 				`https://api.wowdev.com.ng/api/v1/project/open/${id}`,
+				{}, // Empty body if no data needs to be sent
 				{
+					// Headers as a separate object
 					headers: {
 						Accept: "application/json",
 						Authorization: `Bearer ${accessToken}`,
@@ -354,9 +356,7 @@ const ProjectTable = () => {
 			);
 
 			if (response.status === 200) {
-				setTableData((prevData) =>
-					prevData.filter((project) => project.id !== id)
-				);
+				await fetchProjects();
 				toast.success("Project Opened successfully.");
 				closeOpenModal();
 			}
@@ -379,7 +379,9 @@ const ProjectTable = () => {
 
 			const response = await axios.patch(
 				`https://api.wowdev.com.ng/api/v1/project/close/${id}`,
+				{}, // Empty body if no data needs to be sent
 				{
+					// Headers as a separate object
 					headers: {
 						Accept: "application/json",
 						Authorization: `Bearer ${accessToken}`,
@@ -388,9 +390,7 @@ const ProjectTable = () => {
 			);
 
 			if (response.status === 200) {
-				setTableData((prevData) =>
-					prevData.filter((project) => project.id !== id)
-				);
+				await fetchProjects();
 				toast.success("Project closed successfully.");
 				closeCloseModal();
 			}
