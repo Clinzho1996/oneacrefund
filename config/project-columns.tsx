@@ -14,7 +14,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { IconCircleX, IconEdit } from "@tabler/icons-react";
+import { IconCircleX, IconEdit, IconTrash } from "@tabler/icons-react";
 import axios from "axios";
 import { getSession } from "next-auth/react";
 import Link from "next/link";
@@ -76,6 +76,8 @@ interface Group {
 const ProjectTable = () => {
 	const [isEditModalOpen, setEditModalOpen] = useState(false);
 	const [isOpenModalOpen, setOpenModalOpen] = useState(false);
+
+	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [isCloseModalOpen, setCloseModalOpen] = useState(false);
 	const [selectedRow, setSelectedRow] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -135,6 +137,15 @@ const ProjectTable = () => {
 
 	const closeCloseModal = () => {
 		setCloseModalOpen(false);
+	};
+
+	const openDeleteModal = (row: any) => {
+		setSelectedRow(row.original);
+		setDeleteModalOpen(true);
+	};
+
+	const closeDeleteModal = () => {
+		setDeleteModalOpen(false);
 	};
 
 	useEffect(() => {
@@ -332,6 +343,38 @@ const ProjectTable = () => {
 		}
 	};
 
+	const deleteProject = async (id: string) => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			if (!accessToken) {
+				console.error("No access token found.");
+				return;
+			}
+
+			const response = await axios.delete(
+				`https://api.wowdev.com.ng/api/v1/project/${id}`,
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			if (response.status === 200) {
+				// Remove the deleted farmer from the table
+				setTableData((prevData) =>
+					prevData.filter((farmer) => farmer.id !== id)
+				);
+
+				toast.success("Project deleted successfully.");
+			}
+		} catch (error) {
+			console.error("Error deleting project:", error);
+		}
+	};
 	const openProject = async (id: string) => {
 		try {
 			const session = await getSession();
@@ -520,6 +563,12 @@ const ProjectTable = () => {
 							className="border-[#E8E8E8] border-[1px] text-sm font-medium text-[#6B7280] font-inter"
 							onClick={() => openEditModal(row)}>
 							<IconEdit />
+						</Button>
+
+						<Button
+							className="border-[#E8E8E8] border-[1px] text-sm font-medium text-[#6B7280] font-inter"
+							onClick={() => openDeleteModal(row)}>
+							<IconTrash />
 						</Button>
 					</div>
 				);
@@ -833,6 +882,31 @@ const ProjectTable = () => {
 								if (selectedRow) {
 									closeProject(selectedRow.id);
 								}
+							}}>
+							Yes, Confirm
+						</Button>
+					</div>
+				</Modal>
+			)}
+
+			{isDeleteModalOpen && (
+				<Modal onClose={closeDeleteModal} isOpen={isDeleteModalOpen}>
+					<p className="mt-4">
+						Are you sure you want to delete {selectedRow?.name}'s project?
+					</p>
+
+					<p className="text-sm text-primary-6">This can't be undone</p>
+					<div className="flex flex-row justify-end items-center gap-3 font-inter mt-4">
+						<Button
+							className="border-[#E8E8E8] border-[1px] text-primary-6 text-xs"
+							onClick={closeDeleteModal}>
+							Cancel
+						</Button>
+						<Button
+							className="bg-[#F04F4A] text-white font-inter text-xs modal-delete"
+							onClick={async () => {
+								await deleteProject(selectedRow.id);
+								closeDeleteModal();
 							}}>
 							Yes, Confirm
 						</Button>
