@@ -313,19 +313,24 @@ export function ProjectDataTable<TData, TValue>({
 	const handleStatusFilter = (status: string) => {
 		setSelectedStatus(status);
 
-		if (status === "View All") {
+		// Map UI status to API status values
+		const statusMap: Record<string, string | null> = {
+			"View All": null,
+			Open: "open",
+			"Yet to Open": "yet_to_open", // This was likely the issue
+			Closed: "closed",
+		};
+
+		const apiStatus = statusMap[status];
+
+		if (apiStatus === null) {
 			setTableData(data); // Reset to all data
-			return;
+		} else {
+			const filteredData = data.filter(
+				(project: any) => project.status === apiStatus
+			);
+			setTableData(filteredData);
 		}
-
-		const filteredData = data.filter((farmer: any) => {
-			// Ensure biometricStatus exists before calling toLowerCase()
-			const farmerStatus = farmer?.status ? farmer.status.toLowerCase() : "";
-
-			return farmerStatus === status.toLowerCase();
-		});
-
-		setTableData(filteredData);
 	};
 
 	useEffect(() => {
@@ -657,7 +662,7 @@ export function ProjectDataTable<TData, TValue>({
 
 			<div className="p-3 flex flex-row justify-between border-b-[1px] border-[#E2E4E9] bg-white items-center gap-20 max-w-full">
 				<div className="flex flex-row justify-center bg-white items-center rounded-lg mx-auto special-btn-farmer pr-2">
-					{["View All", "Open", "Yet to Open", "Close"].map(
+					{["View All", "Open", "Yet to Open", "Closed"].map(
 						(status, index, arr) => (
 							<p
 								key={status}

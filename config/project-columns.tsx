@@ -468,16 +468,23 @@ const ProjectTable = () => {
 			},
 			cell: ({ row }) => {
 				const status = row.getValue<string>("status");
+				const statusDisplay =
+					{
+						open: "Open",
+						yet_to_open: "Yet to Open",
+						closed: "Closed",
+					}[status] || status;
+
 				return (
 					<div
 						className={`status ${
 							status === "open"
 								? "green"
-								: status === "pending"
+								: status === "yet_to_open"
 								? "yellow"
 								: "red"
 						}`}>
-						{status}
+						{statusDisplay}
 					</div>
 				);
 			},
