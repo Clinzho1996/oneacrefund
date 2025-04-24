@@ -231,9 +231,23 @@ export function ProjectDetailsDataTable<TData, TValue>({
 							height={20}
 							width={250}
 						/>
-						<span className="capitalize status-inner green">
-							{projectDetails?.status}
-						</span>
+						{projectDetails?.status === "open" && (
+							<span className="capitalize status-inner green">
+								{projectDetails?.status}
+							</span>
+						)}
+
+						{projectDetails?.status === "closed" && (
+							<span className="capitalize status-inner red">
+								{projectDetails?.status}
+							</span>
+						)}
+
+						{projectDetails?.status === "yet_to_open" && (
+							<span className="capitalize status-inner yellow">
+								{projectDetails?.status}
+							</span>
+						)}
 					</div>
 				</div>
 			</div>
