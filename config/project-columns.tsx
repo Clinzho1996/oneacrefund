@@ -540,7 +540,7 @@ const ProjectTable = () => {
 
 				return (
 					<div className="flex flex-row justify-start items-center gap-5">
-						<Link href={`/projects/${project.id}`} target="_blank">
+						<Link href={`/project-management/${project.id}`}>
 							<Button className="border-[#E8E8E8] border-[1px] text-xs font-medium text-[#6B7280] font-inter">
 								View Verification
 							</Button>
