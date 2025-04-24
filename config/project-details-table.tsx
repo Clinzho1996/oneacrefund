@@ -205,7 +205,7 @@ export function ProjectDetailsDataTable<TData, TValue>({
 					borderTopLeftRadius: "0.5rem",
 					borderTopRightRadius: "0.5rem",
 				}}>
-				<div className="flex flex-row justify-between items-center w-full">
+				<div className="flex flex-col sm:flex-row justify-between items-center w-full">
 					<div className="flex flex-row justify-start items-center gap-2">
 						<Image
 							src="/images/proj2.png"
