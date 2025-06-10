@@ -264,10 +264,6 @@ export function FarmerDataTable<TData, TValue>({
 		}
 	};
 
-	useEffect(() => {
-		fetchStates();
-	}, []);
-
 	const handleExport = () => {
 		// Convert the table data to a worksheet
 		const worksheet = XLSX.utils.json_to_sheet(tableData);
@@ -587,8 +583,16 @@ export function FarmerDataTable<TData, TValue>({
 		setUploadProgress(0);
 	};
 
+	useEffect(() => {
+		fetchStates();
+	}, []);
+
 	const handleImportSubmit = async () => {
 		if (!selectedFile) return;
+		if (!selectedStateId) {
+			toast.error("Please select a state");
+			return;
+		}
 
 		setIsImporting(true);
 		setUploadProgress(0);
@@ -603,6 +607,7 @@ export function FarmerDataTable<TData, TValue>({
 
 			const formData = new FormData();
 			formData.append("csv_file", selectedFile);
+			formData.append("state_id", selectedStateId);
 
 			const response = await axios.post(
 				"https://api.wowdev.com.ng/api/v1/farmer/import/data/extended",
@@ -628,7 +633,6 @@ export function FarmerDataTable<TData, TValue>({
 			fetchFarmers(); // Refresh the farmer list
 		} catch (error) {
 			if (axios.isAxiosError(error)) {
-				// Corrected error message access
 				if (error.response && error.response.data) {
 					toast.error(error?.response?.data?.message);
 					console.log("Error response:", error.response.data);
@@ -929,6 +933,25 @@ export function FarmerDataTable<TData, TValue>({
 				title="Import Farmer">
 				<div className="bg-white py-1 rounded-lg import-farmer transition-transform ease-in-out max-h-[70vh] overflow-y-auto">
 					<div className="mt-3 border-[1px] border-dashed border-[#E2E4E9] pt-4 px-4">
+						{/* State Selection */}
+						<div className="w-full mb-4">
+							<p className="text-xs text-primary-6 mt-2 font-inter">State</p>
+							<Select
+								value={selectedStateId || ""}
+								onValueChange={(value) => setSelectedStateId(value)}>
+								<SelectTrigger className="w-full mt-2">
+									<SelectValue placeholder="Select State" />
+								</SelectTrigger>
+								<SelectContent className="z-200 post bg-white">
+									{states.map((state) => (
+										<SelectItem key={state.id} value={state.id}>
+											{state.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+
 						{/* File Upload Section */}
 						<div className="flex flex-col justify-center items-center gap-3 p-6 border-dashed border-2 border-gray-300 rounded-lg mb-4">
 							{!selectedFile ? (
@@ -1048,7 +1071,7 @@ export function FarmerDataTable<TData, TValue>({
 							<Button
 								className="bg-primary-1 text-white font-inter text-xs"
 								onClick={handleImportSubmit}
-								disabled={!selectedFile || isImporting}>
+								disabled={!selectedFile || !selectedStateId || isImporting}>
 								{isImporting ? "Importing..." : "Import"}
 							</Button>
 						</div>
