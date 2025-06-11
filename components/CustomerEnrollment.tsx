@@ -8,7 +8,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import Image from "next/image";
-import { CartesianGrid, Line, LineChart, XAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import {
 	ChartConfig,
@@ -171,7 +171,7 @@ function CustomerEnrollment() {
 					<div className="py-3 h-fit">
 						<ChartContainer config={chartConfig}>
 							<LineChart
-								height={200}
+								height={150}
 								accessibilityLayer
 								data={chartData}
 								margin={{
@@ -187,6 +187,11 @@ function CustomerEnrollment() {
 									axisLine={false}
 									tickMargin={1}
 									tickFormatter={(value) => value.slice(0, 3)}
+								/>
+								<YAxis
+									domain={[0, "dataMax + 50000"]} // This ensures the chart includes all data with small padding
+									tickLine={false}
+									axisLine={false}
 								/>
 								<ChartTooltip
 									cursor={{ stroke: "#ccc", strokeWidth: 1 }}
@@ -218,8 +223,8 @@ function CustomerEnrollment() {
 															{staff}
 														</p>
 														<div className="flex flex-row justify-start items-center gap-1">
-															<IconRectangleFilled size={10} color="#6E3FF3" />
-															<p className="text-primary-6">Total Staffs</p>
+															<IconRectangleFilled size={10} color="#FFA116" />
+															<p className="text-primary-6">Total Staff</p>
 														</div>
 													</div>
 												</div>
@@ -232,14 +237,14 @@ function CustomerEnrollment() {
 									type="monotone"
 									stroke="#09A609"
 									strokeWidth={2}
-									dot={true}
+									dot={false}
 								/>
 								<Line
 									dataKey="totalStaff"
 									type="monotone"
-									stroke="#6E3FF3"
+									stroke="#FFA116"
 									strokeWidth={2}
-									dot={true}
+									dot={false}
 								/>
 							</LineChart>
 						</ChartContainer>
