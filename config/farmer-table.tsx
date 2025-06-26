@@ -50,6 +50,7 @@ import {
 } from "lucide-react";
 import { getSession } from "next-auth/react";
 import Image from "next/image";
+import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { toast } from "react-toastify";
@@ -932,6 +933,14 @@ export function FarmerDataTable<TData, TValue>({
 				onClose={closeImportModal}
 				title="Import Farmer">
 				<div className="bg-white py-1 rounded-lg import-farmer transition-transform ease-in-out max-h-[70vh] overflow-y-auto">
+					<div className="flex flex-row items-center justify-end gap-4 p-4">
+						<Link href="/temp.xlsx">
+							<Button className="bg-primary-1 text-white">
+								<IconCloudDownload />
+								Download Template
+							</Button>
+						</Link>
+					</div>
 					<div className="mt-3 border-[1px] border-dashed border-[#E2E4E9] pt-4 px-4">
 						{/* State Selection */}
 						<div className="w-full mb-4">
