@@ -1,7 +1,12 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import {
+	ArrowUpDown,
+	ChevronLeft,
+	ChevronRight,
+	MoreHorizontal,
+} from "lucide-react";
 
 import Loader from "@/components/Loader";
 import Modal from "@/components/Modal";
@@ -139,6 +144,14 @@ const FarmerTable = () => {
 	const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(
 		null
 	);
+	const [pagination, setPagination] = useState({
+		currentPage: 1,
+		totalItems: 0,
+		lastPage: 1,
+		pageSize: 10,
+		hasNextPage: false,
+		hasPrevPage: false,
+	});
 	const [selectedPodId, setSelectedPodId] = useState<string | null>(null);
 	const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
 	const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
@@ -448,6 +461,14 @@ const FarmerTable = () => {
 			console.log("Mapped Data:", mappedData);
 
 			setTableData(mappedData);
+			setPagination({
+				currentPage: paginationData.current_page,
+				totalItems: paginationData.total,
+				lastPage: Math.ceil(paginationData.total / pageSize),
+				pageSize,
+				hasNextPage: !!paginationData.next_page_url,
+				hasPrevPage: !!paginationData.prev_page_url,
+			});
 			return {
 				data: mappedData,
 				pagination: {
@@ -514,6 +535,23 @@ const FarmerTable = () => {
 		}
 	};
 
+	useEffect(() => {
+		fetchFarmers(pagination.currentPage, pagination.pageSize);
+	}, [pagination.currentPage, pagination.pageSize]);
+
+	const handlePageChange = (newPage: number) => {
+		if (newPage >= 1 && newPage <= pagination.lastPage) {
+			setPagination((prev) => ({ ...prev, currentPage: newPage }));
+		}
+	};
+
+	const handlePageSizeChange = (newSize: number) => {
+		setPagination((prev) => ({
+			...prev,
+			pageSize: newSize,
+			currentPage: 1, // Reset to first page when changing page size
+		}));
+	};
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0] || null;
 		setFeaturedImage(file);
@@ -773,6 +811,50 @@ const FarmerTable = () => {
 			) : (
 				<FarmerDataTable columns={columns} data={tableData} />
 			)}
+
+			{/* Pagination Controls */}
+			<div className="flex items-center justify-between px-2 py-4">
+				<div className="flex items-center space-x-2 gap-3">
+					<p className="text-sm font-medium">Rows per page</p>
+					<Select
+						value={`${pagination.pageSize}`}
+						onValueChange={(value) => handlePageSizeChange(Number(value))}>
+						<SelectTrigger className="h-8 w-[70px] bg-white border border-[#E8E8E8]">
+							<SelectValue placeholder={pagination.pageSize} />
+						</SelectTrigger>
+						<SelectContent side="top" className="z-200 post bg-white">
+							{[10, 20, 30, 40, 50].map((pageSize) => (
+								<SelectItem key={pageSize} value={`${pageSize}`}>
+									{pageSize}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</div>
+				<div className="flex items-center space-x-6 lg:space-x-8 gap-3">
+					<div className="flex w-[100px] items-center justify-center text-sm font-medium">
+						Page {pagination.currentPage} of {pagination.lastPage}
+					</div>
+					<div className="flex items-center space-x-2 gap-2">
+						<Button
+							variant="outline"
+							className="h-8 w-8 p-0 bg-white"
+							onClick={() => handlePageChange(pagination.currentPage - 1)}
+							disabled={!pagination.hasPrevPage}>
+							<span className="sr-only">Go to previous page</span>
+							<ChevronLeft className="h-4 w-4" />
+						</Button>
+						<Button
+							variant="outline"
+							className="h-8 w-8 p-0 bg-white"
+							onClick={() => handlePageChange(pagination.currentPage + 1)}
+							disabled={!pagination.hasNextPage}>
+							<span className="sr-only">Go to next page</span>
+							<ChevronRight className="h-4 w-4" />
+						</Button>
+					</div>
+				</div>
+			</div>
 
 			{isEditModalOpen && (
 				<Modal
