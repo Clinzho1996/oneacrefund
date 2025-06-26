@@ -445,6 +445,9 @@ const FarmerTable = () => {
 						: "none",
 			}));
 
+			console.log("Mapped Data:", mappedData);
+
+			setTableData(mappedData);
 			return {
 				data: mappedData,
 				pagination: {
