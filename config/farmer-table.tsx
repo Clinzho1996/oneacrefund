@@ -454,12 +454,11 @@ export function FarmerDataTable<TData, TValue>({
 		setSelectedStatus(status);
 
 		if (status === "View All") {
-			setTableData(data); // Reset to all data
+			setTableData(data);
 			return;
 		}
 
 		const filteredData = data.filter((farmer: any) => {
-			// Ensure biometricStatus exists before calling toLowerCase()
 			const farmerStatus = farmer?.biometricStatus
 				? farmer.biometricStatus.toLowerCase()
 				: "";
@@ -475,7 +474,7 @@ export function FarmerDataTable<TData, TValue>({
 	}, [data]);
 
 	useEffect(() => {
-		setTableData(data); // Sync `tableData` with `data` prop
+		setTableData(data);
 	}, [data]);
 
 	const handleDelete = () => {

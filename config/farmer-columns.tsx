@@ -372,14 +372,12 @@ const FarmerTable = () => {
 		setDeleteModalOpen(false);
 	};
 
-	const fetchFarmers = async () => {
+	const fetchFarmers = async (page: number = 1, pageSize: number = 10) => {
 		try {
 			setIsLoading(true);
 			const session = await getSession();
-
-			console.log("session", session);
-
 			const accessToken = session?.backendData?.token;
+
 			if (!accessToken) {
 				console.error("No access token found.");
 				setIsLoading(false);
@@ -387,21 +385,31 @@ const FarmerTable = () => {
 			}
 
 			const response = await axios.get<{
-				status: string;
-				message: string;
 				data: Farmer[];
+				pagination: {
+					current_page: number;
+					total: number;
+					next_page_url: string | null;
+					prev_page_url: string | null;
+				};
 			}>("https://api.wowdev.com.ng/api/v1/farmer", {
 				headers: {
 					Accept: "application/json",
 					Authorization: `Bearer ${accessToken}`,
 				},
+				params: {
+					page,
+					per_page: pageSize,
+				},
 			});
 
 			const fetchedData = response.data.data;
+			const paginationData = response.data.pagination;
 
+			console.log("API Response:", response.data);
 			console.log("Farmer Data:", fetchedData);
+			console.log("Pagination Data:", paginationData);
 
-			// Map the API response to match the `Farmer` type
 			const mappedData = fetchedData.map((item) => ({
 				id: item.id,
 				oaf_id: item.oaf_id,
@@ -437,10 +445,30 @@ const FarmerTable = () => {
 						: "none",
 			}));
 
-			console.log("Mapped Data:", mappedData);
-			setTableData(mappedData);
+			return {
+				data: mappedData,
+				pagination: {
+					currentPage: paginationData.current_page,
+					totalItems: paginationData.total,
+					lastPage: Math.ceil(paginationData.total / pageSize),
+					pageSize,
+					hasNextPage: !!paginationData.next_page_url,
+					hasPrevPage: !!paginationData.prev_page_url,
+				},
+			};
 		} catch (error) {
 			console.error("Error fetching farmer data:", error);
+			return {
+				data: [],
+				pagination: {
+					currentPage: 1,
+					totalItems: 0,
+					lastPage: 1,
+					pageSize: 10,
+					hasNextPage: false,
+					hasPrevPage: false,
+				},
+			};
 		} finally {
 			setIsLoading(false);
 		}
