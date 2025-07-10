@@ -780,31 +780,31 @@ const ProjectTable = () => {
 							<div className="mt-4 space-y-2">
 								{selectedGroups.map((group) => (
 									<div
-										key={group.id}
+										key={group?.id}
 										className="flex justify-between items-center p-2 bg-gray-50 rounded">
 										<div className="text-xs">
 											<span className="text-[#6B7280]">
 												State:{" "}
-												{states.find((s) => s.id === group.state_id)?.name ||
-													group.state_id}
+												{states?.find((s) => s.id === group?.state_id)?.name ||
+													group?.state_id}
 											</span>{" "}
 											<span>
 												District:{" "}
-												{districts.find((d) => d.id === group.district_id)
-													?.name || group.district_id}
+												{districts?.find((d) => d.id === group?.district_id)
+													?.name || group?.district_id}
 											</span>{" "}
 											<span className="text-[#6B7280]">
 												POD/Sector:{" "}
-												{pods.find((p) => p.id === group.pod_id)?.name ||
-													group.pod_id}
+												{pods?.find((p) => p.id === group?.pod_id)?.name ||
+													group?.pod_id}
 											</span>{" "}
 											<span>
 												Site:{" "}
-												{sites.find((s) => s.id === group.site_id)?.name ||
-													group.site_id}
+												{sites?.find((s) => s.id === group?.site_id)?.name ||
+													group?.site_id}
 											</span>{" "}
 											<span className="text-[#6B7280]">
-												Group name: {group.name}
+												Group name: {group?.name}
 											</span>
 										</div>
 										<Button

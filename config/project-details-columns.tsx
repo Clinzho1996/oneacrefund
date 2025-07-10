@@ -1,6 +1,6 @@
 "use client";
 
-import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
+import { ColumnDef } from "@tanstack/react-table";
 import { useParams } from "next/navigation";
 
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,7 +15,8 @@ export type Farmer = {
 	id: string;
 	first_name: string;
 	last_name: string;
-	created_at: string;
+	created_at: string | null;
+	validated: boolean;
 };
 
 type ProjectDetails = {
@@ -26,8 +27,8 @@ type ProjectDetails = {
 	end_date: string;
 	status: string;
 	groups: string[];
-	created_at: string;
-	updated_at: string;
+	created_at: string | null;
+	updated_at: string | null;
 	user: {
 		id: string;
 		first_name: string;
@@ -41,7 +42,7 @@ type ProjectDetails = {
 		created_at: string;
 		updated_at: string;
 	};
-};
+} & Farmer[];
 
 const ProjectDetailsTable = () => {
 	const { id } = useParams();
@@ -50,7 +51,6 @@ const ProjectDetailsTable = () => {
 		null
 	);
 	const [farmers, setFarmers] = useState<Farmer[]>([]);
-	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const columns: ColumnDef<Farmer>[] = [
 		{
 			id: "select",
@@ -97,10 +97,29 @@ const ProjectDetailsTable = () => {
 			},
 		},
 		{
+			accessorKey: "validated",
+			header: "Status",
+			cell: ({ row }) => {
+				return (
+					<span
+						className={`text-xs capitalize px-2 py-1 rounded-full ${
+							row.original.validated ? "status green" : "status yellow"
+						}`}>
+						{row.original.validated ? "Validated" : "Pending"}
+					</span>
+				);
+			},
+		},
+		{
 			accessorKey: "created_at",
 			header: "Date Added",
 			cell: ({ row }) => {
-				const date = parseISO(row.original.created_at);
+				const createdAt = row.original.created_at;
+				if (!createdAt) {
+					return <span className="text-xs text-primary-6">N/A</span>;
+				}
+
+				const date = parseISO(createdAt);
 				return (
 					<span className="text-xs text-primary-6">
 						{isValid(date) ? format(date, "do MMM. yyyy") : "Invalid Date"}
@@ -127,7 +146,7 @@ const ProjectDetailsTable = () => {
 				status: string;
 				message: string;
 				data: ProjectDetails;
-			}>(`https://api.wowdev.com.ng/api/v1/project/${id}`, {
+			}>(`https://api.wowdev.com.ng/api/v1/project/farmers/${id}`, {
 				headers: {
 					Accept: "application/json",
 					Authorization: `Bearer ${accessToken}`,
@@ -136,23 +155,9 @@ const ProjectDetailsTable = () => {
 
 			setProjectDetails(projectResponse.data.data);
 
-			// TODO: Replace with actual farmers endpoint once available
-			// For now, using mock data
-			const mockFarmers: Farmer[] = [
-				{
-					id: "1",
-					first_name: "John",
-					last_name: "Doe",
-					created_at: "2025-04-22T12:59:29.000000Z",
-				},
-				{
-					id: "2",
-					first_name: "Jane",
-					last_name: "Smith",
-					created_at: "2025-04-21T10:30:00.000000Z",
-				},
-			];
-			setFarmers(mockFarmers);
+			console.log("Project Details:", projectResponse.data.data);
+
+			setFarmers(projectResponse.data.data || []);
 		} catch (error) {
 			console.error("Error fetching project data:", error);
 		} finally {
