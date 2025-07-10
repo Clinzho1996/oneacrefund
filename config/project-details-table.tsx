@@ -45,11 +45,18 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
-import { Farmer } from "./project-details-columns";
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];
 	data: TData[];
 }
+
+export type Farmer = {
+	id: string;
+	first_name: string;
+	last_name: string;
+	created_at: string | null;
+	validated: boolean;
+};
 
 type ProjectDetails = {
 	id: string;
@@ -59,8 +66,8 @@ type ProjectDetails = {
 	end_date: string;
 	status: string;
 	groups: string[];
-	created_at: string;
-	updated_at: string;
+	created_at: string | null;
+	updated_at: string | null;
 	user: {
 		id: string;
 		first_name: string;
@@ -74,7 +81,7 @@ type ProjectDetails = {
 		created_at: string;
 		updated_at: string;
 	};
-};
+} & Farmer[];
 
 export function ProjectDetailsDataTable<TData, TValue>({
 	columns,
@@ -132,12 +139,11 @@ export function ProjectDetailsDataTable<TData, TValue>({
 				return;
 			}
 
-			// Fetch project details
 			const projectResponse = await axios.get<{
 				status: string;
 				message: string;
 				data: ProjectDetails;
-			}>(`https://api.wowdev.com.ng/api/v1/project/${id}`, {
+			}>(`https://api.wowdev.com.ng/api/v1/project/farmers/${id}`, {
 				headers: {
 					Accept: "application/json",
 					Authorization: `Bearer ${accessToken}`,
@@ -146,23 +152,9 @@ export function ProjectDetailsDataTable<TData, TValue>({
 
 			setProjectDetails(projectResponse.data.data);
 
-			// TODO: Replace with actual farmers endpoint once available
-			// For now, using mock data
-			const mockFarmers: Farmer[] = [
-				{
-					id: "1",
-					first_name: "John",
-					last_name: "Doe",
-					created_at: "2025-04-22T12:59:29.000000Z",
-				},
-				{
-					id: "2",
-					first_name: "Jane",
-					last_name: "Smith",
-					created_at: "2025-04-21T10:30:00.000000Z",
-				},
-			];
-			setFarmers(mockFarmers);
+			console.log("Project Details:", projectResponse.data.data);
+
+			setFarmers(projectResponse.data.data || []);
 		} catch (error) {
 			console.error("Error fetching project data:", error);
 		} finally {
