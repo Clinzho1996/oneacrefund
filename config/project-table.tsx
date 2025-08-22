@@ -99,6 +99,11 @@ export function ProjectDataTable<TData, TValue>({
 	const [isCreateModalOpen, setCreateModalOpen] = useState(false);
 	const [tableData, setTableData] = useState(data);
 	const [isLoading, setIsLoading] = useState(false);
+	// Staff states
+	const [staff, setStaff] = useState<
+		{ id: string; first_name: string; last_name: string }[]
+	>([]);
+	const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
 
 	// Form states for creating project
 	const [projectName, setProjectName] = useState("");
@@ -234,6 +239,33 @@ export function ProjectDataTable<TData, TValue>({
 		}
 	};
 
+	const fetchStaff = async () => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+
+			const response = await axios.get(
+				"https://api.wowdev.com.ng/api/v1/user",
+				{
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
+
+			setStaff(response.data.data); // assuming API returns array of {id, name}
+		} catch (error) {
+			console.error("Error fetching staff:", error);
+			toast.error("Failed to fetch staff list");
+		}
+	};
+
+	useEffect(() => {
+		if (isCreateModalOpen) {
+			fetchStaff();
+		}
+	}, [isCreateModalOpen]);
+
 	const handleAddGroup = () => {
 		if (
 			selectedGroupId &&
@@ -317,7 +349,7 @@ export function ProjectDataTable<TData, TValue>({
 			const response = await axios.post(
 				"https://api.wowdev.com.ng/api/v1/project",
 				{
-					user_id: session?.backendData?.user?.id,
+					user_id: selectedStaffId,
 					name: projectName,
 					start_date: startDate,
 					end_date: endDate,
@@ -406,7 +438,7 @@ export function ProjectDataTable<TData, TValue>({
 				isOpen={isCreateModalOpen}
 				onClose={closeCreateModal}
 				title="Create New Project">
-				<div className="bg-white py-5 rounded-lg w-[600px] transition-transform ease-in-out">
+				<div className="bg-white py-5 rounded-lg w-[600px] transition-transform ease-in-out modal">
 					{/* Basic Information Section */}
 					<div className="mb-6">
 						<h3 className="text-sm font-semibold text-gray-800 mb-4">
@@ -595,6 +627,26 @@ export function ProjectDataTable<TData, TValue>({
 									</Button>
 								</div>
 							</div>
+						</div>
+
+						<div>
+							<label className="block text-xs text-gray-600 mb-1 mt-4">
+								Assign Staff *
+							</label>
+							<Select
+								value={selectedStaffId || ""}
+								onValueChange={(value) => setSelectedStaffId(value)}>
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select Staff" />
+								</SelectTrigger>
+								<SelectContent className="z-200 post bg-white ">
+									{staff.map((member) => (
+										<SelectItem key={member.id} value={member.id}>
+											{member.first_name} {member.last_name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 						</div>
 
 						{/* Selected Groups List */}
