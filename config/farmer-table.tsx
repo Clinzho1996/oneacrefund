@@ -502,6 +502,7 @@ export function FarmerDataTable<TData, TValue>({
 			formData.append("dob", dob);
 			formData.append("phone_number", phoneNumber);
 			formData.append("email", email);
+			formData.append("group_id", selectedGroupId || "");
 			formData.append("site_id", selectedSiteId || "");
 			formData.append("pod_id", selectedPodId || "");
 			formData.append("district_id", selectedDistrictId || "");
@@ -830,6 +831,26 @@ export function FarmerDataTable<TData, TValue>({
 												{sites.map((site) => (
 													<SelectItem key={site.id} value={site.id}>
 														{site.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									</div>
+								</div>
+								<div className="flex flex-col gap-2">
+									<div>
+										<p className="text-xs text-primary-6 mt-2 font-inter">
+											Group
+										</p>
+										<Select
+											onValueChange={(value) => setSelectedGroupId(value)}>
+											<SelectTrigger className="w-full mt-2">
+												<SelectValue placeholder="Select Group" />
+											</SelectTrigger>
+											<SelectContent className="z-200 post bg-white">
+												{groups.map((group) => (
+													<SelectItem key={group.id} value={group.id}>
+														{group.name}
 													</SelectItem>
 												))}
 											</SelectContent>

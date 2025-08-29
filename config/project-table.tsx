@@ -353,6 +353,7 @@ export function ProjectDataTable<TData, TValue>({
 					name: projectName,
 					start_date: startDate,
 					end_date: endDate,
+					site_id: selectedSiteId,
 					groups: selectedGroups.map((g) => g.id),
 				},
 				{
