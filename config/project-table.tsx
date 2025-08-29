@@ -336,12 +336,7 @@ export function ProjectDataTable<TData, TValue>({
 			const session = await getSession();
 			const accessToken = session?.backendData?.token;
 
-			if (
-				!projectName ||
-				!startDate ||
-				!endDate ||
-				selectedGroups.length === 0
-			) {
+			if (!projectName || !startDate || !endDate) {
 				toast.error("Please fill all required fields");
 				return;
 			}
@@ -703,13 +698,7 @@ export function ProjectDataTable<TData, TValue>({
 						</Button>
 						<Button
 							onClick={handleCreateProject}
-							disabled={
-								isLoading ||
-								!projectName ||
-								!startDate ||
-								!endDate ||
-								selectedGroups.length === 0
-							}
+							disabled={isLoading || !projectName || !startDate || !endDate}
 							className="bg-primary-1 text-white">
 							{isLoading ? "Creating..." : "Create Project"}
 						</Button>
