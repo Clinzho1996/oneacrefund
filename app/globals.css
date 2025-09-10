@@ -27,10 +27,15 @@ body {
 	background-color: #f2f4f7;
 	cursor: pointer;
 }
+
+.dup {
+	height: 100px !important;
+	margin: 10px !important;
+}
+
 .status {
 	justify-content: center;
 	align-items: center;
-	margin-left: 30px;
 	text-align: center;
 	width: 80px;
 	background-color: #297c66; /* Specific inline style */

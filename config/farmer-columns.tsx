@@ -391,6 +391,8 @@ const FarmerTable = () => {
 			const session = await getSession();
 			const accessToken = session?.backendData?.token;
 
+			console.log("session", session);
+
 			if (!accessToken) {
 				console.error("No access token found.");
 				setIsLoading(false);

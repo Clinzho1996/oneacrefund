@@ -1,5 +1,3 @@
-import { Project } from "@/config/project-columns";
-
 export const sidebarLinks = [
 	{
 		label: "Dashboard",
@@ -9,6 +7,11 @@ export const sidebarLinks = [
 	{
 		label: "Farmer Management",
 		route: "/farmer-management",
+		imgUrl: "/icons/farmer.svg",
+	},
+	{
+		label: "Duplicate Management",
+		route: "/duplicate-management",
 		imgUrl: "/icons/farmer.svg",
 	},
 	{
@@ -38,5 +41,3 @@ export const sidebarLinks = [
 		imgUrl: "/icons/log.svg",
 	},
 ];
-
-
