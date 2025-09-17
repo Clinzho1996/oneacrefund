@@ -563,6 +563,7 @@ export function FarmerDataTable<TData, TValue>({
 			setIsAddingFarmer(false);
 		}
 	};
+	
 	const table = useReactTable({
 		data: filteredData,
 		columns,
@@ -673,6 +674,10 @@ export function FarmerDataTable<TData, TValue>({
 			setUploadProgress(0);
 		}
 	};
+
+	useEffect(() => {
+		setTableData(data); // Sync `tableData` with `data` prop
+	}, [data]);
 
 	return (
 		<div className="rounded-lg border-[1px] py-0">

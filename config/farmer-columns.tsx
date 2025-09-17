@@ -145,6 +145,7 @@ const FarmerTable = () => {
 	const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(
 		null
 	);
+
 	const [pagination, setPagination] = useState({
 		currentPage: 1,
 		totalItems: 0,
