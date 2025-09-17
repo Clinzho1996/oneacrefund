@@ -101,6 +101,8 @@ export function FarmerDataTable<TData, TValue>({
 	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 	const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
 	const [isAddingFarmer, setIsAddingFarmer] = useState(false);
+	const [allFarmersData, setAllFarmersData] = useState<TData[]>(data);
+	const [filteredData, setFilteredData] = useState<TData[]>(data);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(
 		null
@@ -427,32 +429,58 @@ export function FarmerDataTable<TData, TValue>({
 	const filterDataByDateRange = () => {
 		if (!dateRange?.from || !dateRange?.to) {
 			console.log("No date range selected. Resetting to all data.");
-			setTableData(data); // Reset to all data
+			setFilteredData(allFarmersData); // Reset to all data
 			return;
 		}
 
-		const filteredData = data.filter((farmer: any) => {
+		const filteredData = allFarmersData.filter((farmer: any) => {
 			const dateJoined = new Date(farmer.created_at);
 			return dateJoined >= dateRange.from! && dateJoined <= dateRange.to!;
 		});
 
 		console.log("Filtered data by date range:", filteredData);
-		setTableData(filteredData);
+		setFilteredData(filteredData);
 	};
 
 	useEffect(() => {
 		filterDataByDateRange();
 	}, [dateRange]);
 
+	useEffect(() => {
+		if (!globalFilter) {
+			setFilteredData(allFarmersData);
+			return;
+		}
+
+		const filteredData = allFarmersData.filter((farmer: any) => {
+			return (
+				farmer.first_name?.toLowerCase().includes(globalFilter.toLowerCase()) ||
+				farmer.last_name?.toLowerCase().includes(globalFilter.toLowerCase()) ||
+				farmer.oaf_id?.toLowerCase().includes(globalFilter.toLowerCase()) ||
+				farmer.phone_number
+					?.toLowerCase()
+					.includes(globalFilter.toLowerCase()) ||
+				farmer.email?.toLowerCase().includes(globalFilter.toLowerCase()) ||
+				farmer.group?.name
+					?.toLowerCase()
+					.includes(globalFilter.toLowerCase()) ||
+				farmer.site?.name?.toLowerCase().includes(globalFilter.toLowerCase()) ||
+				farmer.pod?.name?.toLowerCase().includes(globalFilter.toLowerCase())
+			);
+		});
+
+		setFilteredData(filteredData);
+	}, [globalFilter, allFarmersData]);
+
 	const handleStatusFilter = (status: string) => {
 		setSelectedStatus(status);
 
 		if (status === "View All") {
-			setTableData(data);
+			setFilteredData(allFarmersData);
 			return;
 		}
 
-		const filteredData = data.filter((farmer: any) => {
+		const filteredData = allFarmersData.filter((farmer: any) => {
 			const farmerStatus = farmer?.biometricStatus
 				? farmer.biometricStatus.toLowerCase()
 				: "";
@@ -460,7 +488,7 @@ export function FarmerDataTable<TData, TValue>({
 			return farmerStatus === status.toLowerCase();
 		});
 
-		setTableData(filteredData);
+		setFilteredData(filteredData);
 	};
 
 	useEffect(() => {
@@ -468,7 +496,8 @@ export function FarmerDataTable<TData, TValue>({
 	}, [data]);
 
 	useEffect(() => {
-		setTableData(data);
+		setAllFarmersData(data);
+		setFilteredData(data);
 	}, [data]);
 
 	const handleDelete = () => {
@@ -535,7 +564,7 @@ export function FarmerDataTable<TData, TValue>({
 		}
 	};
 	const table = useReactTable({
-		data: tableData,
+		data: filteredData,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
@@ -623,6 +652,7 @@ export function FarmerDataTable<TData, TValue>({
 			);
 
 			toast.success("Farmers imported successfully!");
+
 			closeImportModal();
 			fetchFarmers(); // Refresh the farmer list
 		} catch (error) {
