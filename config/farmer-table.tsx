@@ -17,7 +17,6 @@ import {
 import { Button } from "@/components/ui/button";
 
 import Modal from "@/components/Modal";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Input } from "@/components/ui/input";
 import {
 	Select,
@@ -49,7 +48,6 @@ import React, { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
-import { Farmer } from "./farmer-columns";
 import { Group } from "./group-columns";
 
 interface DataTableProps<TData, TValue> {
@@ -90,7 +88,6 @@ export function FarmerDataTable<TData, TValue>({
 	);
 	const [columnVisibility, setColumnVisibility] =
 		React.useState<VisibilityState>({});
-	const [selectedStatus, setSelectedStatus] = useState<string>("View All");
 	const [featuredImage, setFeaturedImage] = useState<File | null>(null);
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [globalFilter, setGlobalFilter] = useState("");
@@ -101,8 +98,6 @@ export function FarmerDataTable<TData, TValue>({
 	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 	const [selectedStateId, setSelectedStateId] = useState<string | null>(null);
 	const [isAddingFarmer, setIsAddingFarmer] = useState(false);
-	const [allFarmersData, setAllFarmersData] = useState<TData[]>(data);
-	const [filteredData, setFilteredData] = useState<TData[]>(data);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(
 		null
@@ -299,80 +294,6 @@ export function FarmerDataTable<TData, TValue>({
 		return buf;
 	};
 
-	const fetchFarmers = async () => {
-		try {
-			setIsLoading(true);
-			const session = await getSession();
-
-			console.log("session", session);
-
-			const accessToken = session?.backendData?.token;
-			if (!accessToken) {
-				console.error("No access token found.");
-				setIsLoading(false);
-				return;
-			}
-
-			const response = await axios.get<{
-				status: string;
-				message: string;
-				data: Farmer[];
-			}>("https://api.wowdev.com.ng/api/v1/farmer", {
-				headers: {
-					Accept: "application/json",
-					Authorization: `Bearer ${accessToken}`,
-				},
-			});
-
-			const fetchedData = response.data.data;
-
-			console.log("Farmer Data:", fetchedData);
-
-			// Map the API response to match the `Farmer` type
-			const mappedData = fetchedData.map((item) => ({
-				id: item.id,
-				oaf_id: item.oaf_id,
-				first_name: item.first_name,
-				last_name: item.last_name,
-				other_name: item.other_name,
-				gender: item.gender,
-				email: item.email,
-				phone_number: item.phone_number,
-				dob: item.dob,
-				state_id: item.state_id,
-				district_id: item.district_id,
-				pod_id: item.pod_id,
-				site_id: item.site_id,
-				group_id: item.group_id,
-				pic: item.pic,
-				finger_bio: item.finger_bio,
-				facial_bio: item.facial_bio,
-				created_at: item.created_at,
-				updated_at: item.updated_at,
-				group: item.group || "N/A",
-				site: item.site || "N/A",
-				pod: item.pod || "N/A",
-				district: item.district || "N/A",
-				state: item.state || "N/A",
-				biometricStatus:
-					item.finger_bio && item.facial_bio
-						? "both"
-						: item.facial_bio
-						? "facial"
-						: item.finger_bio
-						? "fingerprint"
-						: "none",
-			}));
-
-			console.log("Mapped Data:", mappedData);
-			setTableData(mappedData as TData[]);
-		} catch (error) {
-			console.error("Error fetching farmer data:", error);
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
 	useEffect(() => {
 		if (selectedStateId) {
 			fetchDistricts(selectedStateId);
@@ -425,91 +346,9 @@ export function FarmerDataTable<TData, TValue>({
 		}
 	};
 
-	// Function to filter data based on date range
-	const filterDataByDateRange = () => {
-		if (!dateRange?.from || !dateRange?.to) {
-			console.log("No date range selected. Resetting to all data.");
-			setFilteredData(allFarmersData); // Reset to all data
-			return;
-		}
-
-		const filteredData = allFarmersData.filter((farmer: any) => {
-			const dateJoined = new Date(farmer.created_at);
-			return dateJoined >= dateRange.from! && dateJoined <= dateRange.to!;
-		});
-
-		console.log("Filtered data by date range:", filteredData);
-		setFilteredData(filteredData);
-	};
-
 	useEffect(() => {
-		filterDataByDateRange();
-	}, [dateRange]);
-
-	useEffect(() => {
-		if (!globalFilter) {
-			setFilteredData(allFarmersData);
-			return;
-		}
-
-		const filteredData = allFarmersData.filter((farmer: any) => {
-			return (
-				farmer.first_name?.toLowerCase().includes(globalFilter.toLowerCase()) ||
-				farmer.last_name?.toLowerCase().includes(globalFilter.toLowerCase()) ||
-				farmer.oaf_id?.toLowerCase().includes(globalFilter.toLowerCase()) ||
-				farmer.phone_number
-					?.toLowerCase()
-					.includes(globalFilter.toLowerCase()) ||
-				farmer.email?.toLowerCase().includes(globalFilter.toLowerCase()) ||
-				farmer.group?.name
-					?.toLowerCase()
-					.includes(globalFilter.toLowerCase()) ||
-				farmer.site?.name?.toLowerCase().includes(globalFilter.toLowerCase()) ||
-				farmer.pod?.name?.toLowerCase().includes(globalFilter.toLowerCase())
-			);
-		});
-
-		setFilteredData(filteredData);
-	}, [globalFilter, allFarmersData]);
-
-	const handleStatusFilter = (status: string) => {
-		setSelectedStatus(status);
-
-		if (status === "View All") {
-			setFilteredData(allFarmersData);
-			return;
-		}
-
-		const filteredData = allFarmersData.filter((farmer: any) => {
-			const farmerStatus = farmer?.biometricStatus
-				? farmer.biometricStatus.toLowerCase()
-				: "";
-
-			return farmerStatus === status.toLowerCase();
-		});
-
-		setFilteredData(filteredData);
-	};
-
-	useEffect(() => {
-		handleStatusFilter(selectedStatus);
+		setTableData(data);
 	}, [data]);
-
-	useEffect(() => {
-		setAllFarmersData(data);
-		setFilteredData(data);
-	}, [data]);
-
-	const handleDelete = () => {
-		const selectedRowIds = Object.keys(rowSelection).filter(
-			(key) => rowSelection[key]
-		);
-		const filteredData = tableData.filter(
-			(_, index) => !selectedRowIds.includes(index.toString())
-		);
-		setTableData(filteredData);
-		setRowSelection({});
-	};
 
 	const handleAddFarmer = async () => {
 		setIsAddingFarmer(true);
@@ -553,7 +392,7 @@ export function FarmerDataTable<TData, TValue>({
 			);
 
 			console.log("Farmer added successfully:", response.data);
-			await fetchFarmers();
+
 			toast.success("Farmer added successfully");
 
 			closeModal();
@@ -563,15 +402,16 @@ export function FarmerDataTable<TData, TValue>({
 			setIsAddingFarmer(false);
 		}
 	};
-	
+
 	const table = useReactTable({
-		data: filteredData,
+		data: tableData,
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
 		onSortingChange: setSorting,
 		getSortedRowModel: getSortedRowModel(),
 		onColumnFiltersChange: setColumnFilters,
+		globalFilterFn: "includesString",
 		getFilteredRowModel: getFilteredRowModel(),
 		onColumnVisibilityChange: setColumnVisibility,
 		onRowSelectionChange: setRowSelection,
@@ -655,7 +495,6 @@ export function FarmerDataTable<TData, TValue>({
 			toast.success("Farmers imported successfully!");
 
 			closeImportModal();
-			fetchFarmers(); // Refresh the farmer list
 		} catch (error) {
 			if (axios.isAxiosError(error)) {
 				if (error.response && error.response.data) {
@@ -674,10 +513,6 @@ export function FarmerDataTable<TData, TValue>({
 			setUploadProgress(0);
 		}
 	};
-
-	useEffect(() => {
-		setTableData(data); // Sync `tableData` with `data` prop
-	}, [data]);
 
 	return (
 		<div className="rounded-lg border-[1px] py-0">
@@ -1154,46 +989,6 @@ export function FarmerDataTable<TData, TValue>({
 						className="bg-primary-1 text-white font-inter"
 						onClick={openModal}>
 						<IconPlus /> Add Farmer
-					</Button>
-				</div>
-			</div>
-
-			{/* filter function */}
-			<div className="p-3 flex flex-row justify-between border-b-[1px] border-[#E2E4E9] bg-white items-center gap-20 max-w-full">
-				<div className="flex flex-row justify-center bg-white items-center rounded-lg mx-auto special-btn-farmer pr-2">
-					{["View All", "Both", "Facial", "Fingerprint", "None"].map(
-						(status, index, arr) => (
-							<p
-								key={status}
-								className={`px-2 py-2 text-center text-sm cursor-pointer border border-[#E2E4E9] overflow-hidden ${
-									selectedStatus === status
-										? "bg-primary-5 text-dark-1"
-										: "text-dark-1"
-								} 
-			${index === 0 ? "rounded-l-lg firstRound" : ""} 
-			${index === arr.length - 1 ? "rounded-r-lg lastRound" : ""}`}
-								onClick={() => handleStatusFilter(status)}>
-								{status}
-							</p>
-						)
-					)}
-				</div>
-
-				<div className="p-3 flex flex-row justify-start items-center gap-3 w-full ">
-					<Input
-						placeholder="Search Farmer..."
-						value={globalFilter}
-						onChange={(e) => setGlobalFilter(e.target.value)}
-						className="focus:border-none bg-[#F9FAFB]"
-					/>
-					{/* filter by date */}
-					<div className="w-[250px]">
-						<DateRangePicker dateRange={dateRange} onSelect={setDateRange} />
-					</div>
-					<Button
-						className="border-[#E8E8E8] border-[1px] bg-white"
-						onClick={handleDelete}>
-						<IconTrash /> Delete
 					</Button>
 				</div>
 			</div>

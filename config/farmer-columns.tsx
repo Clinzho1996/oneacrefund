@@ -135,6 +135,9 @@ interface Site {
 const FarmerTable = () => {
 	const [isEditModalOpen, setEditModalOpen] = useState(false);
 	const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+	const [searchInput, setSearchInput] = useState("");
+	const [search, setSearch] = useState("");
+
 	const [selectedRow, setSelectedRow] = useState<any>(null);
 	const [allFarmersData, setAllFarmersData] = useState<Farmer[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -387,7 +390,11 @@ const FarmerTable = () => {
 		setDeleteModalOpen(false);
 	};
 
-	const fetchFarmers = async (page: number = 1, pageSize: number = 10) => {
+	const fetchFarmers = async (
+		page: number = 1,
+		pageSize: number = 10,
+		search: string = ""
+	) => {
 		try {
 			setIsLoading(true);
 			const session = await getSession();
@@ -415,6 +422,7 @@ const FarmerTable = () => {
 				params: {
 					page,
 					per_page: pageSize,
+					search: search,
 				},
 			});
 
@@ -456,7 +464,9 @@ const FarmerTable = () => {
 						: "none",
 			}));
 
+			console.log("Farmer Data:", mappedData);
 			setTableData(mappedData);
+
 			setPagination({
 				currentPage: paginationData.current_page,
 				totalItems: paginationData.total,
@@ -495,84 +505,6 @@ const FarmerTable = () => {
 		}
 	};
 
-	// Add a new function to fetch ALL farmers without pagination
-	const fetchAllFarmers = async () => {
-		try {
-			const session = await getSession();
-			const accessToken = session?.backendData?.token;
-
-			if (!accessToken) {
-				console.error("No access token found.");
-				return [];
-			}
-
-			// Fetch all data by using a large page size
-			const response = await axios.get<{
-				data: Farmer[];
-			}>("https://api.wowdev.com.ng/api/v1/farmer", {
-				headers: {
-					Accept: "application/json",
-					Authorization: `Bearer ${accessToken}`,
-				},
-				params: {
-					per_page: 10000, // Large number to get all records
-				},
-			});
-
-			const fetchedData = response.data.data;
-
-			const mappedData = fetchedData.map((item) => ({
-				id: item.id,
-				oaf_id: item.oaf_id,
-				first_name: item.first_name,
-				last_name: item.last_name,
-				other_name: item.other_name,
-				gender: item.gender,
-				email: item.email,
-				phone_number: item.phone_number,
-				dob: item.dob,
-				state_id: item.state_id,
-				district_id: item.district_id,
-				pod_id: item.pod_id,
-				site_id: item.site_id,
-				group_id: item.group_id,
-				pic: item.pic,
-				finger_bio: item.finger_bio,
-				facial_bio: item.facial_bio,
-				created_at: item.created_at,
-				updated_at: item.updated_at,
-				group: item.group || "N/A",
-				site: item.site || "N/A",
-				pod: item.pod || "N/A",
-				district: item.district || "N/A",
-				state: item.state || "N/A",
-				biometricStatus:
-					item.finger_bio && item.facial_bio
-						? "both"
-						: item.facial_bio
-						? "facial"
-						: item.finger_bio
-						? "fingerprint"
-						: "none",
-			}));
-
-			return mappedData;
-		} catch (error) {
-			console.error("Error fetching all farmer data:", error);
-			return [];
-		}
-	};
-
-	// Update the useEffect to fetch all data
-	useEffect(() => {
-		const loadData = async () => {
-			const allData = await fetchAllFarmers();
-			setAllFarmersData(allData);
-			await fetchFarmers(); // Load initial paginated data
-		};
-		loadData();
-	}, []);
-
 	const deleteFarmer = async (id: string) => {
 		try {
 			const session = await getSession();
@@ -607,8 +539,17 @@ const FarmerTable = () => {
 	};
 
 	useEffect(() => {
-		fetchFarmers(pagination.currentPage, pagination.pageSize);
-	}, [pagination.currentPage, pagination.pageSize]);
+		fetchFarmers(pagination.currentPage, pagination.pageSize, search);
+	}, [pagination.currentPage, pagination.pageSize, search]);
+
+	useEffect(() => {
+		const delay = setTimeout(() => {
+			setPagination((prev) => ({ ...prev, currentPage: 1 })); // Reset to first page
+			setSearch(searchInput); // Only now update the "active search"
+		}, 500); // 500ms delay after typing stops
+
+		return () => clearTimeout(delay);
+	}, [searchInput]);
 
 	const handlePageChange = (newPage: number) => {
 		if (newPage >= 1 && newPage <= pagination.lastPage) {
@@ -880,7 +821,25 @@ const FarmerTable = () => {
 			{isLoading ? (
 				<Loader />
 			) : (
-				<FarmerDataTable columns={columns} data={allFarmersData} />
+				<>
+					<div className="flex items-center justify-between  gap-3 ">
+						<Input
+							type="text"
+							value={searchInput}
+							className="bg-white"
+							onChange={(e) => setSearchInput(e.target.value)}
+							placeholder="Search farmers..."
+						/>
+
+						<Button
+							onClick={() => fetchFarmers(1, pagination.pageSize, search)}
+							className="ml-2 bg-primary-1 text-white">
+							Search
+						</Button>
+					</div>
+
+					<FarmerDataTable columns={columns} data={tableData} />
+				</>
 			)}
 
 			{/* Pagination Controls */}
