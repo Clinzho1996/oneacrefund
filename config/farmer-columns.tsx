@@ -505,8 +505,6 @@ const FarmerTable = () => {
 		}
 	};
 
-
-
 	const deleteFarmer = async (id: string) => {
 		try {
 			const session = await getSession();
@@ -533,7 +531,7 @@ const FarmerTable = () => {
 					prevData.filter((farmer) => farmer.id !== id)
 				);
 
-				toast.success("Farmer deleted successfully.");
+				toast.success("Farmer deleted successfully");
 			}
 		} catch (error) {
 			console.error("Error deleting farmer:", error);
