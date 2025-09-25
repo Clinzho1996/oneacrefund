@@ -256,37 +256,49 @@ export function FarmerDataTable<TData, TValue>({
 		}
 	};
 
-	const handleExport = () => {
-		// Convert the table data to a worksheet
-		const worksheet = XLSX.utils.json_to_sheet(tableData);
+	const handleExport = async () => {
+		try {
+			const session = await getSession();
+			const accessToken = session?.backendData?.token;
+			if (!accessToken) throw new Error("No access token");
 
-		// Create a new workbook and add the worksheet
-		const workbook = XLSX.utils.book_new();
-		XLSX.utils.book_append_sheet(workbook, worksheet, "Farmers");
+			// Fetch all farmers (no pagination)
+			const response = await axios.get(
+				"https://api.wowdev.com.ng/api/v1/farmer?all=true", // make sure your backend supports a "get all" flag
+				{
+					headers: {
+						Accept: "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}
+			);
 
-		// Generate a binary string from the workbook
-		const binaryString = XLSX.write(workbook, {
-			bookType: "xlsx",
-			type: "binary",
-		});
+			const allFarmers = response.data.data; // all rows
 
-		// Convert the binary string to a Blob
-		const blob = new Blob([s2ab(binaryString)], {
-			type: "application/octet-stream",
-		});
+			// Convert to worksheet
+			const worksheet = XLSX.utils.json_to_sheet(allFarmers);
+			const workbook = XLSX.utils.book_new();
+			XLSX.utils.book_append_sheet(workbook, worksheet, "Farmers");
 
-		// Create a link element and trigger the download
-		const url = URL.createObjectURL(blob);
-		const link = document.createElement("a");
-		link.href = url;
-		link.download = "farmers.xlsx";
-		link.click();
-
-		// Clean up
-		URL.revokeObjectURL(url);
+			const binaryString = XLSX.write(workbook, {
+				bookType: "xlsx",
+				type: "binary",
+			});
+			const blob = new Blob([s2ab(binaryString)], {
+				type: "application/octet-stream",
+			});
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement("a");
+			link.href = url;
+			link.download = "farmers.xlsx";
+			link.click();
+			URL.revokeObjectURL(url);
+		} catch (error) {
+			console.error("Error exporting all farmers:", error);
+			toast.error("Failed to export all farmers");
+		}
 	};
 
-	// Utility function to convert string to ArrayBuffer
 	const s2ab = (s: string) => {
 		const buf = new ArrayBuffer(s.length);
 		const view = new Uint8Array(buf);

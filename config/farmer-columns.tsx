@@ -505,6 +505,8 @@ const FarmerTable = () => {
 		}
 	};
 
+
+
 	const deleteFarmer = async (id: string) => {
 		try {
 			const session = await getSession();
